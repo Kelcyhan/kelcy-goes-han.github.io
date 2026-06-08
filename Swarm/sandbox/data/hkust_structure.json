@@ -1,0 +1,432 @@
+{
+  "generatedAt": "2025-11-12T10:38:48.538Z",
+  "source": "DWXX_JY_PT.shp",
+  "bounds": {
+    "minX": 82.953008,
+    "maxX": 82.970981,
+    "minY": 41.70856,
+    "maxY": 41.72062
+  },
+  "schools": [
+    {
+      "id": "engineering",
+      "name": "School of Engineering",
+      "color": "#ff4477",
+      "departments": [
+        {
+          "id": "dept-0",
+          "name": "库车县林基路小学汉语学校",
+          "address": "文化西路06号",
+          "categoryCode": "B070802",
+          "globalCode": "070802",
+          "position": [
+            82.954773,
+            41.718128
+          ]
+        },
+        {
+          "id": "dept-5",
+          "name": "爱心幼儿园",
+          "address": "友谊北路",
+          "categoryCode": "B070803",
+          "globalCode": "070803",
+          "position": [
+            82.962364,
+            41.72062
+          ]
+        },
+        {
+          "id": "dept-10",
+          "name": "库车县第七小学家长学校",
+          "address": "文化中路04号",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.968064,
+            41.714259
+          ]
+        },
+        {
+          "id": "dept-15",
+          "name": "可爱宝贝双语幼儿园",
+          "address": "团结路",
+          "categoryCode": "B070803",
+          "globalCode": "070803",
+          "position": [
+            82.962657,
+            41.711152
+          ]
+        },
+        {
+          "id": "dept-20",
+          "name": "继承者双语幼儿园",
+          "address": "天山中路",
+          "categoryCode": "B070803",
+          "globalCode": "070803",
+          "position": [
+            82.957538,
+            41.71213
+          ]
+        },
+        {
+          "id": "dept-25",
+          "name": "爱乐艺术中心",
+          "address": "文化中路04-12号",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.9678,
+            41.713918
+          ]
+        },
+        {
+          "id": "dept-30",
+          "name": "商运驾校",
+          "address": "天山中路",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.970978,
+            41.70856
+          ]
+        }
+      ]
+    },
+    {
+      "id": "science",
+      "name": "School of Science",
+      "color": "#44aaff",
+      "departments": [
+        {
+          "id": "dept-1",
+          "name": "艺星艺术培训",
+          "address": "建设路",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.954038,
+            41.717973
+          ]
+        },
+        {
+          "id": "dept-6",
+          "name": "库车县业余体校",
+          "address": "五一北路",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.970981,
+            41.715014
+          ]
+        },
+        {
+          "id": "dept-11",
+          "name": "库车山河机动车驾驶培训有限公司",
+          "address": "天山中路",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.967064,
+            41.709396
+          ]
+        },
+        {
+          "id": "dept-16",
+          "name": "博雅文化艺术培训中心",
+          "address": "团结路",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.963591,
+            41.713538
+          ]
+        },
+        {
+          "id": "dept-21",
+          "name": "库车县第二小学",
+          "address": "解放路",
+          "categoryCode": "B070802",
+          "globalCode": "070802",
+          "position": [
+            82.958389,
+            41.71371
+          ]
+        },
+        {
+          "id": "dept-26",
+          "name": "音乐艺术培训",
+          "address": "文化中路04-16号",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.967661,
+            41.713953
+          ]
+        },
+        {
+          "id": "dept-31",
+          "name": "宝贝家双语幼儿园",
+          "address": "建设路",
+          "categoryCode": "B070803",
+          "globalCode": "070803",
+          "position": [
+            82.953222,
+            41.716442
+          ]
+        }
+      ]
+    },
+    {
+      "id": "business",
+      "name": "School of Business and Management",
+      "color": "#ffc145",
+      "departments": [
+        {
+          "id": "dept-2",
+          "name": "培蕾辅导班",
+          "address": "阿木提鲁克巴格巷",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.958646,
+            41.717662
+          ]
+        },
+        {
+          "id": "dept-7",
+          "name": "世纪剑桥英语培训中心",
+          "address": "五一北路",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.970944,
+            41.71492
+          ]
+        },
+        {
+          "id": "dept-12",
+          "name": "童心英语",
+          "address": "五一南路",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.96781,
+            41.710348
+          ]
+        },
+        {
+          "id": "dept-17",
+          "name": "库车县农村实用人才培训基地",
+          "address": "团结路",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.96369,
+            41.713733
+          ]
+        },
+        {
+          "id": "dept-22",
+          "name": "库车县第三幼儿园",
+          "address": "解放路",
+          "categoryCode": "B070803",
+          "globalCode": "070803",
+          "position": [
+            82.956858,
+            41.714312
+          ]
+        },
+        {
+          "id": "dept-27",
+          "name": "库车实验中学",
+          "address": "文化中路06号",
+          "categoryCode": "B070802",
+          "globalCode": "070802",
+          "position": [
+            82.965495,
+            41.715241
+          ]
+        },
+        {
+          "id": "dept-32",
+          "name": "希望双语幼儿园",
+          "address": "建设路",
+          "categoryCode": "B070803",
+          "globalCode": "070803",
+          "position": [
+            82.953207,
+            41.716407
+          ]
+        }
+      ]
+    },
+    {
+      "id": "humanities",
+      "name": "School of Humanities and Social Science",
+      "color": "#8dd36f",
+      "departments": [
+        {
+          "id": "dept-3",
+          "name": "精灵家教辅导托管中心",
+          "address": "解放路07-10号",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.957402,
+            41.71709
+          ]
+        },
+        {
+          "id": "dept-8",
+          "name": "亚欧文化艺术培训中心",
+          "address": "文化中路",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.969422,
+            41.713515
+          ]
+        },
+        {
+          "id": "dept-13",
+          "name": "功成职业学校",
+          "address": "五一南路",
+          "categoryCode": "B070804",
+          "globalCode": "070804",
+          "position": [
+            82.967779,
+            41.710357
+          ]
+        },
+        {
+          "id": "dept-18",
+          "name": "库车县第一幼儿园",
+          "address": "团结路",
+          "categoryCode": "B070803",
+          "globalCode": "070803",
+          "position": [
+            82.961079,
+            41.713056
+          ]
+        },
+        {
+          "id": "dept-23",
+          "name": "龟兹歌舞团文化艺术培训中心",
+          "address": "解放路",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.956951,
+            41.715319
+          ]
+        },
+        {
+          "id": "dept-28",
+          "name": "库车县实验中学家长学校",
+          "address": "文化中路06号",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.96566,
+            41.715209
+          ]
+        },
+        {
+          "id": "dept-33",
+          "name": "bibanu幼儿园",
+          "address": "解放路10-21号",
+          "categoryCode": "B070803",
+          "globalCode": "070803",
+          "position": [
+            82.955862,
+            41.715229
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ipo",
+      "name": "Interdisciplinary Programs Office",
+      "color": "#b28cff",
+      "departments": [
+        {
+          "id": "dept-4",
+          "name": "希望双语幼儿园",
+          "address": "胜利路",
+          "categoryCode": "B070803",
+          "globalCode": "070803",
+          "position": [
+            82.958846,
+            41.719606
+          ]
+        },
+        {
+          "id": "dept-9",
+          "name": "库车县第七小学",
+          "address": "文化中路04号",
+          "categoryCode": "B070802",
+          "globalCode": "070802",
+          "position": [
+            82.967888,
+            41.714307
+          ]
+        },
+        {
+          "id": "dept-14",
+          "name": "爱乐艺术中心",
+          "address": "",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.967264,
+            41.710493
+          ]
+        },
+        {
+          "id": "dept-19",
+          "name": "诚信幼儿园",
+          "address": "团结路",
+          "categoryCode": "B070803",
+          "globalCode": "070803",
+          "position": [
+            82.962102,
+            41.711767
+          ]
+        },
+        {
+          "id": "dept-24",
+          "name": "鸿博文化艺术培训中心",
+          "address": "友谊路",
+          "categoryCode": "B070805",
+          "globalCode": "070805",
+          "position": [
+            82.959842,
+            41.715266
+          ]
+        },
+        {
+          "id": "dept-29",
+          "name": "开心宝贝幼儿园",
+          "address": "文化西路",
+          "categoryCode": "B070803",
+          "globalCode": "070803",
+          "position": [
+            82.953008,
+            41.717386
+          ]
+        },
+        {
+          "id": "dept-34",
+          "name": "库车县第六中学",
+          "address": "解放路10-12号",
+          "categoryCode": "B070802",
+          "globalCode": "070802",
+          "position": [
+            82.95596,
+            41.715942
+          ]
+        }
+      ]
+    }
+  ]
+}

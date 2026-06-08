@@ -1,0 +1,1265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MetacogReef — Kelcy Han</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Averia+Sans+Libre:ital,wght@1,300;1,400;1,700&family=Edu+QLD+Beginner:wght@400;500;600;700&family=Sansita:ital,wght@0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
+
+<script type="importmap">
+{
+  "imports": {
+    "three":         "https://esm.sh/three@0.158.0",
+    "three/addons/": "https://esm.sh/three@0.158.0/examples/jsm/",
+    "lenis":         "https://cdn.jsdelivr.net/npm/lenis@1.1.13/+esm"
+  }
+}
+</script>
+
+<style>
+  :root {
+    --linen:  #F1ECE3;
+    --cloud:  #D6D2C9;
+    --teal:   #3C5A5E;
+    --jade:   #A6C2A8;
+    --beach:  #D4A574;
+    --cream:  #F4E8D0;
+    --honey:  #F4A742;
+    --ink:    #2A2A28;
+    --paper:  #E9DFCB;
+    --rust:   #8B4A2B;
+
+    --title-font:    'Sansita', serif;
+    --subtitle-font: 'Averia Sans Libre', cursive;
+    --body-font:     'Edu QLD Beginner', cursive;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    background: #16110b;
+    color: var(--linen);
+    overflow-x: hidden;
+  }
+  /* Page must scroll on the document — Lenis hooks documentElement.scrollTop.
+     Earlier `height: 100%` made the body scroll internally instead → camera
+     stayed pinned to stop 0 and 3D never advanced. */
+  body {
+    font-family: var(--body-font);
+    line-height: 1.55;
+  }
+
+  /* ============ THREE.JS CANVAS BACKGROUND ============ */
+  #three-canvas {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+  /* Page bg gradient that warms as you scroll */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 30% 20%, rgba(244, 167, 66, 0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 60% at 70% 80%, rgba(139, 74, 43, 0.08) 0%, transparent 60%),
+      linear-gradient(180deg, #16110b 0%, #1f1813 60%, #14110E 100%);
+  }
+
+  /* ============ TOP BAR ============ */
+  .top-bar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 60;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.1rem 2.0rem;
+    color: var(--linen);
+    pointer-events: none;
+  }
+  .top-bar .back,
+  .top-bar .proj-id {
+    background: rgba(10, 14, 18, 0.42);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    padding: 0.55rem 1.0rem;
+    border-radius: 999px;
+    pointer-events: auto;
+    color: var(--linen);
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28);
+  }
+  .top-bar .back {
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: inherit; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.6em;
+    opacity: 0.85; transition: opacity 0.3s, transform 0.4s ease;
+    cursor: pointer;
+  }
+  .top-bar .back:hover { opacity: 1; transform: translateX(-3px); }
+  .top-bar .proj-id {
+    font-family: var(--title-font); font-style: italic;
+    font-size: 0.9rem; letter-spacing: 0.05em;
+    opacity: 0.85;
+  }
+
+  /* ============ STOP PROGRESS DOTS ============ */
+  .stop-rail {
+    position: fixed; right: 32px; top: 50%;
+    transform: translateY(-50%);
+    z-index: 50;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .stop-rail .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(241, 236, 227, 0.25);
+    transition: background 0.3s, transform 0.3s;
+  }
+  .stop-rail .dot.active {
+    background: var(--honey);
+    transform: scale(1.6);
+  }
+
+  /* ============ DOM TEXT OVERLAY (above canvas, below BGM) ============ */
+  main.case {
+    position: relative;
+    z-index: 10;
+  }
+  section.stop {
+    position: relative;
+    min-height: 100vh;
+    padding: 0;
+    color: var(--linen);
+  }
+  /* Default text panel: sits in the BOTTOM-LEFT corner, narrow column,
+     so the centred PDF in the canvas behind never gets covered by text. */
+  section.stop > .reveal,
+  section.stop > .anchor-side.reveal {
+    position: absolute;
+    bottom: 9vh;
+    left: 5vw;
+    width: clamp(260px, 28vw, 380px);
+    max-width: 380px;
+    padding: 1.4rem 1.5rem;
+    background: linear-gradient(135deg, rgba(22,17,11,0.78) 0%, rgba(22,17,11,0.55) 70%, rgba(22,17,11,0.28) 100%);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-left: 2px solid rgba(244, 167, 66, 0.32);
+    border-radius: 0 8px 8px 0;
+  }
+  /* Alternating side — right-class sections push panel to bottom-RIGHT,
+     so adjacent stops feel like a typeset spread, not a column. */
+  section.stop.right > .reveal,
+  section.stop.right > .anchor-side.reveal {
+    left: auto;
+    right: 5vw;
+    text-align: right;
+    border-left: 0;
+    border-right: 2px solid rgba(244, 167, 66, 0.32);
+    border-radius: 8px 0 0 8px;
+    background: linear-gradient(-135deg, rgba(22,17,11,0.78) 0%, rgba(22,17,11,0.55) 70%, rgba(22,17,11,0.28) 100%);
+  }
+  section.stop.right > .anchor-side.reveal .lead,
+  section.stop.right > .anchor-side.reveal .body { margin-left: auto; }
+
+  section.stop .stop-num {
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: 0.7rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--honey);
+    opacity: 0.9;
+    margin-bottom: 0.9rem;
+  }
+  section.stop h2 {
+    font-family: var(--title-font); font-style: italic;
+    font-weight: 800;
+    font-size: clamp(22px, 2.2vw, 34px);
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    color: rgba(241, 236, 227, 0.94);
+    margin-bottom: 0.7em;
+  }
+  section.stop h2 .accent { color: var(--honey); }
+  section.stop .lead {
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: clamp(13px, 1.0vw, 15px);
+    line-height: 1.55;
+    color: rgba(241, 236, 227, 0.82);
+    margin-bottom: 0.9em;
+  }
+  section.stop .body {
+    font-family: var(--body-font);
+    font-size: clamp(12px, 0.85vw, 14px);
+    line-height: 1.6;
+    color: rgba(241, 236, 227, 0.66);
+  }
+  section.stop .meta-row {
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(241, 236, 227, 0.5);
+    margin-top: 1.5rem;
+    display: flex; flex-wrap: wrap; gap: 1.1em;
+  }
+
+  /* Hero — the DOM title IS the visual. Big Sansita italic with text-shadow
+     bevel + subtle mouse-driven perspective rotation = glass/ceramic feel
+     without the brittleness of WebGL TextGeometry. */
+  /* Hero section is a flex-column centered layout — overrides the
+     absolute-corner panel rule used elsewhere. */
+  #stop-hero {
+    min-height: 100vh;
+    padding: 12vh 6vw 14vh 6vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  #stop-hero > div:last-child {
+    max-width: 620px;
+    margin-top: 2vh;
+  }
+  #stop-hero .lead {
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: clamp(14px, 1.15vw, 17px);
+    line-height: 1.65;
+    color: rgba(241, 236, 227, 0.8);
+    margin-bottom: 1.2em;
+    max-width: 540px;
+  }
+  .hero-wrap {
+    perspective: 1100px;
+    margin-bottom: 1.6em;
+    width: 100%;
+  }
+  .hero-title {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-weight: 900;
+    font-size: clamp(80px, 16vw, 260px);
+    line-height: 0.88;
+    letter-spacing: -0.045em;
+    color: var(--cream);
+    margin: 0;
+    pointer-events: none;
+    transform-style: preserve-3d;
+    transform: rotateX(0deg) rotateY(0deg);
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    -webkit-text-stroke: 1px rgba(60, 40, 20, 0.35);
+    /* Deep bevel stack — 12 layers of shadow create an extruded edge,
+       then a long soft drop-shadow grounds the type onto the scene. */
+    text-shadow:
+      0 1px 0 #ead8a8,
+      0 2px 0 #dcc798,
+      0 3px 0 #c9b485,
+      0 4px 0 #b4a06e,
+      0 5px 0 #9d8a59,
+      0 6px 0 #877546,
+      0 7px 0 #6f5e35,
+      0 8px 0 #5a4b29,
+      0 9px 0 #45381e,
+      0 10px 1px #2e2614,
+      0 11px 3px rgba(0,0,0,0.6),
+      0 16px 30px rgba(0,0,0,0.55),
+      0 0 80px rgba(244,167,66,0.10);
+  }
+  .hero-title .accent {
+    color: var(--honey);
+    font-style: italic;
+    -webkit-text-stroke: 1px rgba(80, 40, 5, 0.55);
+    text-shadow:
+      0 1px 0 #e2932a,
+      0 2px 0 #cb7e1e,
+      0 3px 0 #b46a14,
+      0 4px 0 #9a560c,
+      0 5px 0 #804408,
+      0 6px 0 #683607,
+      0 7px 0 #4e2706,
+      0 8px 0 #361a04,
+      0 9px 0 #21100a,
+      0 10px 1px #100808,
+      0 11px 3px rgba(0,0,0,0.65),
+      0 16px 30px rgba(0,0,0,0.5),
+      0 0 90px rgba(244,167,66,0.22);
+  }
+
+  /* Scroll hint */
+  .scroll-hint {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 40;
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: 0.72rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: rgba(241, 236, 227, 0.5);
+    pointer-events: none;
+    transition: opacity 0.5s;
+  }
+  .scroll-hint.hidden { opacity: 0; }
+
+  /* ============ DRAG CURSOR + TOOLTIP ============ */
+  body.can-drag { cursor: grab; }
+  body.can-drag * { cursor: grab; }
+  body.dragging,
+  body.dragging * { cursor: grabbing !important; }
+  /* Don't force grab when hovering text panels / links / buttons — let users select text */
+  body.can-drag .reveal,
+  body.can-drag .reveal *,
+  body.can-drag .meta-row,
+  body.can-drag a,
+  body.can-drag button { cursor: auto; }
+  body.can-drag .close-cta a { cursor: pointer; }
+
+  /* Drag hint tooltip — shown once when user first lands on a draggable stop */
+  .drag-hint {
+    position: fixed;
+    bottom: 64px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    z-index: 45;
+    padding: 0.6em 1.4em;
+    background: rgba(22, 17, 11, 0.82);
+    border: 1px solid rgba(244, 167, 66, 0.32);
+    border-radius: 999px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: rgba(244, 232, 208, 0.95);
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    white-space: nowrap;
+  }
+  .drag-hint .arrow { color: var(--honey); font-style: normal; margin: 0 0.35em; }
+  .drag-hint.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Reflection close */
+  #stop-reflect .close-cta {
+    margin-top: 4rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid rgba(241, 236, 227, 0.18);
+    padding-top: 3rem;
+    max-width: 760px;
+  }
+  #stop-reflect .close-cta a {
+    font-family: var(--title-font); font-style: italic;
+    font-size: clamp(20px, 2.4vw, 36px);
+    color: var(--linen);
+    text-decoration: none; cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: color 0.4s, transform 0.5s ease;
+    display: inline-flex; align-items: center; gap: 0.6em;
+  }
+  #stop-reflect .close-cta a:hover { color: var(--honey); transform: translateX(6px); }
+  #stop-reflect .credits {
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    opacity: 0.55;
+  }
+
+  /* Reveal */
+  .reveal { opacity: 0; transform: translateY(36px); transition: opacity 1s ease, transform 1s cubic-bezier(0.22, 1, 0.36, 1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ============ LOADING SCREEN ============
+     Shown immediately on page load, hides once WebGL scene + first PDF are ready.
+     The wordmark uses a per-letter flip-in (rotateX) — same family of trick unseen
+     uses on its project loaders. */
+  #loading-screen {
+    position: fixed; inset: 0;
+    z-index: 9000;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 50%, rgba(244, 167, 66, 0.06) 0%, transparent 60%),
+      linear-gradient(180deg, #16110b 0%, #1f1813 60%, #14110E 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1.6rem;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  #loading-screen.gone {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .load-wordmark {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-weight: 900;
+    font-size: clamp(56px, 11vw, 156px);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    color: var(--cream);
+    display: flex;
+    gap: 0.04em;
+    perspective: 900px;
+    transform-style: preserve-3d;
+    user-select: none;
+  }
+  .load-wordmark .gap { width: 0.42em; }
+  .load-wordmark .ltr {
+    display: inline-block;
+    transform-origin: 50% 50%;
+    transform: rotateX(-90deg);
+    opacity: 0;
+    animation: ltrFlip 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    text-shadow:
+      0 1px 0 #d6c79d,
+      0 2px 0 #c9b487,
+      0 3px 0 #ad9866,
+      0 4px 0 #8d7a4d,
+      0 5px 2px rgba(0,0,0,0.55),
+      0 10px 24px rgba(0,0,0,0.45);
+  }
+  .load-wordmark .ltr.accent {
+    color: var(--honey);
+    text-shadow:
+      0 1px 0 #c97f1f,
+      0 2px 0 #a86614,
+      0 3px 0 #7e4a08,
+      0 4px 0 #5a3400,
+      0 5px 2px rgba(0,0,0,0.6),
+      0 10px 24px rgba(0,0,0,0.5);
+  }
+  @keyframes ltrFlip {
+    0%   { transform: rotateX(-90deg) translateY(0.2em); opacity: 0; }
+    55%  { transform: rotateX(20deg) translateY(-0.04em); opacity: 1; }
+    100% { transform: rotateX(0deg) translateY(0); opacity: 1; }
+  }
+  .load-status {
+    font-family: var(--subtitle-font);
+    font-style: italic;
+    color: rgba(241, 236, 227, 0.55);
+    font-size: 0.78rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: statusFade 0.6s ease 1.6s forwards;
+  }
+  @keyframes statusFade { to { opacity: 1; } }
+
+  /* ============ BGM (only on direct visits — hidden in iframe) ============ */
+  body.in-iframe .top-bar { /* glass pill already independent of bg */ }
+
+  /* ============ MOBILE ============ */
+  @media (max-width: 768px) {
+    section.stop { padding: 0 5vw; }
+    .top-bar { padding: 1rem 1.2rem; }
+    .stop-rail { right: 12px; }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ============ LOADING SCREEN — covers everything until WebGL + first PDF are ready ============ -->
+<div id="loading-screen" aria-hidden="true">
+  <div class="load-wordmark" id="load-wordmark">
+    <span class="ltr accent" style="animation-delay:0.00s">K</span>
+    <span class="ltr accent" style="animation-delay:0.06s">e</span>
+    <span class="ltr accent" style="animation-delay:0.12s">l</span>
+    <span class="ltr accent" style="animation-delay:0.18s">c</span>
+    <span class="ltr accent" style="animation-delay:0.24s">y</span>
+    <span class="gap"></span>
+    <span class="ltr"        style="animation-delay:0.36s">H</span>
+    <span class="ltr"        style="animation-delay:0.42s">a</span>
+    <span class="ltr"        style="animation-delay:0.48s">n</span>
+  </div>
+  <div class="load-status">Reef forming…</div>
+</div>
+
+<!-- ============ THREE.JS CANVAS ============ -->
+<canvas id="three-canvas"></canvas>
+
+<!-- ============ TOP BAR ============ -->
+<div class="top-bar">
+  <a class="back" id="back-link" href="../?room=2">←&nbsp; Back to Gallery</a>
+  <span class="proj-id">MetacogReef</span>
+</div>
+
+<!-- ============ STOP PROGRESS DOTS ============ -->
+<div class="stop-rail" id="stop-rail" aria-hidden="true"></div>
+
+<!-- ============ SCROLL HINT ============ -->
+<div class="scroll-hint" id="scroll-hint">scroll &nbsp;↓</div>
+
+<!-- ============ DRAG HINT (shown once on first draggable stop) ============ -->
+<div class="drag-hint" id="drag-hint">
+  <span class="arrow">←</span> drag to pan <span class="arrow">→</span>
+</div>
+
+<!-- ============ MAIN CONTENT ============ -->
+<main class="case">
+
+  <section id="stop-hero" class="stop" data-stop="0">
+    <div class="hero-wrap">
+      <h1 class="hero-title" id="hero-title">Metacog<span class="accent">Reef</span></h1>
+    </div>
+    <div>
+      <p class="stop-num">Case Study</p>
+      <p class="lead">A service-design ecosystem helping adolescents navigate self-identity through metacognitive therapy — across digital, spatial, and social touchpoints.</p>
+      <div class="meta-row">
+        <span>Individual Project</span>
+        <span>2023.02 — 2023.06</span>
+        <span>Service · Interaction · Spatial · Social</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Merged: 02 Introduction + 03 Research → one stop -->
+  <section id="stop-intro-research" class="stop right" data-stop="1">
+    <div class="anchor-side reveal">
+      <p class="stop-num">Introduction &amp; Research</p>
+      <h2>Designing the <span class="accent">space between</span> thoughts.</h2>
+      <p class="lead">Adolescents form their sense of self in the gap between what they feel, what they're told, and what they observe. Metacognitive therapy gives them a vocabulary for that gap.</p>
+      <p class="body">Surveys, observational fieldwork, and expert interviews with adolescent therapists surfaced six recurring tensions that shaped every downstream decision.</p>
+    </div>
+  </section>
+
+  <section id="stop-insights" class="stop" data-stop="2">
+    <div class="anchor-side reveal">
+      <p class="stop-num">Design Criteria</p>
+      <h2>Six anchors. <span class="accent">One reef.</span></h2>
+      <p class="lead">Empathy. Metacognitive Therapy. Self-Identification. Independence. Attachment. Resilience.</p>
+      <p class="body">A checklist I ran each design choice against — surfacing tradeoffs early and keeping every artefact in coherent emotional register.</p>
+    </div>
+  </section>
+
+  <!-- Merged: 05 Product + 06 Brand → one stop -->
+  <section id="stop-product-brand" class="stop right" data-stop="3">
+    <div class="anchor-side reveal">
+      <p class="stop-num">Product &amp; Brand</p>
+      <h2>A <span class="accent">pocket reef</span>, dressed in its own palette.</h2>
+      <p class="lead">Wireframes to high-fidelity flows in Figma, tested with adolescent users over three rounds. Brand: earthy ochre and sand against deep coral — warm enough for teenagers, restrained enough for clinicians.</p>
+      <p class="body">Linen · Sand · Rust · Teal · Ink. Editorial serif paired with quiet sans.</p>
+    </div>
+  </section>
+
+  <section id="stop-spatial" class="stop" data-stop="4">
+    <div class="anchor-side reveal">
+      <p class="stop-num">Spatial</p>
+      <h2>An inner landscape, <span class="accent">made walkable.</span></h2>
+      <p class="lead">The exhibition translates the app's metaphor into physical space — a curved maze with a central reef-sphere, lit so visitors notice their own shadow before the artwork.</p>
+    </div>
+  </section>
+
+  <section id="stop-blueprint" class="stop right" data-stop="5">
+    <div class="anchor-side reveal">
+      <p class="stop-num">Service Blueprint</p>
+      <h2>The whole <span class="accent">choreography.</span></h2>
+      <p class="lead">Every layer of the system — user actions, frontstage staff, backstage logic, and supporting evidence — mapped end-to-end.</p>
+    </div>
+  </section>
+
+  <section id="stop-reflect" class="stop" data-stop="6">
+    <div class="anchor-side reveal">
+      <p class="stop-num">Reflection</p>
+      <h2>What the reef <span class="accent">taught me.</span></h2>
+      <p class="lead">Service design is the practice of designing things people walk through, not just things they hold. MetacogReef pushed me to keep the same care across every modality.</p>
+      <p class="body">Future work explores partnering with a Hong Kong NGO to pilot the daily-reef ritual in school counsellor sessions.</p>
+      <div class="close-cta">
+        <a id="bottom-back">← Return to the gallery</a>
+        <span class="credits">© 2024 Kelcy Han</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import Lenis from 'lenis';
+
+// ============================================================
+// IFRAME-AWARE BACK NAV
+// ============================================================
+const inIframe = window.top !== window.self;
+if (inIframe) document.body.classList.add('in-iframe');
+function goBack(e) {
+  if (e) e.preventDefault();
+  if (inIframe) window.parent.postMessage({ type: 'close-route' }, '*');
+  else window.location.href = '../?room=2';
+}
+document.getElementById('back-link').addEventListener('click', goBack);
+document.getElementById('bottom-back').addEventListener('click', goBack);
+
+// ============================================================
+// SETUP — Three.js scene, camera, lights, environment
+// ============================================================
+const canvas = document.getElementById('three-canvas');
+let W = window.innerWidth, H = window.innerHeight;
+
+const renderer = new THREE.WebGLRenderer({
+  canvas, alpha: true, antialias: true, powerPreference: 'high-performance'
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(W, H);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, W / H, 0.1, 200);
+camera.position.set(0, 0, 8);
+
+// Environment (PMREM-baked room env for reflections on transmission material)
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xfff1d8, 1.1);
+keyLight.position.set(4, 6, 5);
+scene.add(keyLight);
+const rimLight = new THREE.DirectionalLight(0xf4a742, 0.6);
+rimLight.position.set(-5, -2, 3);
+scene.add(rimLight);
+const ambient = new THREE.AmbientLight(0xffe6c2, 0.18);
+scene.add(ambient);
+
+// ============================================================
+// MATERIALS — glass, ceramic, metallic accent
+// ============================================================
+function makeGlassMaterial(colorHex) {
+  return new THREE.MeshPhysicalMaterial({
+    color: colorHex,
+    metalness: 0.0,
+    roughness: 0.04,
+    transmission: 0.85,
+    thickness: 0.6,
+    ior: 1.5,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.04,
+    envMapIntensity: 1.2,
+    attenuationColor: 0xfff5e0,
+    attenuationDistance: 2.5,
+    side: THREE.DoubleSide,
+  });
+}
+function makeCeramicMaterial(colorHex) {
+  return new THREE.MeshPhysicalMaterial({
+    color: colorHex,
+    metalness: 0.0,
+    roughness: 0.35,
+    clearcoat: 0.6,
+    clearcoatRoughness: 0.25,
+    envMapIntensity: 0.8,
+  });
+}
+
+const matCream  = makeGlassMaterial(0xF4E8D0);
+const matHoney  = makeGlassMaterial(0xF4A742);
+const matJade   = makeGlassMaterial(0xA6C2A8);
+const matTeal   = makeGlassMaterial(0x3C5A5E);
+const matRust   = makeCeramicMaterial(0x8B4A2B);
+
+// Meshes that should sinusoidally bob in y over time (organic floating feel).
+// Each entry expected to have userData.bob = { baseY, freq, phase, amp }.
+const bobMeshes = [];
+
+// ============================================================
+// CAMERA STOPS — 7 stops after merging 02→03 and 05→06.
+// Purely vertical layout: each new section rolls up from the bottom
+// as the camera descends, matching unseen.co/true scroll feel.
+// Y_GAP must exceed the visible vertical extent at FOV 32 / z=8
+// (~4.6 units) so adjacent stops never bleed into the viewport.
+// ============================================================
+const Y_GAP = 6.8;
+const STOPS = [
+  { name: 'hero',            y:  0 * -Y_GAP },  // 01 Case Study
+  { name: 'intro-research',  y:  1 * -Y_GAP },  // 02 Introduction & Research
+  { name: 'insights',        y:  2 * -Y_GAP },  // 03 Design Criteria
+  { name: 'product-brand',   y:  3 * -Y_GAP },  // 04 Product & Brand
+  { name: 'spatial',         y:  4 * -Y_GAP },  // 05 Spatial
+  { name: 'blueprint',       y:  5 * -Y_GAP },  // 06 Service Blueprint
+  { name: 'reflect',         y:  6 * -Y_GAP },  // 07 Reflection
+];
+
+// ============================================================
+// BUILD 3D OBJECTS — bigger PDF planes (drag-pannable), organic glass
+// spheres scattered with per-sphere bob, coral GLB asset, mouse-reactive
+// sand particle field across all stops.
+// ============================================================
+const TEX_LOADER = new THREE.TextureLoader();
+let pdfLoadedCount = 0;
+const loadStartedAt = performance.now();
+function onPdfLoaded() { pdfLoadedCount++; maybeFinishLoading(); }
+
+// PDF planes — kept in an array so we can drag-pan whichever the camera
+// is closest to (horizontal scroll within a stop, à la true / unseen).
+const pdfPlanes = [];  // { mesh, stopIdx, baseX, halfW }
+
+function makePdfPlane(url, w, h, stopIdx, baseX = 0, z = -0.4) {
+  const tex = TEX_LOADER.load(url, t => { t.needsUpdate = true; onPdfLoaded(); }, undefined, () => onPdfLoaded());
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  const geo = new THREE.PlaneGeometry(w, h, 1, 1);
+  const mat = new THREE.MeshStandardMaterial({
+    map: tex,
+    metalness: 0.0,
+    roughness: 0.55,
+    envMapIntensity: 0.3,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(baseX, STOPS[stopIdx].y, z);
+  scene.add(mesh);
+  // Dynamic drag range: enough that BOTH edges of the PDF can reach the viewport
+  // edge given the camera distance and FOV. Adds 0.5 buffer for breathing room.
+  const distance = 8.0 - z;
+  const visibleHalfW = distance * Math.tan((32 / 2) * Math.PI / 180);
+  const pdfHalfW = w / 2;
+  const dragRange = Math.max(0.8, pdfHalfW + Math.abs(baseX) - visibleHalfW + 0.5);
+  pdfPlanes.push({ mesh, stopIdx, baseX, halfW: pdfHalfW, dragRange });
+  return mesh;
+}
+
+// PDF page proportions: 2400 x 675 = 3.555 : 1.
+// Bigger than r2 so they read as actual portfolio sheets — drag-pannable.
+const PDF_W = 7.5, PDF_H = 7.5 / 3.555;
+
+// ----- STOP 0 — HERO: portfolio cover (page_1) as wide backdrop --------
+{
+  const w = PDF_W * 1.15;
+  makePdfPlane('assets/page_1.webp', w, w / 3.555, 0, 0, -1.8);
+  // Sits well behind the DOM hero title; large + far back = atmospheric backdrop
+  pdfPlanes[pdfPlanes.length - 1].mesh.position.y = STOPS[0].y - 1.6;
+}
+
+// ----- STOP 1 — INTRO + RESEARCH: page_2 on the LEFT (text on right) ---
+{
+  makePdfPlane('assets/page_2.webp', PDF_W, PDF_H, 1, -1.6);
+}
+
+// ----- STOP 2 — DESIGN CRITERIA: page_3 + 6 organic anchor spheres ----
+{
+  makePdfPlane('assets/page_3.webp', PDF_W, PDF_H, 2, 1.4);
+  // 6 spheres scattered around the PDF — varying sizes, varying z, never overlap
+  const anchorColors = [0xF4E8D0, 0xD4A574, 0x8B4A2B, 0xA6C2A8, 0x3C5A5E, 0xF4A742];
+  const layout = [
+    // [x, yOff, z, scale, bobFreq, bobPhase]
+    [-2.8, -0.4,  0.6, 0.18, 0.7, 0.0],
+    [-3.1,  1.1,  0.2, 0.22, 0.6, 1.3],
+    [-2.4,  1.8, -0.2, 0.14, 0.9, 2.4],
+    [ 3.6,  1.4,  0.5, 0.16, 0.8, 0.6],
+    [ 3.2, -0.2,  0.1, 0.20, 0.7, 1.9],
+    [-3.3, -2.0,  0.4, 0.12, 1.0, 3.1],
+  ];
+  for (let i = 0; i < 6; i++) {
+    const [x, yOff, z, scale, freq, phase] = layout[i];
+    const sg = new THREE.SphereGeometry(scale, 36, 28);
+    const sm = makeGlassMaterial(anchorColors[i]);
+    const s = new THREE.Mesh(sg, sm);
+    s.position.set(x, STOPS[2].y + yOff, z);
+    s.userData.bob = { baseY: STOPS[2].y + yOff, freq, phase, amp: 0.07 };
+    bobMeshes.push(s);
+    scene.add(s);
+  }
+}
+
+// ----- STOP 3 — PRODUCT + BRAND: page_4 on LEFT + scattered palette pearls on RIGHT --
+{
+  makePdfPlane('assets/page_4.webp', PDF_W, PDF_H, 3, -1.6);
+  const palette = [
+    { c: 0xF1ECE3, scale: 0.42, mat: 'glass' },
+    { c: 0xD4A574, scale: 0.36, mat: 'glass' },
+    { c: 0x8B4A2B, scale: 0.48, mat: 'ceramic' },
+    { c: 0x3C5A5E, scale: 0.34, mat: 'ceramic' },
+    { c: 0x2A2A28, scale: 0.30, mat: 'ceramic' },
+  ];
+  const positions = [
+    [ 2.7,  1.0, 0.2, 0.6, 0.0],
+    [ 3.4,  0.0, 0.5, 0.5, 1.1],
+    [ 2.4, -1.1, 0.0, 0.7, 2.2],
+    [ 3.6, -1.8, 0.3, 0.55, 0.7],
+    [ 2.9, -2.4,-0.2, 0.8, 1.8],
+  ];
+  for (let i = 0; i < 5; i++) {
+    const { c, scale, mat: matKind } = palette[i];
+    const [x, yOff, z, freq, phase] = positions[i];
+    const sg = new THREE.SphereGeometry(scale, 48, 36);
+    const m = matKind === 'glass' ? makeGlassMaterial(c) : makeCeramicMaterial(c);
+    const s = new THREE.Mesh(sg, m);
+    s.position.set(x, STOPS[3].y + yOff, z);
+    s.userData.bob = { baseY: STOPS[3].y + yOff, freq, phase, amp: 0.08 };
+    bobMeshes.push(s);
+    scene.add(s);
+  }
+}
+
+// ----- STOP 4 — SPATIAL: page_5 only (coral moved to hero+reflect bookends) --
+{
+  makePdfPlane('assets/page_5.webp', PDF_W * 0.95, (PDF_W * 0.95) / 3.555, 4, -1.5);
+}
+
+// ----- STOP 5 — BLUEPRINT: wide page_6 (more drag-pan range) ----------
+{
+  makePdfPlane('assets/page_6.webp', PDF_W * 1.25, (PDF_W * 1.25) / 3.555, 5, 0);
+}
+
+// Stop 6 (reflect) — DOM text only, no 3D content.
+
+// ============================================================
+// CORAL BOOKENDS — two coral GLBs frame the case study:
+//   coral.glb (the original)   → STOP 0 hero,    right of the wordmark
+//   coral2.glb (the new upload) → STOP 6 reflect, left of the bottom-right text panel
+// Both load async, fade in when ready; not part of loading-screen handoff.
+// ============================================================
+// Draco-aware GLTFLoader. coral2.glb is Draco-compressed (KHR_draco_mesh_compression
+// is a REQUIRED extension on that asset) — without DRACOLoader attached, the GLB
+// silently fails to decode and the model never appears.
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+dracoLoader.setDecoderConfig({ type: 'js' });
+const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+
+function placeCoral(gltf, opts) {
+  const coral = gltf.scene;
+  const box = new THREE.Box3().setFromObject(coral);
+  const size = box.getSize(new THREE.Vector3());
+  const targetH = opts.targetH || 2.6;
+  const k = targetH / Math.max(size.x, size.y, size.z, 0.001);
+  coral.scale.setScalar(k);
+  box.setFromObject(coral);
+  const center = box.getCenter(new THREE.Vector3());
+  const stopY = STOPS[opts.stopIdx].y + (opts.yOff || 0);
+  coral.position.set(
+    opts.x - center.x,
+    stopY - center.y,
+    opts.z - center.z
+  );
+  coral.rotation.y = opts.rotY || 0;
+  coral.traverse(node => {
+    if (node.isMesh && node.material) {
+      const mats = Array.isArray(node.material) ? node.material : [node.material];
+      for (const m of mats) {
+        if (m.envMapIntensity !== undefined) m.envMapIntensity = 1.1;
+        if (m.roughness !== undefined) m.roughness = Math.max(0.35, m.roughness ?? 0.5);
+      }
+    }
+  });
+  coral.userData.bob = {
+    baseY: stopY,
+    freq: opts.bobFreq || 0.35,
+    phase: opts.bobPhase || 0,
+    amp: opts.bobAmp || 0.10,
+  };
+  coral.userData.spin = opts.spin !== false;
+  bobMeshes.push(coral);
+  scene.add(coral);
+  return coral;
+}
+
+// First coral — hero stop, right side of the wordmark
+gltfLoader.load('assets/coral.glb',
+  (gltf) => placeCoral(gltf, {
+    stopIdx: 0, x: 2.2, yOff: -0.3, z: 1.2,
+    targetH: 2.4, rotY: -0.35,
+    bobFreq: 0.32, bobPhase: 0.0, bobAmp: 0.10,
+  }),
+  undefined,
+  (err) => console.warn('coral.glb load failed:', err)
+);
+
+// Second coral — reflect stop (closing bookend). Right side, opposite the
+// bottom-left text panel. Different species + opposite rotation for visual
+// rhyme rather than mirror.
+gltfLoader.load('assets/coral2.glb',
+  (gltf) => placeCoral(gltf, {
+    stopIdx: 6, x: 2.2, yOff: 0.2, z: 1.0,
+    targetH: 2.2, rotY: 0.55,
+    bobFreq: 0.28, bobPhase: 1.8, bobAmp: 0.09,
+  }),
+  undefined,
+  (err) => console.warn('coral2.glb load failed:', err)
+);
+
+// ============================================================
+// FLOATING SAND — Three.js Points field with cursor-repulsion.
+// Cream-tinted, semi-transparent, additive blending; spans the full
+// vertical scroll-range so it's visible at every stop.
+// ============================================================
+const SAND_COUNT = 720;
+const sandPositions = new Float32Array(SAND_COUNT * 3);
+const sandVelocities = new Float32Array(SAND_COUNT * 3);
+const sandSizes = new Float32Array(SAND_COUNT);
+const sandBaseAlpha = new Float32Array(SAND_COUNT);
+const Y_TOTAL_SPAN = Y_GAP * (STOPS.length - 1) + 4;  // a bit of overhang either end
+for (let i = 0; i < SAND_COUNT; i++) {
+  sandPositions[3*i]     = (Math.random() - 0.5) * 18;
+  sandPositions[3*i + 1] = (Math.random() * Y_TOTAL_SPAN - Y_TOTAL_SPAN) + 2;
+  sandPositions[3*i + 2] = (Math.random() - 0.5) * 5 + 1;  // mostly in front of PDFs
+  sandVelocities[3*i]     = (Math.random() - 0.5) * 0.0025;
+  sandVelocities[3*i + 1] = (Math.random() - 0.4) * 0.0015;  // slight downward drift
+  sandVelocities[3*i + 2] = (Math.random() - 0.5) * 0.001;
+  sandSizes[i] = 0.02 + Math.random() * 0.06;
+  sandBaseAlpha[i] = 0.35 + Math.random() * 0.45;
+}
+const sandGeom = new THREE.BufferGeometry();
+sandGeom.setAttribute('position', new THREE.BufferAttribute(sandPositions, 3));
+sandGeom.setAttribute('size',     new THREE.BufferAttribute(sandSizes, 1));
+sandGeom.setAttribute('aAlpha',   new THREE.BufferAttribute(sandBaseAlpha, 1));
+const sandMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime:  { value: 0 },
+    uColor: { value: new THREE.Color(0xF4E8D0) },
+    uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+  },
+  vertexShader: `
+    attribute float size;
+    attribute float aAlpha;
+    varying float vAlpha;
+    uniform float uPixelRatio;
+    uniform float uTime;
+    void main() {
+      vAlpha = aAlpha;
+      vec3 p = position;
+      // Tiny shimmer
+      p.x += sin(uTime * 0.6 + position.y * 0.7) * 0.015;
+      vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
+      gl_PointSize = size * 300.0 * uPixelRatio / -mvPosition.z;
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 uColor;
+    varying float vAlpha;
+    void main() {
+      // Soft circular sprite
+      vec2 uv = gl_PointCoord - 0.5;
+      float d = length(uv);
+      float a = smoothstep(0.5, 0.05, d) * vAlpha;
+      gl_FragColor = vec4(uColor, a);
+    }
+  `,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+});
+const sandPoints = new THREE.Points(sandGeom, sandMat);
+sandPoints.frustumCulled = false;
+scene.add(sandPoints);
+
+// ============================================================
+// BOB ARRAY — meshes that should sin-bob in y over time.
+// Initialized above the build blocks so .push() works during build.
+// ============================================================
+// (Moved declaration above for use by build blocks; this comment is a tag)
+
+// ============================================================
+// SCROLL & MOUSE INTERACTION
+// ============================================================
+const lenis = new Lenis({
+  duration: 1.2,
+  easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+  smoothWheel: true,
+  smoothTouch: false,
+});
+window.lenis = lenis;  // expose for debugging / programmatic scroll
+
+let scrollY = 0;
+lenis.on('scroll', ({ scroll }) => { scrollY = scroll; });
+
+let mx = 0, my = 0;        // current
+let tmx = 0, tmy = 0;      // target
+window.addEventListener('mousemove', (e) => {
+  tmx = (e.clientX / window.innerWidth) * 2 - 1;
+  tmy = (e.clientY / window.innerHeight) * 2 - 1;
+});
+window.addEventListener('touchmove', (e) => {
+  if (e.touches.length) {
+    tmx = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+    tmy = (e.touches[0].clientY / window.innerHeight) * 2 - 1;
+  }
+}, { passive: true });
+
+// ============================================================
+// REVEAL ON SCROLL (DOM text)
+// ============================================================
+const revealEls = document.querySelectorAll('.reveal');
+const revObs = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      revObs.unobserve(e.target);
+    }
+  }
+}, { threshold: 0.15, rootMargin: '0px 0px -5% 0px' });
+revealEls.forEach(el => revObs.observe(el));
+
+// Hide scroll hint once user has scrolled past the hero
+const scrollHint = document.getElementById('scroll-hint');
+window.addEventListener('scroll', () => {
+  if (scrollHint && window.scrollY > window.innerHeight * 0.3) {
+    scrollHint.classList.add('hidden');
+  }
+}, { passive: true });
+
+// ============================================================
+// STOP RAIL DOTS
+// ============================================================
+const rail = document.getElementById('stop-rail');
+for (let i = 0; i < STOPS.length; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot';
+  rail.appendChild(d);
+}
+const dots = Array.from(rail.querySelectorAll('.dot'));
+
+// ============================================================
+// HORIZONTAL DRAG-PAN for the PDF nearest the current camera y.
+// Picks plane by camera-y proximity (not strict stopIdx) so dragging
+// works during the transition between stops too. Per-plane dragRange
+// (computed in makePdfPlane) ensures both edges always reach the viewport.
+// ============================================================
+let dragging = false;
+let dragMoved = false;
+let dragStartX = 0;
+let dragStartPdfX = 0;
+let dragTargetPlane = null;
+
+function getActivePdfPlaneByY(camY) {
+  let best = null;
+  let bestDist = Infinity;
+  for (const p of pdfPlanes) {
+    const stopY = STOPS[p.stopIdx].y;
+    const d = Math.abs(stopY - camY);
+    if (d < bestDist) { bestDist = d; best = p; }
+  }
+  // Only return if close enough — within one Y_GAP — else there's no PDF in view
+  return (best && bestDist < Y_GAP * 0.7) ? best : null;
+}
+
+window.addEventListener('pointerdown', (e) => {
+  // Skip if pointer started on an interactive DOM element
+  if (e.target.closest('a, button, [role="button"], input, textarea')) return;
+  if (e.target.closest('.reveal, .meta-row')) return;
+  dragTargetPlane = getActivePdfPlaneByY(camera.position.y);
+  if (!dragTargetPlane) return;
+  dragging = true;
+  dragMoved = false;
+  dragStartX = e.clientX;
+  dragStartPdfX = dragTargetPlane.mesh.position.x;
+  document.body.classList.add('dragging');
+  // First drag completes the tutorial → never show again
+  hideDragHint(true);
+});
+window.addEventListener('pointermove', (e) => {
+  if (!dragging || !dragTargetPlane) return;
+  if (Math.abs(e.clientX - dragStartX) > 3) dragMoved = true;
+  // 8 world units across full viewport width ≈ 1:1 visual drag at avg PDF z
+  const dx = (e.clientX - dragStartX) / window.innerWidth * 8;
+  let nx = dragStartPdfX + dx;
+  const baseX = dragTargetPlane.baseX;
+  const range = dragTargetPlane.dragRange;
+  nx = Math.max(baseX - range, Math.min(baseX + range, nx));
+  dragTargetPlane.mesh.position.x = nx;
+});
+function endDrag() {
+  dragging = false;
+  dragTargetPlane = null;
+  document.body.classList.remove('dragging');
+}
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
+
+// ============================================================
+// CURSOR HINT + ONE-TIME DRAG TOOLTIP
+// ============================================================
+let lastCanDrag = null;
+function updateDragCursor(camY) {
+  if (dragging) return;
+  const can = !!getActivePdfPlaneByY(camY);
+  if (can !== lastCanDrag) {
+    document.body.classList.toggle('can-drag', can);
+    lastCanDrag = can;
+  }
+}
+
+const dragHintEl = document.getElementById('drag-hint');
+let dragHintShown = false;
+let dragHintTimer = null;
+const DRAG_HINT_KEY = 'metacogreef_drag_hint_seen';
+function showDragHint() {
+  if (dragHintShown) return;
+  try { if (sessionStorage.getItem(DRAG_HINT_KEY)) return; } catch (e) {}
+  if (!dragHintEl) return;
+  dragHintShown = true;
+  dragHintEl.classList.add('visible');
+  dragHintTimer = setTimeout(() => hideDragHint(false), 5000);
+}
+function hideDragHint(persistent) {
+  if (dragHintEl) dragHintEl.classList.remove('visible');
+  if (dragHintTimer) { clearTimeout(dragHintTimer); dragHintTimer = null; }
+  if (persistent) {
+    try { sessionStorage.setItem(DRAG_HINT_KEY, '1'); } catch (e) {}
+  }
+}
+
+// ============================================================
+// MAIN LOOP — vertical-only camera, sand drift, organic bob,
+// hero parallax, dot rail
+// ============================================================
+let currentStopIdx = 0;
+function lerpStop() {
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  const t = docH > 0 ? Math.max(0, Math.min(1, scrollY / docH)) : 0;
+  const idx = t * (STOPS.length - 1);
+  const i0 = Math.max(0, Math.min(STOPS.length - 1, Math.floor(idx)));
+  const i1 = Math.min(i0 + 1, STOPS.length - 1);
+  const f = idx - i0;
+  const sf = f * f * (3 - 2 * f);
+  const targetY = STOPS[i0].y * (1 - sf) + STOPS[i1].y * sf;
+  // Subtle vertical-only mouse parallax — no side-sway
+  camera.position.x = mx * 0.30;
+  camera.position.y = targetY + (-my * 0.20);
+  camera.position.z = 8.0;
+  camera.lookAt(camera.position.x * 0.4, targetY, 0);
+  currentStopIdx = i0;
+  return { i0, targetY };
+}
+
+function tickDots(i0) {
+  for (let i = 0; i < dots.length; i++) {
+    dots[i].classList.toggle('active', i === i0);
+  }
+}
+
+// Hero DOM title — deeper rotation amplitude for a more tactile 3D feel.
+const heroTitleEl = document.getElementById('hero-title');
+function tickHeroTitle() {
+  if (!heroTitleEl) return;
+  if (window.scrollY > window.innerHeight * 1.2) return;
+  const rx = (-my * 10).toFixed(2);
+  const ry = (mx * 14).toFixed(2);
+  heroTitleEl.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+}
+
+function tickBobs(time) {
+  const tSec = time * 0.001;
+  for (const m of bobMeshes) {
+    const b = m.userData.bob;
+    if (!b) continue;
+    m.position.y = b.baseY + Math.sin(tSec * b.freq + b.phase) * b.amp;
+    if (m.userData.spin) {
+      m.rotation.y += 0.0025;
+    }
+  }
+}
+
+// Sand particle drift + cursor repulsion in world space.
+const tmpV = new THREE.Vector3();
+function tickSand(time, targetY) {
+  const pos = sandGeom.attributes.position.array;
+  sandMat.uniforms.uTime.value = time * 0.001;
+  // Mouse ray → approximate world point at the active y-band
+  const mouseWorldX = mx * 6 + camera.position.x;
+  const mouseWorldY = -my * 4 + targetY;
+  const halfYSpan = Y_TOTAL_SPAN / 2;
+  for (let i = 0; i < SAND_COUNT; i++) {
+    pos[3*i]     += sandVelocities[3*i];
+    pos[3*i + 1] += sandVelocities[3*i + 1];
+    pos[3*i + 2] += sandVelocities[3*i + 2];
+
+    // Cursor repulsion
+    const dx = pos[3*i]     - mouseWorldX;
+    const dy = pos[3*i + 1] - mouseWorldY;
+    const d2 = dx*dx + dy*dy;
+    if (d2 < 9.0) {
+      const f = 0.012 / (d2 + 0.6);
+      pos[3*i]     += dx * f;
+      pos[3*i + 1] += dy * f;
+    }
+    // Wrap horizontally + y across the full vertical span
+    if (pos[3*i]     >  9.5) pos[3*i]     = -9.5;
+    if (pos[3*i]     < -9.5) pos[3*i]     =  9.5;
+    if (pos[3*i + 1] >  3.0) pos[3*i + 1] = -Y_TOTAL_SPAN + 1.5;
+    if (pos[3*i + 1] < -Y_TOTAL_SPAN) pos[3*i + 1] = 3.0;
+  }
+  sandGeom.attributes.position.needsUpdate = true;
+}
+
+let framesRendered = 0;
+function tick(time) {
+  try {
+    mx += (tmx - mx) * 0.06;
+    my += (tmy - my) * 0.06;
+    lenis.raf(time);
+    const { i0, targetY } = lerpStop();
+    tickDots(i0);
+    tickHeroTitle();
+    tickBobs(time);
+    tickSand(time, targetY);
+    updateDragCursor(camera.position.y);
+    // Show the drag hint the first time the camera lands on a non-hero draggable stop
+    if (!dragHintShown && i0 >= 1 && getActivePdfPlaneByY(camera.position.y)) {
+      showDragHint();
+    }
+    renderer.render(scene, camera);
+    framesRendered++;
+    if (framesRendered === 6) maybeFinishLoading();
+  } catch (err) {
+    console.warn('MetacogReef tick error (continuing):', err);
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// ============================================================
+// LOADING SCREEN handoff — fade out when WebGL is rendering AND
+// most PDFs have loaded. Hard ceiling at 4s in case of slow assets.
+// ============================================================
+const loadingScreen = document.getElementById('loading-screen');
+let loadingDone = false;
+// Last letter starts flip at 0.48s + 1.05s anim = 1.53s; status fades in at 1.6s.
+// Hold the loader at least until the wordmark animation has fully resolved.
+const LOADING_MIN_MS = 1900;
+function maybeFinishLoading() {
+  if (loadingDone) return;
+  const elapsed = performance.now() - loadStartedAt;
+  if (elapsed < LOADING_MIN_MS) {
+    setTimeout(maybeFinishLoading, LOADING_MIN_MS - elapsed + 60);
+    return;
+  }
+  if (framesRendered >= 6 && (pdfLoadedCount >= 3 || elapsed > 2600)) {
+    finishLoading();
+  }
+}
+function finishLoading() {
+  if (loadingDone) return;
+  loadingDone = true;
+  if (loadingScreen) loadingScreen.classList.add('gone');
+  // Notify parent that the case study is ready (lets the parent fade out its
+  // own shell-level loading overlay the instant the inner content is paintable).
+  if (inIframe) {
+    try { window.parent.postMessage({ type: 'route-ready', path: 'MetacogReef/' }, '*'); } catch (e) {}
+  }
+}
+// Hard ceiling — never trap the user behind the loader
+setTimeout(finishLoading, 4500);
+
+// ============================================================
+// RESIZE
+// ============================================================
+function onResize() {
+  W = window.innerWidth; H = window.innerHeight;
+  renderer.setSize(W, H);
+  camera.aspect = W / H;
+  camera.updateProjectionMatrix();
+  sandMat.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
+}
+window.addEventListener('resize', onResize);
+onResize();
+</script>
+
+</body>
+</html>

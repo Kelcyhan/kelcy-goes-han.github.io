@@ -18,6 +18,9 @@
 }
 </script>
 
+<!-- Eager-load the hero poster so refresh never flashes the bg color -->
+<link rel="preload" as="image" href="assets/frames/scene_1/frame_001.webp?v=1">
+
 <style>
   :root {
     --linen: #F1ECE3;
@@ -37,7 +40,14 @@
     --body-font:     'Edu QLD Beginner', cursive;
   }
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; overflow: hidden; background: #000; }
+  html { height: 100%; overflow: hidden; perspective: 1600px; perspective-origin: 50% 50%; }
+  /* Body bg is the scene_1 first frame — eliminates the teal flash on refresh
+     before the canvas paints. Once canvas starts rendering it covers this. */
+  body {
+    height: 100%; overflow: hidden;
+    background: #2C3E36 url('assets/frames/scene_1/frame_001.webp?v=1') center/cover no-repeat;
+    transform-style: preserve-3d;
+  }
   body {
     font-family: var(--body-font);
     color: var(--linen);
@@ -45,37 +55,63 @@
   }
 
   /* ================ STAGE LAYERS ================ */
-  #stage { position: fixed; inset: 0; z-index: 0; }
-  #frame-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
-  #fish-canvas  { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; pointer-events: none; }
+  #stage {
+    position: fixed; inset: 0; z-index: 0;
+    will-change: transform;
+    transform-style: preserve-3d;
+    transform: rotateX(0deg) rotateY(0deg) translateZ(0) scale(1.05);  /* baseline */
+  }
+  #frame-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; }
+  #fish-canvas  { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 2; pointer-events: none; }
 
   /* ================ NAV (replicated from original 3d-portfolio) ================ */
   #main-nav {
     position: fixed; top: 0; left: 0; right: 0;
     z-index: 100;
     display: flex; justify-content: space-between; align-items: center;
-    padding: 1.5rem 3rem;
+    padding: 1.1rem 2.4rem;
     transition: opacity 0.5s;
-    mix-blend-mode: difference;
+    pointer-events: none;
     color: var(--linen);
   }
   .nav-logo {
     font-family: var(--title-font); font-style: italic;
-    font-weight: 700; font-size: 1.2rem;
+    font-weight: 700; font-size: 1.1rem;
     color: var(--linen); cursor: pointer;
     letter-spacing: -0.02em;
+    background: rgba(10, 14, 18, 0.42);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    padding: 0.5rem 1.0rem;
+    border-radius: 999px;
+    pointer-events: auto;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28);
   }
-  .nav-rooms { display: flex; gap: 3rem; list-style: none; }
+  .nav-rooms {
+    display: flex; gap: 0.4rem; list-style: none;
+    background: rgba(10, 14, 18, 0.42);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    padding: 0.35rem 0.6rem;
+    border-radius: 999px;
+    pointer-events: auto;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28);
+  }
   .nav-rooms a {
-    color: var(--linen); opacity: 0.55; text-decoration: none;
+    color: var(--linen); opacity: 0.7; text-decoration: none;
     font-family: var(--subtitle-font); font-style: italic;
-    font-size: 1rem; font-weight: 500;
+    font-size: 0.92rem; font-weight: 500;
     letter-spacing: 0.08em; text-transform: uppercase;
-    cursor: pointer; transition: opacity 0.3s;
-    display: flex; align-items: baseline; gap: 0.5rem;
+    cursor: pointer; transition: opacity 0.3s, background 0.25s;
+    display: flex; align-items: baseline; gap: 0.4rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
   }
-  .nav-rooms a:hover, .nav-rooms a.active { opacity: 1; }
-  .nav-rooms .nav-num { font-size: 0.75rem; opacity: 0.7; }
+  .nav-rooms a:hover { opacity: 1; }
+  .nav-rooms a.active { opacity: 1; background: rgba(255, 255, 255, 0.10); }
+  .nav-rooms .nav-num { font-size: 0.7rem; opacity: 0.65; }
 
   /* ================ OVERLAY CONTENT ================ */
   .overlay { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
@@ -107,20 +143,33 @@
     max-width: 520px;
     line-height: 1.55;
   }
-  .scroll-hint {
-    position: fixed; bottom: 28px; left: 6%;
-    font-family: var(--subtitle-font); font-style: italic;
-    font-size: 0.8rem; color: var(--linen); opacity: 0.65;
-    letter-spacing: 0.16em; text-transform: uppercase;
-    display: flex; align-items: center; gap: 14px;
-    transition: opacity 0.4s;
+  /* Minimalist scroll-mouse icon (replaces all hint text) */
+  .scroll-mouse {
+    position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%);
+    width: 22px; height: 36px;
+    border: 1.4px solid var(--linen);
+    border-radius: 12px;
+    opacity: 0.55;
+    transition: opacity 0.5s;
+    pointer-events: none;
+    z-index: 10;
   }
-  .scroll-hint .line {
-    width: 60px; height: 1px;
-    background: currentColor;
-    animation: pulse 2.2s ease-in-out infinite;
+  .scroll-mouse::after {
+    content: '';
+    position: absolute;
+    left: 50%; top: 6px;
+    width: 3px; height: 6px;
+    background: var(--linen);
+    border-radius: 2px;
+    transform: translateX(-50%);
+    animation: scrollDot 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
   }
-  @keyframes pulse { 0%,100% { opacity: 0.3; transform: scaleX(0.5); transform-origin: left; } 50% { opacity: 1; transform: scaleX(1); } }
+  @keyframes scrollDot {
+    0%      { transform: translate(-50%, 0);  opacity: 0; }
+    25%     { opacity: 1; }
+    75%     { opacity: 1; }
+    100%    { transform: translate(-50%, 14px); opacity: 0; }
+  }
 
   /* Room 2 — gallery cards (Unseen-style float) */
   #r2-cards {
@@ -149,39 +198,109 @@
     letter-spacing: 0.14em; text-transform: uppercase;
     margin-top: 6px;
   }
+  /* ---- Project cards: translucent floating bubbles ---- */
   .card {
     position: absolute;
-    width: clamp(220px, 22vw, 320px);
-    background: rgba(241, 236, 227, 0.93);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    color: var(--ink);
-    border-radius: 6px;
-    padding: 22px 22px 18px;
-    box-shadow: 0 18px 60px rgba(0, 30, 50, 0.4);
+    width: clamp(180px, 18vw, 240px);
+    height: clamp(180px, 18vw, 240px);
+    border-radius: 50%;
+    color: var(--linen);
     cursor: pointer;
-    transition: transform 0.35s ease-out, box-shadow 0.35s;
-    animation: bob 6.5s ease-in-out infinite;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 1.4rem;
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                filter 0.45s ease, box-shadow 0.45s ease;
+    animation: bubbleBob 7.5s ease-in-out infinite;
+    user-select: none;
+    /* Soft bubble surface — semi-translucent, refractive-ish blur,
+       inner-highlight ring + outer rim shadow for orb depth. */
+    background:
+      radial-gradient(circle at 32% 28%, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.04) 28%, rgba(255,255,255,0) 52%),
+      radial-gradient(circle at 65% 75%, rgba(244,167,66,0.10) 0%, transparent 55%),
+      radial-gradient(circle at 50% 50%, rgba(60,90,94,0.22) 0%, rgba(20,30,40,0.32) 100%);
+    backdrop-filter: blur(8px) saturate(1.1);
+    -webkit-backdrop-filter: blur(8px) saturate(1.1);
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.18),
+      inset 0 14px 30px rgba(255,255,255,0.10),
+      inset 0 -22px 40px rgba(0,0,0,0.30),
+      0 26px 60px rgba(0,30,40,0.45),
+      0 0 0 1px rgba(244,232,208,0.06);
   }
-  .card:nth-child(2) { animation-delay: -1.6s; }
-  .card:nth-child(3) { animation-delay: -3.2s; }
-  .card:nth-child(4) { animation-delay: -4.8s; }
-  .card:nth-child(5) { animation-delay: -2.2s; }
-  .card:hover { transform: translateY(-8px) scale(1.03); box-shadow: 0 26px 80px rgba(0, 30, 50, 0.55); }
+  .card:nth-child(2) { animation-delay: -1.8s; }
+  .card:nth-child(3) { animation-delay: -3.6s; }
+  .card:nth-child(4) { animation-delay: -5.4s; }
+  .card:hover {
+    transform: translateY(-10px) scale(1.06);
+    filter: brightness(1.08);
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.28),
+      inset 0 14px 30px rgba(255,255,255,0.18),
+      inset 0 -22px 40px rgba(0,0,0,0.20),
+      0 32px 80px rgba(0,30,40,0.55),
+      0 0 60px rgba(244,167,66,0.22);
+  }
+  /* Per-project tint — overrides the outer radial. Each bubble keeps its
+     project's brand colour through a deeper second-radial overlay. */
+  .card.tint-reef     { background:
+      radial-gradient(circle at 32% 28%, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.04) 28%, transparent 52%),
+      radial-gradient(circle at 65% 75%, rgba(244,167,66,0.14) 0%, transparent 55%),
+      radial-gradient(circle at 50% 50%, rgba(166,194,168,0.22) 0%, rgba(20,30,28,0.40) 100%); }
+  .card.tint-mint     { background:
+      radial-gradient(circle at 32% 28%, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0.04) 28%, transparent 52%),
+      radial-gradient(circle at 65% 75%, rgba(127,227,196,0.18) 0%, transparent 55%),
+      radial-gradient(circle at 50% 50%, rgba(14,26,31,0.32) 0%, rgba(14,26,31,0.48) 100%); }
+  .card.tint-amber    { background:
+      radial-gradient(circle at 32% 28%, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.04) 28%, transparent 52%),
+      radial-gradient(circle at 65% 75%, rgba(244,167,66,0.22) 0%, transparent 55%),
+      radial-gradient(circle at 50% 50%, rgba(60,90,94,0.32) 0%, rgba(16,20,26,0.48) 100%); }
+  .card.tint-rust     { background:
+      radial-gradient(circle at 32% 28%, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.04) 28%, transparent 52%),
+      radial-gradient(circle at 65% 75%, rgba(212,165,116,0.22) 0%, transparent 55%),
+      radial-gradient(circle at 50% 50%, rgba(139,74,43,0.22) 0%, rgba(30,18,12,0.48) 100%); }
+  .card.tint-swarm    { background:
+      radial-gradient(circle at 32% 28%, rgba(160,210,240,0.32) 0%, rgba(160,210,240,0.04) 28%, transparent 52%),
+      radial-gradient(circle at 65% 75%, rgba(80,180,210,0.18) 0%, transparent 55%),
+      radial-gradient(circle at 50% 50%, rgba(8,14,22,0.45) 0%, rgba(2,4,8,0.55) 100%); }
+
+  .card-arrow {
+    position: absolute;
+    top: 38%; right: 14%;
+    font-family: var(--subtitle-font);
+    font-size: 1.0rem;
+    color: rgba(244, 232, 208, 0.65);
+    opacity: 0.85;
+    transition: transform 0.4s ease-out, opacity 0.3s;
+  }
+  .card.has-route:hover .card-arrow {
+    transform: translate(4px, -4px);
+    opacity: 1;
+    color: var(--cream);
+  }
   .card .ttl {
     font-family: var(--title-font); font-style: italic;
-    font-size: 1.4rem; font-weight: 500;
-    margin: 0 0 6px; letter-spacing: -0.01em;
+    font-size: clamp(1.05rem, 1.5vw, 1.45rem);
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: -0.02em;
+    color: var(--cream);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.55);
   }
   .card .tag {
     font-family: var(--subtitle-font); font-style: italic;
-    font-size: 0.72rem;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    color: #8a8a8a;
+    font-size: 0.65rem;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(241, 236, 227, 0.65);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.55);
   }
-  @keyframes bob {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-12px); }
+  @keyframes bubbleBob {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    33%      { transform: translateY(-14px) rotate(-1.5deg); }
+    66%      { transform: translateY(-6px) rotate(1deg); }
   }
 
   /* Room 3 — contact */
@@ -221,40 +340,93 @@
   }
   #r3-content .links a:hover { opacity: 1; color: var(--cream); }
 
-  /* ================ HINTS ================ */
-  #scroll-hints {
-    position: fixed; bottom: 28px; right: 32px;
-    z-index: 10;
-    color: var(--linen);
-    opacity: 0.6;
-    font-family: var(--subtitle-font); font-style: italic;
-    font-size: 0.78rem;
-    letter-spacing: 0.06em;
-    text-align: right;
+  /* ================ BGM PLAYER (glass water-drop) ================ */
+  #bgm-player {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    width: 140px;
+    height: 140px;
+    z-index: 99999;
+    isolation: isolate;          /* its own stacking context so iframe never covers it */
+    pointer-events: auto;        /* always interactive, even when body.route-open blocks the stage */
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    transform: scale(1);
+    transform-origin: bottom left;
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
   }
-  #scroll-hints .hint { display: block; line-height: 1.7; }
-  #scroll-hints .hint .key {
-    display: inline-block; padding: 2px 7px;
-    border: 1px solid currentColor; border-radius: 3px;
-    font-size: 0.7rem; margin-right: 7px; opacity: 0.7;
-    font-family: ui-monospace, monospace;
+  #bgm-player:hover { transform: scale(1.18); }
+  #bgm-player .bgm-droplet {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    /* SVG filter chain — bright cream tint + luma-to-alpha so black bg disappears
+       and the droplet reads as semi-transparent warm glass. */
+    filter: url(#bgm-luma-alpha);
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: scale(1);
+    display: block;
+    background: transparent;
+  }
+  /* Paused: liquid frozen, droplet contracted (shape-only language for "stopped") */
+  #bgm-player.paused .bgm-droplet {
+    transform: scale(0.74);
+    filter: url(#bgm-luma-alpha-dim);
   }
 
-  #stub-banner {
-    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
-    z-index: 10;
-    background: rgba(230, 97, 53, 0.12);
-    border: 1px solid var(--persimmon);
-    color: var(--persimmon);
-    padding: 6px 14px;
-    font-family: ui-monospace, monospace;
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    border-radius: 3px;
-    display: none;
+  /* ================ ROUTE SHELL (iframe covers stage while case study is open) ================ */
+  #route-shell {
+    position: fixed; inset: 0;
+    z-index: 500;
+    background: #16110b;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
   }
-  #stub-banner.shown { display: block; }
+  #route-shell.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #route-iframe {
+    width: 100%; height: 100%; border: 0; display: block; background: transparent;
+    opacity: 0; transition: opacity 0.5s ease;
+  }
+  #route-shell.iframe-ready #route-iframe { opacity: 1; }
+  /* Loading overlay — shown until iframe.load fires */
+  #route-shell::before {
+    content: '';
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 50%, rgba(244, 167, 66, 0.05) 0%, transparent 60%),
+      linear-gradient(180deg, #16110b 0%, #1f1813 60%, #14110E 100%);
+    opacity: 1;
+    transition: opacity 0.5s ease;
+  }
+  #route-shell.iframe-ready::before { opacity: 0; }
+  #route-shell .route-loading {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #F1ECE3;
+    font-family: 'Averia Sans Libre', cursive;
+    font-style: italic;
+    font-size: 0.85rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  #route-shell.iframe-ready .route-loading { opacity: 0; }
+  /* When a route is open, hide stage interactions so they don't fight scroll */
+  body.route-open #stage,
+  body.route-open #main-nav,
+  body.route-open .overlay { pointer-events: none; }
+  body.route-open #main-nav { opacity: 0; }
 
   @media (max-width: 768px) {
     #main-nav { padding: 1rem 1.2rem; }
@@ -263,9 +435,8 @@
     .nav-rooms .nav-num { display: none; }
     #r1-content { left: 5%; bottom: 18%; }
     #r1-content h1 { font-size: 11vw; }
-    .scroll-hint { left: 5%; }
     .card { width: 70vw; }
-    #scroll-hints { display: none; }
+    #bgm-player { bottom: 6px; left: 6px; width: 96px; height: 96px; }
   }
 </style>
 </head>
@@ -292,10 +463,7 @@
     <p class="hero-sub">Senior UI/UX Designer based in Hong Kong. I design experiences at the intersection of precision and instinct &mdash; with AI as a creative collaborator.</p>
   </div>
 
-  <div class="scroll-hint" id="scroll-hint">
-    <span>Scroll to dive</span>
-    <div class="line"></div>
-  </div>
+  <div class="scroll-mouse" id="scroll-mouse"></div>
 
   <div id="r2-header">
     <h2>Selected Work</h2>
@@ -303,6 +471,47 @@
   </div>
 
   <div id="r2-cards"></div>
+
+  <!-- Hidden SVG filters — convert the mp4 to a cream-tinted translucent glass droplet.
+       Matrix: brighten 5x + cream tint (cream R/G/B = 244/232/208 ÷ 255 × 5/3 per channel),
+       then luma-to-alpha with cap so the droplet reads as semi-transparent glass. -->
+  <svg width="0" height="0" style="position:absolute; pointer-events:none;" aria-hidden="true">
+    <defs>
+      <filter id="bgm-luma-alpha" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" values="
+          1.595 1.595 1.595 0  0
+          1.515 1.515 1.515 0  0
+          1.360 1.360 1.360 0  0
+          3     3     3     0 -0.15" />
+        <feComponentTransfer>
+          <feFuncA type="linear" slope="0.85" intercept="0"/>
+        </feComponentTransfer>
+      </filter>
+      <filter id="bgm-luma-alpha-dim" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" values="
+          0.957 0.957 0.957 0  0
+          0.910 0.910 0.910 0  0
+          0.816 0.816 0.816 0  0
+          3     3     3     0 -0.15" />
+        <feComponentTransfer>
+          <feFuncA type="linear" slope="0.55" intercept="0"/>
+        </feComponentTransfer>
+      </filter>
+    </defs>
+  </svg>
+
+  <div id="bgm-player" role="button" tabindex="0" aria-label="Toggle background music">
+    <video class="bgm-droplet" muted loop playsinline autoplay preload="auto" disablepictureinpicture>
+      <source src="assets/video/water_drop.mp4" type="video/mp4">
+    </video>
+    <audio id="bgm-audio" loop preload="auto" src="assets/audio/bgm.mp3"></audio>
+  </div>
+
+  <!-- Route shell — holds the case-study iframe; sits above stage but below BGM player -->
+  <div id="route-shell" aria-hidden="true">
+    <div class="route-loading">Loading</div>
+    <iframe id="route-iframe" title="Case study" allow="autoplay"></iframe>
+  </div>
 
   <div id="r3-content">
     <h2>Let's talk.</h2>
@@ -313,60 +522,92 @@
       <a href="#" target="_blank" rel="noopener">GitHub</a>
     </div>
   </div>
-
-  <div id="scroll-hints">
-    <span class="hint"><span class="key">↓</span>dive underwater</span>
-    <span class="hint"><span class="key">→</span>pan to contact</span>
-  </div>
-
-  <div id="stub-banner">STUB MODE &middot; no frames yet</div>
 </div>
 
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass }     from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+// NOTE: dropped EffectComposer + UnrealBloomPass — the bloom shader forces alpha=1.0
+// in its final composite, which made the fish-canvas opaque black, covering everything below.
+// Render directly via renderer for proper transparent alpha.
 
 // ============================================================
 // CONFIG
 // ============================================================
 const SCENES = {
-  scene1: { dir: 'assets/frames/scene_1/', count: 150, ext: 'webp' },
-  scene2: { dir: 'assets/frames/scene_2/', count: 300, ext: 'webp' },
-  scene3: { dir: 'assets/frames/scene_3/', count: 300, ext: 'webp' },
+  scene1: { dir: 'assets/frames/scene_1/', count: 121, ext: 'webp', fps: 24 },   // R1 ambient loop (a0 ↔ a0')
+  scene2: { dir: 'assets/frames/scene_2/', count: 121, ext: 'webp', fps: 24 },   // R1 ↔ R2 dive (a0 → a1)
+  scene3: { dir: 'assets/frames/scene_3/', count: 121, ext: 'webp', fps: 24 },   // R1 ↔ R3 push-in (a0 → a2)
+  scene4: { dir: 'assets/frames/scene_4/', count: 121, ext: 'webp', fps: 24 },   // R3 ↔ R2 alcove dive (a2 → a1)
 };
 
-const frames = { scene1: [], scene2: [], scene3: [] };
-const realFrames = { scene1: false, scene2: false, scene3: false };
+const frames = { scene1: [], scene2: [], scene3: [], scene4: [] };
+// Idle backgrounds reuse the same preloaded WebP frames — drawRoomIdle just keeps
+// showing the last frame of whichever transition brought us here, so the commit
+// has zero visual change (no separate idle image files, no crossfade artifact).
+
+// =========== STATE MACHINE ===========
+// Idle in `room`, OR timed transition toward `transitionTo` over TRANSITION_MS.
+// Transition table maps (from, to) → which scene and direction of playback.
+const TRANSITION_MS = 2400;                 // total duration of any inter-room transition
+const REPEAT_LOCKOUT_MS = 250;              // ignore input briefly after a transition completes
+const INPUT_DELTA_THRESHOLD = 6;            // min |wheel delta| to fire (drops accidental jitter)
 
 const state = {
-  diveProgress: 0,
-  panProgress:  0,
+  room: 1,
+  previousRoom: null,                       // remembers prior room — used for R2's "up" exit
+  transitionTo: null,
+  progress: 0,                              // eased 0..1
+  transitionStartMs: 0,
   ambientFrame: 0,
+  lastTransitionScene: null,                // scene played to enter current room
+  lastTransitionFrame: 0,                   // idle bg = this exact frame (no aspect change)
 };
 
-const targetState = { diveProgress: 0, panProgress: 0 };  // for nav-triggered animations
+let lastTransitionEndMs = -Infinity;
+
+// from → to → { scene, reversed }
+const TRANSITIONS = {
+  1: { 2: { scene: 'scene2', reversed: false },   // R1→R2 dive
+       3: { scene: 'scene3', reversed: false } }, // R1→R3 push-in
+  2: { 1: { scene: 'scene2', reversed: true  },   // R2→R1 surface
+       3: { scene: 'scene4', reversed: true  } }, // R2→R3 alcove rise
+  3: { 1: { scene: 'scene3', reversed: true  },   // R3→R1 pull-back
+       2: { scene: 'scene4', reversed: false } }, // R3→R2 alcove dive
+};
+
+// Trapezoidal ease — 18% accelerate, 64% constant velocity, 18% decelerate.
+// Matches user request: "鼠标滑动后应该要有一段匀速，始末可以有一点势能".
+function easeTrapezoidal(t) {
+  const A = 0.18;
+  const peak = 1 / (1 - A);
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  if (t <= A)         return (t * t / (2 * A)) * peak;
+  if (t >= 1 - A) {
+    const u = 1 - t;
+    return 1 - (u * u / (2 * A)) * peak;
+  }
+  return (A / 2 + t - A) * peak;
+}
 
 // ============================================================
 // FRAME PRELOAD
 // ============================================================
+// Per-scene cache-bust version — bump when frames change to force browser reload
+const ASSET_VERSIONS = { scene1: '1', scene2: 'v11', scene3: '1', scene4: '1' };
 function preloadScene(name) {
   const cfg = SCENES[name];
-  let anyLoaded = false;
-  const promises = [];
   for (let i = 0; i < cfg.count; i++) {
     const img = new Image();
-    img.src = cfg.dir + 'frame_' + String(i + 1).padStart(3, '0') + '.' + cfg.ext;
+    const ver = ASSET_VERSIONS[name] || '1';
+    img.src = cfg.dir + 'frame_' + String(i + 1).padStart(3, '0') + '.' + cfg.ext + '?v=' + ver;
     frames[name][i] = img;
-    promises.push(new Promise(res => {
-      img.onload = () => { anyLoaded = true; res(true); };
-      img.onerror = () => res(false);
-    }));
+    // No promise tracking — drawFrame checks img.complete per-frame.
+    // This means navigation works mid-preload: any frame that's loaded draws,
+    // unloaded frames fall back to the prior frame (so canvas never resets to stub).
   }
-  return Promise.all(promises).then(() => { realFrames[name] = anyLoaded; });
 }
 
 // ============================================================
@@ -386,73 +627,69 @@ function resizeStage() {
 window.addEventListener('resize', resizeStage);
 resizeStage();
 
-function lerpColor(a, b, t) {
-  const ah = parseInt(a.slice(1), 16), bh = parseInt(b.slice(1), 16);
-  const ar = (ah >> 16) & 0xff, ag = (ah >> 8) & 0xff, ab = ah & 0xff;
-  const br = (bh >> 16) & 0xff, bg = (bh >> 8) & 0xff, bb = bh & 0xff;
-  return 'rgb(' + Math.round(ar + (br - ar) * t) + ',' + Math.round(ag + (bg - ag) * t) + ',' + Math.round(ab + (bb - ab) * t) + ')';
-}
-
-function drawStub(sceneName, idx) {
-  const cfg = SCENES[sceneName];
-  const t = idx / Math.max(1, cfg.count - 1);
-  const w = window.innerWidth, h = window.innerHeight;
-  let topColor, btmColor;
-  if (sceneName === 'scene1') {
-    topColor = '#F4E8D0'; btmColor = '#A6C2A8';
-  } else if (sceneName === 'scene2') {
-    if (t < 0.5) { topColor = lerpColor('#F4E8D0', '#A6C2A8', t * 2); btmColor = lerpColor('#A6C2A8', '#3C5A5E', t * 2); }
-    else { topColor = lerpColor('#A6C2A8', '#3C5A5E', (t - 0.5) * 2); btmColor = lerpColor('#3C5A5E', '#1E2E32', (t - 0.5) * 2); }
-  } else {
-    topColor = '#F4E8D0'; btmColor = lerpColor('#A6C2A8', '#D6D2C9', t);
-  }
-  const grad = stageCtx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, topColor); grad.addColorStop(1, btmColor);
-  stageCtx.fillStyle = grad; stageCtx.fillRect(0, 0, w, h);
-
-  // god-ray hint when diving
-  if (sceneName === 'scene2' && t > 0.4) {
-    const a = (t - 0.4) * 0.55;
-    stageCtx.fillStyle = 'rgba(244, 232, 208, ' + a + ')';
-    for (let i = 0; i < 5; i++) {
-      const x = w * (0.15 + i * 0.18);
-      stageCtx.beginPath();
-      stageCtx.moveTo(x, 0); stageCtx.lineTo(x - 40, h); stageCtx.lineTo(x + 40, h);
-      stageCtx.closePath(); stageCtx.fill();
-    }
-  }
-  // tiny dev label
-  stageCtx.fillStyle = 'rgba(42,42,40,0.35)';
-  stageCtx.font = '11px ui-monospace, monospace';
-  stageCtx.fillText('stub · ' + sceneName + ' · ' + Math.round(t * 100) + '%', 24, h - 24);
-}
+// Last successfully drawn frame per scene — used as fallback when the
+// currently-requested frame isn't loaded yet. Avoids ever showing stub gradients
+// once anything has rendered (no more "screen goes flat" during preload).
+const lastDrawnFrame = { scene1: null, scene2: null, scene3: null, scene4: null };
 
 function drawFrame(sceneName, idx) {
-  if (realFrames[sceneName]) {
-    const img = frames[sceneName][idx];
-    if (img && img.complete && img.naturalWidth > 0) {
-      const w = window.innerWidth, h = window.innerHeight;
-      const ir = img.naturalWidth / img.naturalHeight;
-      const sr = w / h;
-      let dw, dh, dx, dy;
-      if (ir > sr) { dh = h; dw = h * ir; dx = (w - dw) / 2; dy = 0; }
-      else         { dw = w; dh = w / ir; dy = (h - dh) / 2; dx = 0; }
-      stageCtx.drawImage(img, dx, dy, dw, dh);
+  const w = window.innerWidth, h = window.innerHeight;
+  let img = frames[sceneName][idx];
+  if (!img || !img.complete || img.naturalWidth === 0) {
+    // Use most recently shown frame from this scene if available
+    img = lastDrawnFrame[sceneName];
+    if (!img) {
+      // Cold case: nothing loaded yet from this scene. Don't draw stub gradients
+      // (they look wrong). Just leave whatever was on the canvas (body bg shows through).
       return;
     }
+  } else {
+    lastDrawnFrame[sceneName] = img;
   }
-  drawStub(sceneName, idx);
+  const ir = img.naturalWidth / img.naturalHeight;
+  const sr = w / h;
+  let dw, dh, dx, dy;
+  if (ir > sr) { dh = h; dw = h * ir; dx = (w - dw) / 2; dy = 0; }
+  else         { dw = w; dh = w / ir; dx = 0; dy = (h - dh) / 2; }
+  stageCtx.drawImage(img, dx, dy, dw, dh);
+}
+
+function drawRoomIdle(roomNum) {
+  if (roomNum === 1) {
+    // R1 idle — Scene 1 ambient loop, time-driven for true 24fps regardless of paint rate
+    const t = performance.now() / 1000;
+    state.ambientFrame = Math.floor(t * SCENES.scene1.fps) % SCENES.scene1.count;
+    drawFrame('scene1', state.ambientFrame);
+    return;
+  }
+  // R2 / R3: continue showing the EXACT last frame from the transition that
+  // brought us here. Same scene, same aspect, same crop → zero visual jump.
+  if (state.lastTransitionScene) {
+    const cnt = SCENES[state.lastTransitionScene].count;
+    const idx = Math.max(0, Math.min(cnt - 1, state.lastTransitionFrame));
+    drawFrame(state.lastTransitionScene, idx);
+    return;
+  }
+  // Fallback (e.g. cold-start / deep-link straight into R2 or R3)
+  if (roomNum === 2) drawFrame('scene2', SCENES.scene2.count - 1);
+  else if (roomNum === 3) drawFrame('scene3', SCENES.scene3.count - 1);
 }
 
 function renderStage() {
-  if (state.panProgress > 0.01) {
-    drawFrame('scene3', Math.floor(state.panProgress * (SCENES.scene3.count - 1)));
-  } else if (state.diveProgress > 0.01) {
-    drawFrame('scene2', Math.floor(state.diveProgress * (SCENES.scene2.count - 1)));
-  } else {
-    state.ambientFrame = (state.ambientFrame + 1) % SCENES.scene1.count;
-    drawFrame('scene1', state.ambientFrame);
+  if (state.transitionTo === null || state.transitionTo === state.room) {
+    drawRoomIdle(state.room);
+    return;
   }
+  const t = TRANSITIONS[state.room]?.[state.transitionTo];
+  if (!t) { drawRoomIdle(state.room); return; }
+  // Pure single-frame draw — no crossfade. The transition video's last frame
+  // is identical to the idle (drawRoomIdle uses scene last frame too), so
+  // commit is pixel-exact seamless without any blending artifact.
+  const count = SCENES[t.scene].count;
+  let p = state.progress;
+  if (t.reversed) p = 1 - p;
+  const idx = Math.floor(p * (count - 1));
+  drawFrame(t.scene, idx);
 }
 
 // ============================================================
@@ -468,6 +705,32 @@ fishRenderer.setSize(window.innerWidth, window.innerHeight, false);
 fishRenderer.setClearColor(0x000000, 0);
 fishRenderer.outputColorSpace = THREE.SRGBColorSpace;
 
+
+// ============================================================
+// MOUSE 3D PARALLAX — CSS perspective + 3D rotation on #stage.
+// Genuine depth illusion (not flat translate). Mouse drives rotateX/Y of the
+// entire stacked stage; the parent <html> has perspective:1600px so the result
+// shows real foreshortening — edges recede as you look "into" them.
+// ============================================================
+const stageEl = document.getElementById('stage');
+const parallax = { rx: 0, ry: 0, mx: 0, my: 0 };
+window.addEventListener('pointermove', e => {
+  parallax.mx = (e.clientX / window.innerWidth - 0.5) * 2;
+  parallax.my = (e.clientY / window.innerHeight - 0.5) * 2;
+});
+window.addEventListener('pointerleave', () => { parallax.mx = 0; parallax.my = 0; });
+const TILT_X = 2.2;   // max degrees rotation around X axis (mouse vertical)
+const TILT_Y = 3.0;   // max degrees rotation around Y axis (mouse horizontal)
+const TILT_LERP = 0.07;
+function tickParallax() {
+  const targetRy =  parallax.mx * TILT_Y;     // mouse right → look right
+  const targetRx = -parallax.my * TILT_X;     // mouse down → look down (negative rotateX)
+  parallax.ry += (targetRy - parallax.ry) * TILT_LERP;
+  parallax.rx += (targetRx - parallax.rx) * TILT_LERP;
+  stageEl.style.transform =
+    `rotateX(${parallax.rx.toFixed(3)}deg) rotateY(${parallax.ry.toFixed(3)}deg) translateZ(0) scale(1.05)`;
+}
+
 const fishScene = new THREE.Scene();
 const fishCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
 fishCamera.position.set(0, 0, 12);
@@ -481,16 +744,9 @@ const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);   // pure white fil
 fillLight.position.set(-4, -2, 3);
 fishScene.add(fillLight);
 
-// Post-processing — bloom for butterfly-like halo/glow effect on fish
-const composer = new EffectComposer(fishRenderer);
-composer.addPass(new RenderPass(fishScene, fishCamera));
-const bloomPass = new UnrealBloomPass(
-  new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.55,  // strength — subtle glow
-  0.45,  // radius — soft falloff
-  0.62   // threshold — only bright pixels (white koi body, scales) bloom
-);
-composer.addPass(bloomPass);
+// Post-processing removed — render fish directly with the WebGLRenderer.
+// fishRenderer.setClearColor(0,0,0,0) ensures the canvas is cleared to transparent
+// each frame, so frame-canvas content shows through wherever there's no fish.
 
 const INITIAL_COUNT = 14;       // was 22 — less crowded
 const INITIAL_GROUPS = 5;       // initial spawn pre-clustered into groups of ~3
@@ -556,7 +812,6 @@ function updateMouseWorld() {
 
 function resizeFish() {
   fishRenderer.setSize(window.innerWidth, window.innerHeight, false);
-  composer.setSize(window.innerWidth, window.innerHeight);
   fishCamera.aspect = window.innerWidth / window.innerHeight;
   fishCamera.updateProjectionMatrix();
 }
@@ -852,7 +1107,7 @@ gltfLoader.loadAsync('assets/fish/koi.glb').then(gltf => {
 // Click → spawn cluster of small fish at click position, STAGGERED over ~2s with fade-in
 window.addEventListener('click', e => {
   if (!fishLoaded) return;
-  if (state.diveProgress < 0.5) return;
+  if (underwaterness() < 0.5) return;   // only spawn fish when actually in/near R2
   if (e.target.closest('.card, nav, a, button, .links')) return;
 
   const clickMouse = new THREE.Vector2(
@@ -862,9 +1117,6 @@ window.addEventListener('click', e => {
   raycaster.setFromCamera(clickMouse, fishCamera);
   const spawnPos = new THREE.Vector3();
   if (!raycaster.ray.intersectPlane(mousePlane, spawnPos)) return;
-
-  console.log('[click] spawn at', spawnPos.toArray().map(n => n.toFixed(2)),
-              '· dive:', state.diveProgress.toFixed(2));
 
   // Unseen-style: fish swim IN from outside the click area, fade in as they approach.
   // Calm, premium pacing — not a burst. 3-4 fish per click, ~3 second total reveal.
@@ -904,10 +1156,24 @@ window.addEventListener('click', e => {
   }
 });
 
-function tickFish(dt, t) {
-  if (!fishLoaded) return;
+// 3D koi visibility — fish ONLY appear when fully arrived in R2 (idle),
+// with a smooth time-based fade-in (no fish during the dive video itself).
+let r2IdleStartMs = -Infinity;
+const FISH_FADE_IN_MS = 700;
+function underwaterness() {
+  if (state.room !== 2) return 0;
+  if (state.transitionTo !== null) {
+    // Leaving R2 — fade out by 30% of progress
+    return Math.max(0, 1 - state.progress / 0.3);
+  }
+  // Idle in R2 — ramp up from when we arrived
+  const elapsed = performance.now() - r2IdleStartMs;
+  return Math.max(0, Math.min(1, elapsed / FISH_FADE_IN_MS));
+}
 
-  const visibility = Math.max(0, Math.min(1, (state.diveProgress - 0.4) / 0.4));
+function tickFish(dt, t) {
+  const visibility = fishLoaded ? underwaterness() : 0;
+
   if (visibility < 0.02) {
     fishRenderer.clear();
     return;
@@ -1029,25 +1295,35 @@ function tickFish(dt, t) {
     for (const m of f.mats) m.opacity = opacity;
   }
 
-  composer.render();
+  fishRenderer.render(fishScene, fishCamera);
 }
 
 // ============================================================
 // UI SYNC
 // ============================================================
+// How "in room R" we are, 0..1 — fully 1 when idle in R, fades during transitions in/out
+function roomPresence(r) {
+  if (state.transitionTo === null) return state.room === r ? 1 : 0;
+  if (state.room === r)        return Math.max(0, 1 - state.progress);
+  if (state.transitionTo === r) return state.progress;
+  return 0;
+}
+
 function updateOverlays() {
-  const r1Vis = 1 - Math.max(state.diveProgress, state.panProgress) * 1.8;
-  document.getElementById('r1-content').style.opacity = Math.max(0, r1Vis);
-  document.getElementById('scroll-hint').style.opacity = Math.max(0, r1Vis * 0.7);
+  const r1 = roomPresence(1), r2 = roomPresence(2), r3 = roomPresence(3);
 
-  document.getElementById('r2-cards').classList.toggle('active', state.diveProgress > 0.7);
-  document.getElementById('r2-header').classList.toggle('active', state.diveProgress > 0.7);
-  document.getElementById('r3-content').classList.toggle('active', state.panProgress > 0.7);
+  document.getElementById('r1-content').style.opacity = r1;
+  const scrollMouse = document.getElementById('scroll-mouse');
+  if (scrollMouse) scrollMouse.style.opacity = r1 * 0.55;   // visible only in R1 idle
 
-  // Active nav highlight
+  document.getElementById('r2-cards').classList.toggle('active', r2 > 0.7);
+  document.getElementById('r2-header').classList.toggle('active', r2 > 0.7);
+  document.getElementById('r3-content').classList.toggle('active', r3 > 0.7);
+
+  // Active nav highlight — whoever has the most presence
   let activeRoom = 1;
-  if (state.diveProgress > 0.5) activeRoom = 2;
-  else if (state.panProgress > 0.5) activeRoom = 3;
+  if (r2 >= r1 && r2 >= r3) activeRoom = 2;
+  else if (r3 >= r1 && r3 >= r2) activeRoom = 3;
   document.querySelectorAll('.nav-rooms a').forEach(a => {
     a.classList.toggle('active', a.dataset.room === String(activeRoom));
   });
@@ -1056,73 +1332,283 @@ function updateOverlays() {
 // ============================================================
 // INPUT — wheel, touch, keyboard, nav clicks
 // ============================================================
-const SCROLL_SENS = 0.00085;
+function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+
+// Determine target room from current room + input direction.
+// R2 has only ONE exit (up), and it returns to whichever room user came from (memory).
+// R1 ↔ R3 use horizontal (left/right). R1/R3 → R2 uses down (vertical dive).
+function resolveTarget(fromRoom, direction) {
+  if (fromRoom === 2 && direction === 'up') {
+    return state.previousRoom || 1;        // memory-based exit
+  }
+  const FIXED = {
+    1: { down: 2, right: 3 },
+    3: { down: 2, left:  1 },
+  };
+  return FIXED[fromRoom]?.[direction] || null;
+}
+
+function startTransition(target) {
+  if (state.transitionTo !== null) return false;
+  if (state.room === target)        return false;
+  if (!TRANSITIONS[state.room]?.[target]) return false;
+  state.transitionTo = target;
+  state.progress = 0;
+  state.transitionStartMs = performance.now();
+  return true;
+}
+
+// Advance the timed transition. Called from main loop.
+function advanceTransition(now) {
+  if (state.transitionTo === null) return;
+  const elapsed = now - state.transitionStartMs;
+  const tNorm = clamp01(elapsed / TRANSITION_MS);   // normalized time 0..1
+  state.progress = easeTrapezoidal(tNorm);
+  if (tNorm >= 1) {
+    // Resolve which transition was playing (was `t.scene` — but `t` was a number
+    // here, not the TRANSITIONS object → TypeError at commit, froze the page)
+    const tx = TRANSITIONS[state.room]?.[state.transitionTo];
+    state.previousRoom = state.room;
+    state.room = state.transitionTo;
+    if (tx) {
+      // Remember the scene + final frame so drawRoomIdle keeps showing the
+      // exact pixels the transition ended on — no aspect-change zoom.
+      state.lastTransitionScene = tx.scene;
+      state.lastTransitionFrame = tx.reversed ? 0 : (SCENES[tx.scene].count - 1);
+    }
+    state.transitionTo = null;
+    state.progress = 0;
+    lastTransitionEndMs = now;
+    if (state.room === 2) r2IdleStartMs = now;   // begin 3D koi fade-in
+    else r2IdleStartMs = -Infinity;
+  }
+}
+
+function pushInput(direction) {
+  // Block input during active transition, and briefly after one completes (debounce repeat scrolls)
+  if (state.transitionTo !== null) return;
+  if (performance.now() - lastTransitionEndMs < REPEAT_LOCKOUT_MS) return;
+  const target = resolveTarget(state.room, direction);
+  if (target) startTransition(target);
+}
 
 window.addEventListener('wheel', e => {
   e.preventDefault();
   const isHorizontal = e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY);
-  const delta = (isHorizontal ? (e.deltaX || e.deltaY) : e.deltaY) * SCROLL_SENS;
-  if (isHorizontal) {
-    targetState.panProgress = clamp01(targetState.panProgress + delta);
-    targetState.diveProgress = Math.max(0, targetState.diveProgress - Math.abs(delta) * 0.5);
-  } else {
-    targetState.diveProgress = clamp01(targetState.diveProgress + delta);
-    targetState.panProgress = Math.max(0, targetState.panProgress - Math.abs(delta) * 0.5);
-  }
+  const delta = isHorizontal ? (e.deltaX || e.deltaY) : e.deltaY;
+  if (Math.abs(delta) < INPUT_DELTA_THRESHOLD) return;
+  const direction = isHorizontal
+    ? (delta > 0 ? 'right' : 'left')
+    : (delta > 0 ? 'down' : 'up');
+  pushInput(direction);
 }, { passive: false });
 
 window.addEventListener('keydown', e => {
-  const step = 0.08;
-  if (e.key === 'ArrowDown') { targetState.diveProgress = clamp01(targetState.diveProgress + step); targetState.panProgress = 0; }
-  else if (e.key === 'ArrowUp') { targetState.diveProgress = clamp01(targetState.diveProgress - step); targetState.panProgress = 0; }
-  else if (e.key === 'ArrowRight') { targetState.panProgress = clamp01(targetState.panProgress + step); targetState.diveProgress = 0; }
-  else if (e.key === 'ArrowLeft') { targetState.panProgress = clamp01(targetState.panProgress - step); targetState.diveProgress = 0; }
-  else if (e.key === 'Escape' || e.key === 'Home') { targetState.panProgress = 0; targetState.diveProgress = 0; }
+  if (e.key === 'ArrowDown')       pushInput('down');
+  else if (e.key === 'ArrowUp')    pushInput('up');
+  else if (e.key === 'ArrowRight') pushInput('right');
+  else if (e.key === 'ArrowLeft')  pushInput('left');
+  else if (e.key === 'Escape' || e.key === 'Home') {
+    if (state.room !== 1) startTransition(1);
+  }
 });
 
-let touch = { x: 0, y: 0 };
+// Touch — capture swipe direction at touchend, single fire per swipe
+let touchStart = null;
 window.addEventListener('touchstart', e => {
-  touch.x = e.touches[0].clientX; touch.y = e.touches[0].clientY;
+  touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
 }, { passive: false });
-window.addEventListener('touchmove', e => {
-  const dx = (e.touches[0].clientX - touch.x) / window.innerWidth;
-  const dy = (e.touches[0].clientY - touch.y) / window.innerHeight;
+window.addEventListener('touchend', e => {
+  if (!touchStart) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStart.x;
+  const dy = t.clientY - touchStart.y;
+  touchStart = null;
+  const SWIPE_MIN = 36;
+  if (Math.abs(dx) < SWIPE_MIN && Math.abs(dy) < SWIPE_MIN) return;
   if (Math.abs(dx) > Math.abs(dy)) {
-    targetState.panProgress = clamp01(targetState.panProgress - dx);
+    pushInput(dx < 0 ? 'right' : 'left');
   } else {
-    targetState.diveProgress = clamp01(targetState.diveProgress - dy);
+    pushInput(dy < 0 ? 'down' : 'up');
   }
-  touch.x = e.touches[0].clientX; touch.y = e.touches[0].clientY;
-  e.preventDefault();
-}, { passive: false });
+});
 
-function clamp01(v) { return Math.max(0, Math.min(1, v)); }
-
-// Nav click handler — animates state to target room
+// Nav clicks now animate via transition (no teleport).
+// If target is reachable in one transition, animate. Otherwise queue a two-leg route via R1.
+let navQueue = [];
 window.goRoom = function(roomNum) {
-  if (roomNum === 1)      { targetState.diveProgress = 0; targetState.panProgress = 0; }
-  else if (roomNum === 2) { targetState.diveProgress = 1; /* keep panProgress — dive from wherever */ }
-  else if (roomNum === 3) { targetState.diveProgress = 0; targetState.panProgress = 1; }
+  if (state.transitionTo !== null) return;
+  if (state.room === roomNum) return;
+  if (TRANSITIONS[state.room]?.[roomNum]) {
+    startTransition(roomNum);
+  } else {
+    // shouldn't happen with current graph since every pair is connected; safety net
+    startTransition(1);
+    navQueue.push(roomNum);
+  }
 };
 
 // ============================================================
 // PROJECT CARDS
 // ============================================================
 const PROJECTS = [
-  { ttl: 'PointFit',           tag: 'Health · 2024',     x: '10%', y: '32%' },
-  { ttl: 'Supply Chain Agent', tag: 'Research · 2025',   x: '62%', y: '28%' },
-  { ttl: 'UIST',               tag: 'Conference · 2024', x: '8%',  y: '62%' },
-  { ttl: 'AI Speaking Lab',    tag: 'EdTech · 2025',     x: '56%', y: '65%' },
-  { ttl: 'Master App',         tag: 'iOS · 2023',        x: '78%', y: '48%' },
+  { ttl: 'MetacogReef',  tag: 'Service · 2024',    x: '8%',  y: '20%', tint: 'reef',  route: 'MetacogReef/' },
+  { ttl: 'DiscussAgain', tag: 'UIST · 2026',       x: '63%', y: '14%', tint: 'amber', route: 'DiscussAgain/' },
+  { ttl: 'PointFit',     tag: 'Health · 2024',     x: '12%', y: '58%', tint: 'mint',  route: 'PointFit/' },
+  { ttl: 'SupplyNet',    tag: 'Research · 2026',   x: '54%', y: '55%', tint: 'rust',  route: 'SupplyNet/' },
+  { ttl: 'Swarm',        tag: 'Art Demo · 2025',   x: '78%', y: '35%', tint: 'swarm', route: 'Swarm/' },
 ];
 const cards = document.getElementById('r2-cards');
 for (const p of PROJECTS) {
   const c = document.createElement('div');
-  c.className = 'card';
+  c.className = 'card has-route tint-' + (p.tint || 'reef');
   c.style.left = p.x; c.style.top = p.y;
-  c.innerHTML = '<p class="ttl">' + p.ttl + '</p><p class="tag">' + p.tag + '</p>';
+  c.innerHTML = '<p class="ttl">' + p.ttl + '</p><p class="tag">' + p.tag + '</p>'
+    + '<span class="card-arrow">↗</span>';
+  c.addEventListener('click', (e) => { e.stopPropagation(); openRoute(p.route); });
   cards.appendChild(c);
 }
+
+// ============================================================
+// SPA ROUTE SHELL — iframe covers stage while case study is open.
+// BGM <audio> never reloads → music truly continuous.
+// ============================================================
+const routeShell  = document.getElementById('route-shell');
+const routeIframe = document.getElementById('route-iframe');
+
+// Resolve a route path against the SITE ROOT (the directory the parent page lives in)
+// — not against location.href, because openRoute calls pushState first, which would
+// otherwise cause relative URLs to compound (e.g. 'MetacogReef/' would resolve to
+// '/MetacogReef/MetacogReef/' once the URL had already been pushed to '/MetacogReef/').
+const SITE_ROOT = (() => {
+  // index.html sits at the deploy root; resolve once at load time before any pushState
+  const u = new URL('.', document.baseURI);
+  return u.href;
+})();
+function resolveRoute(path) {
+  return new URL(path, SITE_ROOT).href;
+}
+// Track iframe ready state across navigations so the loading overlay can dim
+// the moment the case-study DOM is actually ready to display.
+function attachIframeReady(path) {
+  routeShell.classList.remove('iframe-ready');
+  const desiredUrl = resolveRoute(path);
+  const onReady = () => {
+    if (routeIframe.dataset.path === path) {
+      routeShell.classList.add('iframe-ready');
+    }
+  };
+  routeIframe.addEventListener('load', onReady, { once: true });
+  // Safety net — only fire if the iframe is ALREADY pointing at the desired
+  // path AND its document is complete. Without the src-match check, switching
+  // from a preloaded route to a different one would re-mark "ready" while
+  // the old route's content was still on screen, causing a brief flash.
+  if (routeIframe.src === desiredUrl &&
+      routeIframe.contentDocument &&
+      routeIframe.contentDocument.readyState === 'complete') {
+    onReady();
+  }
+}
+function openRouteInternal(path) {
+  const absUrl = resolveRoute(path);
+  if (routeIframe.dataset.path !== path) {
+    routeIframe.dataset.path = path;
+    attachIframeReady(path);
+    routeIframe.src = absUrl;
+  } else {
+    // Same path — iframe likely already loaded from preload. Mark ready
+    // immediately unless we're mid-load.
+    if (routeIframe.contentDocument && routeIframe.contentDocument.readyState === 'complete') {
+      routeShell.classList.add('iframe-ready');
+    } else {
+      attachIframeReady(path);
+    }
+  }
+  routeShell.classList.add('active');
+  routeShell.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('route-open');
+}
+function closeRouteInternal() {
+  routeShell.classList.remove('active');
+  routeShell.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('route-open');
+  // Keep iframe loaded so re-opening is instant — don't reset src
+}
+
+// Preload the iframe with about:blank — warms the element without binding
+// to any specific case study. The previous version preloaded MetacogReef,
+// which caused a brief Reef-flash whenever the user clicked any other
+// project (old content stayed visible while new src started loading).
+function preloadFirstRoute() {
+  if (!routeIframe.dataset.path) {
+    routeIframe.dataset.path = '__blank__';
+    routeIframe.src = 'about:blank';
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', preloadFirstRoute, { once: true });
+} else {
+  preloadFirstRoute();
+}
+function openRoute(path) {
+  history.pushState({ route: path }, '', path);
+  openRouteInternal(path);
+}
+function closeRoute() {
+  history.pushState({}, '', '/');
+  closeRouteInternal();
+}
+window.openRoute  = openRoute;
+window.closeRoute = closeRoute;
+
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.route) openRouteInternal(e.state.route);
+  else closeRouteInternal();
+});
+
+// Iframe child posts {type:'close-route'} when user clicks "Back to Kelcy",
+// and {type:'route-ready'} once its own loading screen has fully faded — at
+// that point we can also drop our parent-side loading overlay.
+window.addEventListener('message', (e) => {
+  if (!e.data) return;
+  if (e.data.type === 'close-route') {
+    // After closing the case-study iframe, the user should land in Gallery
+    // (Room 2) — that's where the project cards live. If state.room is anywhere
+    // else (e.g. the iframe was opened via a hash deep-link before the user
+    // ever navigated to Gallery), snap to Gallery first.
+    if (state.room !== 2 && state.transitionTo !== 2) {
+      state.room = 2;
+      state.lastTransitionFrame = 0;
+    }
+    closeRoute();
+  }
+  else if (e.data.type === 'route-ready') routeShell.classList.add('iframe-ready');
+});
+
+// Direct URL visit handling: /MetacogReef/ loads MetacogReef/index.html standalone.
+// Hash-based deep-link from a redirect (#/MetacogReef) opens the iframe instead.
+(function handleInitialRoute() {
+  const hash = location.hash;
+  const match = hash.match(/^#\/(.+?)\/?$/);
+  if (match) {
+    // Project cards live in Gallery — anyone arriving at a project deep-link
+    // should land in Gallery once they close the case study.
+    state.room = 2;
+    state.lastTransitionFrame = 0;
+    const path = match[1] + '/';
+    history.replaceState({ route: path }, '', '/' + path);
+    openRouteInternal(path);
+  }
+  // Honor ?room=N query (used by case-study back links to land on Gallery)
+  try {
+    const params = new URLSearchParams(location.search);
+    const r = parseInt(params.get('room') || '0', 10);
+    if (r >= 1 && r <= 3 && r !== state.room) {
+      state.room = r;
+      state.lastTransitionFrame = 0;
+    }
+  } catch (e) {}
+})();
 
 // ============================================================
 // MAIN LOOP — eased state interpolation for smooth nav animations
@@ -1132,11 +1618,13 @@ function tick(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
 
-  // Smooth state toward target (snappier easing for natural feel)
-  const ease = 0.12;
-  state.diveProgress += (targetState.diveProgress - state.diveProgress) * ease;
-  state.panProgress  += (targetState.panProgress  - state.panProgress)  * ease;
+  advanceTransition(now);
+  if (state.transitionTo === null && navQueue.length) {
+    const next = navQueue.shift();
+    if (next !== state.room && TRANSITIONS[state.room]?.[next]) startTransition(next);
+  }
 
+  tickParallax();
   renderStage();
   tickFish(dt, now * 0.001);
   updateOverlays();
@@ -1145,13 +1633,87 @@ function tick(now) {
 }
 
 // ============================================================
+// BGM PLAYER (glass water-drop, click to toggle)
+// ============================================================
+(function initBgmPlayer() {
+  const player = document.getElementById('bgm-player');
+  const video = player.querySelector('video.bgm-droplet');
+  const audio = document.getElementById('bgm-audio');
+  if (!player || !video || !audio) return;
+  audio.volume = 0.42;
+
+  // Default: PLAYING (autoplay). Video is muted so video.play() always works.
+  // Audio.play() may be blocked by browser → fall back to first-interaction.
+  let playing = true;
+  let audioStarted = false;
+
+  // Restore audio currentTime if returning from /MetacogReef
+  try {
+    const savedTime = parseFloat(sessionStorage.getItem('bgm_time') || '0');
+    if (!isNaN(savedTime) && savedTime > 0) {
+      audio.addEventListener('loadedmetadata', () => {
+        audio.currentTime = Math.min(savedTime, audio.duration - 0.1);
+      }, { once: true });
+    }
+  } catch (e) {}
+
+  const startAudio = () => {
+    if (audioStarted || !playing) return;
+    audio.play().then(() => { audioStarted = true; }).catch(() => {});
+  };
+
+  // Try to start audio immediately. If browser blocks (no user gesture), install
+  // a one-shot interaction listener that starts audio on the next click/scroll/key.
+  audio.addEventListener('canplay', () => {
+    audio.play().then(() => { audioStarted = true; }).catch(() => {
+      const onFirstInteract = () => {
+        if (playing && !audioStarted) startAudio();
+        document.removeEventListener('pointerdown', onFirstInteract);
+        document.removeEventListener('keydown', onFirstInteract);
+        document.removeEventListener('wheel', onFirstInteract);
+        document.removeEventListener('touchstart', onFirstInteract);
+      };
+      document.addEventListener('pointerdown', onFirstInteract, { once: false });
+      document.addEventListener('keydown',     onFirstInteract, { once: false });
+      document.addEventListener('wheel',       onFirstInteract, { once: false });
+      document.addEventListener('touchstart',  onFirstInteract, { once: false });
+    });
+  }, { once: true });
+
+  // Video autoplay (muted is always allowed)
+  video.play().catch(() => {});
+
+  const toggle = () => {
+    playing = !playing;
+    if (playing) {
+      audio.play().then(() => { audioStarted = true; }).catch(() => {});
+      video.play().catch(() => {});
+      player.classList.remove('paused');
+    } else {
+      audio.pause();
+      video.pause();
+      player.classList.add('paused');
+    }
+  };
+  player.addEventListener('click', (e) => { e.stopPropagation(); toggle(); });
+  player.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); }
+  });
+  window.addEventListener('beforeunload', () => {
+    try {
+      sessionStorage.setItem('bgm_time', audio.currentTime.toString());
+      sessionStorage.setItem('bgm_playing', playing ? '1' : '0');
+    } catch (e) {}
+  });
+})();
+
+// ============================================================
 // BOOT
 // ============================================================
-Promise.all([preloadScene('scene1'), preloadScene('scene2'), preloadScene('scene3')]).then(() => {
-  const anyReal = realFrames.scene1 || realFrames.scene2 || realFrames.scene3;
-  if (!anyReal) document.getElementById('stub-banner').classList.add('shown');
-});
-
+preloadScene('scene1');
+preloadScene('scene2');
+preloadScene('scene3');
+preloadScene('scene4');
 resizeFish();
 requestAnimationFrame(tick);
 </script>

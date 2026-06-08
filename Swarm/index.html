@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Swarm — Kelcy Han</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg-deep:   #04060A;
+    --bg-mid:    #08111A;
+    --cyan:      #5AB8DF;
+    --cyan-soft: #8FD0E6;
+    --linen:     #E8EEF0;
+    --dim:       rgba(232, 238, 240, 0.55);
+    --mono:      'Space Mono', monospace;
+    --sans:      'Inter', sans-serif;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    background: var(--bg-deep);
+    color: var(--linen);
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--sans);
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 50%, rgba(90, 184, 223, 0.08) 0%, transparent 60%),
+      linear-gradient(180deg, #04060A 0%, #08111A 50%, #04060A 100%);
+    pointer-events: none;
+  }
+
+  /* ============ LOADING SCREEN (brief — boids assembling) ============ */
+  #loading-screen {
+    position: fixed; inset: 0;
+    z-index: 9000;
+    background: var(--bg-deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1.4rem;
+    transition: opacity 0.7s ease, visibility 0.7s ease;
+  }
+  #loading-screen.gone { opacity: 0; visibility: hidden; pointer-events: none; }
+  .load-wordmark {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(40px, 8vw, 96px);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    color: var(--linen);
+    display: flex;
+    gap: 0.04em;
+    perspective: 900px;
+    user-select: none;
+  }
+  .load-wordmark .ltr {
+    display: inline-block;
+    transform-origin: 50% 50%;
+    transform: rotateX(-90deg);
+    opacity: 0;
+    animation: ltrFlip 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    color: var(--linen);
+  }
+  .load-wordmark .accent { color: var(--cyan); }
+  @keyframes ltrFlip {
+    0%   { transform: rotateX(-90deg) translateY(0.2em); opacity: 0; }
+    55%  { transform: rotateX(20deg) translateY(-0.04em); opacity: 1; }
+    100% { transform: rotateX(0deg) translateY(0); opacity: 1; }
+  }
+  .load-status {
+    font-family: var(--mono);
+    color: var(--dim);
+    font-size: 0.78rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: statusFade 0.6s ease 1.0s forwards;
+  }
+  @keyframes statusFade { to { opacity: 1; } }
+
+  /* ============ FULL-SCREEN SANDBOX IFRAME ============ */
+  #sandbox-frame {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background: var(--bg-deep);
+  }
+  #sandbox-frame iframe {
+    width: 100%; height: 100%;
+    border: 0;
+    display: block;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+  #sandbox-frame.ready iframe { opacity: 1; }
+
+  /* ============ FLOATING OVERLAY ============ */
+  .overlay { position: fixed; z-index: 50; }
+
+  /* Top-left: back + project id */
+  .ov-topleft {
+    top: 1.4rem; left: 1.6rem;
+    display: flex; flex-direction: column;
+    gap: 0.6rem;
+    pointer-events: auto;
+  }
+  .ov-topleft .back {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--dim);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.3s, transform 0.3s;
+  }
+  .ov-topleft .back:hover { color: var(--cyan); transform: translateX(-3px); }
+  .ov-topleft .proj-tag {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--linen);
+    letter-spacing: 0.06em;
+  }
+
+  /* Top-right: project ID badge */
+  .ov-topright {
+    top: 1.4rem; right: 1.6rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    border: 1px solid rgba(90, 184, 223, 0.4);
+    padding: 0.45rem 0.85rem;
+    border-radius: 3px;
+    pointer-events: none;
+  }
+
+  /* Bottom-left: floating info card with project narrative.
+     Auto-hides after 8 seconds (or on iframe click) so it doesn't compete with the sandbox UI. */
+  .ov-info {
+    left: 1.6rem;
+    bottom: 1.6rem;
+    width: clamp(280px, 26vw, 360px);
+    background: linear-gradient(135deg, rgba(8, 17, 26, 0.85) 0%, rgba(8, 17, 26, 0.55) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(90, 184, 223, 0.25);
+    border-radius: 6px;
+    padding: 1.1rem 1.2rem;
+    pointer-events: auto;
+    transition: opacity 0.7s ease, transform 0.7s ease;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .ov-info.in { opacity: 1; transform: none; }
+  .ov-info.gone {
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+  }
+  .ov-info .title {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    color: var(--linen);
+    margin-bottom: 0.35rem;
+  }
+  .ov-info .title .accent { color: var(--cyan); }
+  .ov-info .desc {
+    font-family: var(--sans);
+    font-size: 0.84rem;
+    line-height: 1.55;
+    color: rgba(232, 238, 240, 0.78);
+    margin-bottom: 0.7rem;
+  }
+  .ov-info .meta {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--dim);
+    display: flex; gap: 1.0rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.9rem;
+  }
+  .ov-info .actions {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+  }
+  .ov-info .btn {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    background: transparent;
+    border: 1px solid rgba(90, 184, 223, 0.45);
+    padding: 0.5rem 0.9rem;
+    border-radius: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.25s, color 0.25s;
+  }
+  .ov-info .btn:hover {
+    background: rgba(90, 184, 223, 0.15);
+    color: var(--linen);
+  }
+  .ov-info .btn.muted {
+    color: var(--dim);
+    border-color: rgba(232, 238, 240, 0.2);
+  }
+  .ov-info .btn.muted:hover {
+    color: var(--linen);
+    border-color: rgba(232, 238, 240, 0.4);
+  }
+
+  /* Bottom-right: launch standalone link */
+  .ov-bottomright {
+    right: 1.6rem;
+    bottom: 1.6rem;
+    pointer-events: auto;
+  }
+  .ov-bottomright a {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(90, 184, 223, 0.4);
+    padding-bottom: 0.18rem;
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .ov-bottomright a:hover {
+    color: var(--linen);
+    border-bottom-color: var(--linen);
+  }
+
+  @media (max-width: 768px) {
+    .ov-topleft { top: 1rem; left: 1rem; }
+    .ov-topright { top: 1rem; right: 1rem; }
+    .ov-info { left: 1rem; bottom: 1rem; right: 1rem; width: auto; }
+    .ov-bottomright { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOADING SCREEN ============ -->
+<div id="loading-screen" aria-hidden="true">
+  <div class="load-wordmark" id="load-wordmark">
+    <span class="ltr accent" style="animation-delay:0.00s">S</span>
+    <span class="ltr accent" style="animation-delay:0.07s">w</span>
+    <span class="ltr accent" style="animation-delay:0.14s">a</span>
+    <span class="ltr"        style="animation-delay:0.21s">r</span>
+    <span class="ltr"        style="animation-delay:0.28s">m</span>
+  </div>
+  <div class="load-status">Boids assembling…</div>
+</div>
+
+<!-- ============ FULL-VIEWPORT SANDBOX ============ -->
+<div id="sandbox-frame">
+  <iframe src="sandbox/" title="Swarm sandbox" allow="autoplay; fullscreen"></iframe>
+</div>
+
+<!-- ============ FLOATING OVERLAY ============ -->
+<div class="overlay ov-topleft">
+  <a class="back" id="back-link" href="../?room=2">← Back to Gallery</a>
+  <span class="proj-tag">/Swarm</span>
+</div>
+
+<div class="overlay ov-topright">Art Demo</div>
+
+<div class="overlay ov-info" id="info-card">
+  <p class="title">Swa<span class="accent">rm</span></p>
+  <p class="desc">A thousand minds, one motion. Three rules — separation, alignment, cohesion — govern 1,000 boids through a scripted three-scene narrative: spiral, bloom, then five-school split.</p>
+  <div class="meta">
+    <span>2025.09 — 11</span>
+    <span>Three.js · TS · Vite</span>
+  </div>
+  <div class="actions">
+    <a class="btn" href="sandbox/" target="_blank" rel="noopener">Open standalone ↗</a>
+    <button class="btn muted" id="dismiss-info" type="button">Dismiss</button>
+  </div>
+</div>
+
+<div class="overlay ov-bottomright">
+  <a href="sandbox/" target="_blank" rel="noopener">Full sandbox ↗</a>
+</div>
+
+<script>
+  // Iframe-aware back nav (works whether visited standalone or via parent's iframe shell)
+  const inIframe = window.top !== window.self;
+  function goBack(e) {
+    if (e) e.preventDefault();
+    if (inIframe) window.parent.postMessage({ type: 'close-route' }, '*');
+    else window.location.href = '../?room=2';
+  }
+  document.getElementById('back-link').addEventListener('click', goBack);
+
+  // Loading screen + iframe handoff
+  const loading = document.getElementById('loading-screen');
+  const shell = document.getElementById('sandbox-frame');
+  const iframe = shell.querySelector('iframe');
+  const infoCard = document.getElementById('info-card');
+
+  let loadingDone = false;
+  function finishLoading() {
+    if (loadingDone) return;
+    loadingDone = true;
+    loading.classList.add('gone');
+    shell.classList.add('ready');
+    setTimeout(() => {
+      infoCard.classList.add('in');
+      if (inIframe) {
+        try { window.parent.postMessage({ type: 'route-ready', path: 'Swarm/' }, '*'); } catch (e) {}
+      }
+    }, 400);
+    // Auto-dismiss the info card after the user has had a moment to read
+    setTimeout(() => { infoCard.classList.add('gone'); }, 9000);
+  }
+
+  // Wait for iframe to be at least partially ready + min display time for the
+  // letter-flip animation (lasts ~0.7s).
+  const MIN_HOLD = 1500;
+  const startedAt = performance.now();
+  function maybeFinish() {
+    const elapsed = performance.now() - startedAt;
+    if (elapsed < MIN_HOLD) {
+      setTimeout(maybeFinish, MIN_HOLD - elapsed + 40);
+      return;
+    }
+    finishLoading();
+  }
+  iframe.addEventListener('load', maybeFinish, { once: true });
+  // Safety net — never trap behind the loader
+  setTimeout(finishLoading, 4000);
+
+  // Dismiss info card on demand
+  document.getElementById('dismiss-info').addEventListener('click', () => {
+    infoCard.classList.add('gone');
+  });
+
+  // Hide info card the moment the user interacts with the sandbox iframe area
+  // (heuristic: any click outside the info card or its action buttons).
+  document.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.ov-info')) return;
+    if (e.target.closest('.overlay')) return;
+    // Don't auto-dismiss on click that targets the iframe — only after first move
+    // inside it (we can't read iframe-internal events without same-origin permission)
+  });
+</script>
+
+</body>
+</html>

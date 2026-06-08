@@ -1,0 +1,1570 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DiscussAgain — Kelcy Han</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Averia+Sans+Libre:ital,wght@1,300;1,400;1,700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,500;0,6..72,700;1,6..72,400;1,6..72,700&family=Inter:wght@300;400;500;600&family=Sansita:ital,wght@0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
+
+<script type="importmap">
+{
+  "imports": {
+    "three":         "https://esm.sh/three@0.158.0",
+    "three/addons/": "https://esm.sh/three@0.158.0/examples/jsm/",
+    "lenis":         "https://cdn.jsdelivr.net/npm/lenis@1.1.13/+esm"
+  }
+}
+</script>
+
+<style>
+  :root {
+    /* DiscussAgain palette — deep teal research night + coral pink accent (matches product dashboard) */
+    --linen:  #E6DBC9;
+    --cloud:  #B5B0A5;
+    --teal:   #1A3942;
+    --jade:   #6B9DA2;
+    --beach:  #A8C9B8;
+    --cream:  #F4E8D0;
+    --honey:  #E85D75;
+    --sage:   #A8C9B8;
+    --ink:    #0F1419;
+    --paper:  #D6CFC1;
+    --rust:   #8B4A2B;
+
+    /* Editorial research feel — Newsreader serif title, Inter for body */
+    --title-font:    'Newsreader', 'Sansita', serif;
+    --subtitle-font: 'Inter', sans-serif;
+    --body-font:     'Inter', sans-serif;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    background: #16110b;
+    color: var(--linen);
+    overflow-x: hidden;
+  }
+  /* Page must scroll on the document — Lenis hooks documentElement.scrollTop.
+     Earlier `height: 100%` made the body scroll internally instead → camera
+     stayed pinned to stop 0 and 3D never advanced. */
+  body {
+    font-family: var(--body-font);
+    line-height: 1.55;
+  }
+
+  /* ============ THREE.JS CANVAS BACKGROUND ============ */
+  #three-canvas {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+  /* Page bg gradient — deep teal research-night palette */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 30% 20%, rgba(232, 93, 117, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 60% at 70% 80%, rgba(26, 57, 66, 0.45) 0%, transparent 60%),
+      linear-gradient(180deg, #0a0f14 0%, #14202a 55%, #0a1014 100%);
+  }
+  /* Paper-grain noise overlay — reinforces the editorial research feel */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0.8 0 0 0 0 0.7 0 0 0 0 0.5 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  html, body { background: #0a0f14; }
+
+  /* ============ TOP BAR ============ */
+  .top-bar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 60;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.1rem 2.0rem;
+    color: var(--linen);
+    pointer-events: none;
+  }
+  .top-bar .back,
+  .top-bar .proj-id {
+    background: rgba(10, 14, 18, 0.42);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    padding: 0.55rem 1.0rem;
+    border-radius: 999px;
+    pointer-events: auto;
+    color: var(--linen);
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.28);
+  }
+  .top-bar .back {
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: inherit; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.6em;
+    opacity: 0.85; transition: opacity 0.3s, transform 0.4s ease;
+    cursor: pointer;
+  }
+  .top-bar .back:hover { opacity: 1; transform: translateX(-3px); }
+  .top-bar .proj-id {
+    font-family: var(--title-font); font-style: italic;
+    font-size: 0.9rem; letter-spacing: 0.05em;
+    opacity: 0.85;
+  }
+
+  /* ============ STOP PROGRESS DOTS ============ */
+  .stop-rail {
+    position: fixed; right: 32px; top: 50%;
+    transform: translateY(-50%);
+    z-index: 50;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .stop-rail .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(241, 236, 227, 0.25);
+    transition: background 0.3s, transform 0.3s;
+  }
+  .stop-rail .dot.active {
+    background: var(--honey);
+    transform: scale(1.6);
+  }
+
+  /* ============ DOM TEXT OVERLAY (above canvas, below BGM) ============ */
+  main.case {
+    position: relative;
+    z-index: 10;
+  }
+  section.stop {
+    position: relative;
+    min-height: 100vh;
+    padding: 0;
+    color: var(--linen);
+  }
+  /* Default text panel: sits in the BOTTOM-LEFT corner, narrow column,
+     so the centred PDF in the canvas behind never gets covered by text. */
+  section.stop > .reveal,
+  section.stop > .anchor-side.reveal {
+    position: absolute;
+    bottom: 9vh;
+    left: 5vw;
+    width: clamp(260px, 28vw, 380px);
+    max-width: 380px;
+    padding: 1.4rem 1.5rem;
+    background: linear-gradient(135deg, rgba(22,17,11,0.78) 0%, rgba(22,17,11,0.55) 70%, rgba(22,17,11,0.28) 100%);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-left: 2px solid rgba(232, 93, 117, 0.32);
+    border-radius: 0 8px 8px 0;
+  }
+  /* Alternating side — right-class sections push panel to bottom-RIGHT,
+     so adjacent stops feel like a typeset spread, not a column. */
+  section.stop.right > .reveal,
+  section.stop.right > .anchor-side.reveal {
+    left: auto;
+    right: 5vw;
+    text-align: right;
+    border-left: 0;
+    border-right: 2px solid rgba(232, 93, 117, 0.32);
+    border-radius: 8px 0 0 8px;
+    background: linear-gradient(-135deg, rgba(22,17,11,0.78) 0%, rgba(22,17,11,0.55) 70%, rgba(22,17,11,0.28) 100%);
+  }
+  section.stop.right > .anchor-side.reveal .lead,
+  section.stop.right > .anchor-side.reveal .body { margin-left: auto; }
+
+  /* DA paragraph treatment — research paper aesthetic.
+     Stop number reads as page reference, lead as italic pull-quote,
+     body as monospace-ish footnote. */
+  section.stop .stop-num {
+    font-family: var(--subtitle-font);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--honey);
+    opacity: 0.95;
+    margin-bottom: 1rem;
+    display: inline-block;
+    border-bottom: 1px solid rgba(232, 93, 117, 0.35);
+    padding-bottom: 0.35em;
+  }
+  section.stop .stop-num::before { content: none; }
+  section.stop h2 {
+    font-family: var(--title-font); font-style: italic;
+    font-weight: 500;
+    font-size: clamp(22px, 2.3vw, 36px);
+    letter-spacing: -0.015em;
+    line-height: 1.12;
+    color: rgba(230, 219, 201, 0.95);
+    margin-bottom: 0.7em;
+  }
+  section.stop h2 .accent { color: var(--honey); }
+  /* Lead reads as the section's headline argument — italic Newsreader,
+     warm-cream tone, slightly larger than body. */
+  section.stop .lead {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(14px, 1.05vw, 17px);
+    line-height: 1.55;
+    color: var(--cream);
+    margin-bottom: 0.9em;
+  }
+  /* Body styled as a footnote/transcript continuation — Inter sans, smaller,
+     dimmer, with an indent rule on the left edge. */
+  section.stop .body {
+    font-family: var(--body-font);
+    font-weight: 400;
+    font-size: clamp(12px, 0.85vw, 14px);
+    line-height: 1.62;
+    color: rgba(184, 192, 178, 0.78);
+    padding-left: 0.85em;
+    border-left: 1px solid rgba(107, 157, 162, 0.4);
+    margin-top: 0.6em;
+  }
+  section.stop .meta-row {
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(241, 236, 227, 0.5);
+    margin-top: 1.5rem;
+    display: flex; flex-wrap: wrap; gap: 1.1em;
+  }
+
+  /* Hero — the DOM title IS the visual. Big Sansita italic with text-shadow
+     bevel + subtle mouse-driven perspective rotation = glass/ceramic feel
+     without the brittleness of WebGL TextGeometry. */
+  /* Hero section is a flex-column centered layout — overrides the
+     absolute-corner panel rule used elsewhere. */
+  #stop-hero {
+    min-height: 100vh;
+    padding: 12vh 6vw 14vh 6vw;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(280px, 28vw, 400px);
+    grid-template-rows: auto auto;
+    column-gap: 4vw;
+    row-gap: 1.5vh;
+    align-content: center;
+  }
+  #stop-hero > .hero-wrap {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+  }
+  #stop-hero > div:not(.hero-wrap):not(.content-card) {
+    grid-column: 1;
+    grid-row: 2;
+    max-width: 620px;
+    align-self: start;
+  }
+  #stop-hero > .content-card {
+    position: relative !important;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    top: auto !important;
+    bottom: auto !important;
+    right: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  @media (max-width: 900px) {
+    #stop-hero {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+    }
+    #stop-hero > .content-card {
+      grid-column: 1;
+      grid-row: 3;
+      margin-top: 1.5rem;
+    }
+  }
+  #stop-hero .lead {
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: clamp(14px, 1.15vw, 17px);
+    line-height: 1.65;
+    color: rgba(241, 236, 227, 0.8);
+    margin-bottom: 1.2em;
+    max-width: 540px;
+  }
+  .hero-wrap {
+    perspective: 1100px;
+    margin-bottom: 1.6em;
+    width: 100%;
+  }
+  /* DiscussAgain hero — editorial serif, less industrial bevel, more
+     like an academic title page with soft warm glow. */
+  .hero-title {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-weight: 700;
+    font-size: clamp(80px, 16vw, 260px);
+    line-height: 0.92;
+    letter-spacing: -0.025em;
+    color: var(--linen);
+    margin: 0;
+    pointer-events: none;
+    transform-style: preserve-3d;
+    transform: rotateX(0deg) rotateY(0deg);
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    text-shadow:
+      0 2px 0 rgba(0,0,0,0.4),
+      0 4px 1px rgba(0,0,0,0.35),
+      0 8px 18px rgba(0,0,0,0.6),
+      0 0 60px rgba(107,157,162,0.18);
+  }
+  .hero-title .accent {
+    color: var(--honey);
+    font-style: italic;
+    font-weight: 700;
+    text-shadow:
+      0 2px 0 rgba(0,0,0,0.4),
+      0 4px 1px rgba(0,0,0,0.35),
+      0 8px 18px rgba(0,0,0,0.5),
+      0 0 70px rgba(232,93,117,0.30);
+  }
+
+  /* Scroll hint */
+  .scroll-hint {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 40;
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: 0.72rem; letter-spacing: 0.3em; text-transform: uppercase;
+    color: rgba(241, 236, 227, 0.5);
+    pointer-events: none;
+    transition: opacity 0.5s;
+  }
+  .scroll-hint.hidden { opacity: 0; }
+
+  /* ============ DRAG CURSOR + TOOLTIP ============ */
+  body.can-drag { cursor: grab; }
+  body.can-drag * { cursor: grab; }
+  body.dragging,
+  body.dragging * { cursor: grabbing !important; }
+  /* Don't force grab when hovering text panels / links / buttons — let users select text */
+  body.can-drag .reveal,
+  body.can-drag .reveal *,
+  body.can-drag .meta-row,
+  body.can-drag a,
+  body.can-drag button { cursor: auto; }
+  body.can-drag .close-cta a { cursor: pointer; }
+
+  /* Drag hint tooltip — shown once when user first lands on a draggable stop */
+  .drag-hint {
+    position: fixed;
+    bottom: 64px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    z-index: 45;
+    padding: 0.6em 1.4em;
+    background: rgba(22, 17, 11, 0.82);
+    border: 1px solid rgba(232, 93, 117, 0.32);
+    border-radius: 999px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: rgba(244, 232, 208, 0.95);
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    white-space: nowrap;
+  }
+  .drag-hint .arrow { color: var(--honey); font-style: normal; margin: 0 0.35em; }
+  .drag-hint.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Reflection close */
+  #stop-reflect .close-cta {
+    margin-top: 4rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid rgba(241, 236, 227, 0.18);
+    padding-top: 3rem;
+    max-width: 760px;
+  }
+  #stop-reflect .close-cta a {
+    font-family: var(--title-font); font-style: italic;
+    font-size: clamp(20px, 2.4vw, 36px);
+    color: var(--linen);
+    text-decoration: none; cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: color 0.4s, transform 0.5s ease;
+    display: inline-flex; align-items: center; gap: 0.6em;
+  }
+  #stop-reflect .close-cta a:hover { color: var(--honey); transform: translateX(6px); }
+  #stop-reflect .credits {
+    font-family: var(--subtitle-font); font-style: italic;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    opacity: 0.55;
+  }
+
+  /* Reveal */
+  .reveal { opacity: 0; transform: translateY(36px); transition: opacity 1s ease, transform 1s cubic-bezier(0.22, 1, 0.36, 1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ============ LIVE PROTOTYPE EMBED (stop-demo) ============
+     Full-section edge-to-edge iframe — no banner stacked above. */
+  #stop-demo {
+    padding: 0 !important;
+  }
+  section.stop > .demo-frame-wrap,
+  .demo-frame-wrap {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    pointer-events: none;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .demo-frame {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    background: #0a0f14;
+    border: 0;
+    border-radius: 0;
+    overflow: hidden;
+    pointer-events: auto;
+    box-shadow: none;
+  }
+  .demo-frame iframe,
+  .demo-frame .demo-video {
+    width: 100% !important;
+    height: 100% !important;
+    border: 0;
+    display: block;
+    background: #0a0f14;
+    object-fit: contain;
+  }
+  .demo-tag {
+    position: absolute;
+    top: 18px; left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--subtitle-font);
+    font-size: 0.62rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--honey);
+    background: rgba(8, 12, 17, 0.65);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    padding: 0.4em 0.95em;
+    border-radius: 999px;
+    border: 1px solid rgba(232, 93, 117, 0.4);
+    z-index: 5;
+    pointer-events: none;
+  }
+  .demo-launch {
+    position: absolute;
+    bottom: 18px; right: 24px;
+    font-family: var(--subtitle-font);
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--linen);
+    background: rgba(8, 12, 17, 0.65);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border: 1px solid rgba(232, 93, 117, 0.45);
+    padding: 0.45em 1.0em;
+    border-radius: 999px;
+    text-decoration: none;
+    z-index: 5;
+    transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+  }
+  .demo-launch:hover {
+    background: rgba(232, 93, 117, 0.25);
+    color: var(--cream);
+    transform: translateX(2px);
+  }
+  /* Hide the descriptive banner — iframe is the artifact */
+  #stop-demo .anchor-side.reveal { display: none !important; }
+
+  /* Reflect stop: full-width centered hero-style closer so the final
+     screen doesn't leave a small panel against empty space. */
+  #stop-reflect {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 12vh 6vw 14vh !important;
+    text-align: center;
+  }
+  #stop-reflect > .reveal,
+  #stop-reflect > .anchor-side.reveal {
+    position: static !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    max-width: 760px;
+    width: 100%;
+    text-align: center;
+  }
+  #stop-reflect h2 {
+    font-size: clamp(36px, 4.4vw, 60px) !important;
+    margin: 0 auto 0.6em;
+    max-width: 18ch;
+  }
+  #stop-reflect .lead {
+    font-size: clamp(15px, 1.2vw, 18px) !important;
+    line-height: 1.65;
+    max-width: 56ch;
+    margin: 0 auto 1.2em;
+  }
+  #stop-reflect .body {
+    font-size: clamp(13px, 0.95vw, 15px) !important;
+    max-width: 60ch;
+    margin: 0 auto 2rem;
+  }
+  #stop-reflect .close-cta {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  #stop-reflect .credits {
+    font-family: var(--subtitle-font);
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(230, 219, 201, 0.45);
+  }
+  #stop-reflect #bottom-back {
+    color: var(--honey);
+    font-family: var(--subtitle-font);
+    font-size: 0.85rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid rgba(232, 93, 117, 0.4);
+    padding: 0.85rem 1.5rem;
+    border-radius: 4px;
+    transition: background 0.3s, color 0.3s;
+  }
+  #stop-reflect #bottom-back:hover {
+    background: rgba(232, 93, 117, 0.15);
+    color: var(--linen);
+  }
+
+  /* Content cards: replace paper-page screenshots with curated typeset
+     panels positioned via CSS. Used at the hero and problem stops. */
+  .content-card {
+    position: absolute;
+    width: clamp(280px, 30vw, 420px);
+    padding: 1.6rem 1.7rem;
+    background: linear-gradient(135deg, rgba(20, 32, 42, 0.78) 0%, rgba(20, 32, 42, 0.52) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 6px;
+    border: 1px solid rgba(232, 93, 117, 0.25);
+    color: var(--linen);
+    z-index: 6;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .content-card.in { opacity: 1; transform: none; }
+  .content-card .label {
+    font-family: var(--subtitle-font);
+    font-size: 0.65rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--honey);
+    margin-bottom: 0.6rem;
+  }
+  .content-card .heading {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(18px, 1.6vw, 24px);
+    line-height: 1.22;
+    margin-bottom: 0.7rem;
+    color: var(--cream);
+  }
+  .content-card .quote {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(14px, 1.0vw, 17px);
+    line-height: 1.5;
+    color: rgba(230, 219, 201, 0.85);
+    padding-left: 0.9em;
+    border-left: 2px solid rgba(232, 93, 117, 0.5);
+    margin-bottom: 0.8rem;
+  }
+  .content-card .stat-row {
+    display: flex; gap: 1.4rem;
+    margin-top: 0.9rem;
+    flex-wrap: wrap;
+  }
+  .content-card .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .content-card .stat .num {
+    font-family: var(--title-font);
+    font-size: clamp(20px, 2.0vw, 28px);
+    font-weight: 700;
+    color: var(--honey);
+    line-height: 1;
+  }
+  .content-card .stat .cap {
+    font-family: var(--subtitle-font);
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(230, 219, 201, 0.6);
+  }
+  .content-card ul {
+    list-style: none;
+    margin: 0; padding: 0;
+  }
+  .content-card li {
+    font-family: var(--subtitle-font);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: rgba(230, 219, 201, 0.85);
+    padding: 0.18em 0 0.18em 1.0em;
+    position: relative;
+  }
+  .content-card li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: var(--honey);
+    font-weight: 700;
+  }
+
+  /* ============ LOADING SCREEN ============
+     Shown immediately on page load, hides once WebGL scene + first PDF are ready.
+     The wordmark uses a per-letter flip-in (rotateX) — same family of trick unseen
+     uses on its project loaders. */
+  /* DA Loading — three speech bubbles type out in sequence, then resolve
+     into the "DiscussAgain" wordmark. Conversation metaphor matches the
+     project's central trick: re-entering a past discussion. */
+  #loading-screen {
+    position: fixed; inset: 0;
+    z-index: 9000;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 50%, rgba(107, 157, 162, 0.12) 0%, transparent 60%),
+      linear-gradient(180deg, #0a0f14 0%, #14202a 60%, #0a1014 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 2.4rem;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  #loading-screen.gone {
+    opacity: 0; visibility: hidden; pointer-events: none;
+  }
+  .da-bubbles {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-end;
+    margin-bottom: 0.6rem;
+  }
+  .da-bubble {
+    background: rgba(107, 157, 162, 0.18);
+    border: 1px solid rgba(232, 93, 117, 0.28);
+    border-radius: 18px 18px 18px 4px;
+    padding: 0.85rem 1.2rem;
+    display: flex; gap: 0.35rem; align-items: center;
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+    animation: daBubbleIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    position: relative;
+  }
+  .da-bubble:nth-child(2) { border-radius: 18px 18px 4px 18px; animation-delay: 0.45s; background: rgba(232, 93, 117, 0.16); }
+  .da-bubble:nth-child(3) { animation-delay: 0.95s; background: rgba(107, 157, 162, 0.16); }
+  .da-bubble .ttdot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--linen);
+    opacity: 0.55;
+    animation: daTypingDot 1.2s ease-in-out infinite;
+  }
+  .da-bubble .ttdot:nth-child(2) { animation-delay: 0.18s; }
+  .da-bubble .ttdot:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes daBubbleIn {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes daTypingDot {
+    0%, 100% { opacity: 0.25; transform: translateY(0); }
+    50%      { opacity: 0.95; transform: translateY(-3px); }
+  }
+  .load-wordmark {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-weight: 700;
+    font-size: clamp(42px, 7.5vw, 96px);
+    line-height: 1.0;
+    letter-spacing: -0.025em;
+    color: var(--linen);
+    opacity: 0;
+    animation: daWordmarkIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) 1.5s forwards;
+  }
+  .load-wordmark .accent { color: var(--honey); font-style: italic; }
+  @keyframes daWordmarkIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .load-status {
+    font-family: var(--subtitle-font);
+    font-weight: 400;
+    color: rgba(230, 219, 201, 0.55);
+    font-size: 0.78rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: statusFade 0.6s ease 2.0s forwards;
+  }
+  .load-status::before {
+    content: '— ';
+    color: var(--honey);
+  }
+  @keyframes statusFade { to { opacity: 0.7; } }
+
+  /* ============ BGM (only on direct visits — hidden in iframe) ============ */
+  body.in-iframe .top-bar { /* glass pill already independent of bg */ }
+
+  /* ============ MOBILE ============ */
+  @media (max-width: 768px) {
+    section.stop { padding: 0 5vw; }
+    .top-bar { padding: 1rem 1.2rem; }
+    .stop-rail { right: 12px; }
+  }
+</style>
+</head>
+
+<body>
+
+<!-- ============ LOADING SCREEN — covers everything until WebGL + first PDF are ready ============ -->
+<div id="loading-screen" aria-hidden="true">
+  <div class="da-bubbles">
+    <div class="da-bubble"><span class="ttdot"></span><span class="ttdot"></span><span class="ttdot"></span></div>
+    <div class="da-bubble"><span class="ttdot"></span><span class="ttdot"></span><span class="ttdot"></span></div>
+    <div class="da-bubble"><span class="ttdot"></span><span class="ttdot"></span><span class="ttdot"></span></div>
+  </div>
+  <div class="load-wordmark" id="load-wordmark">Discuss<span class="accent">Again</span></div>
+  <div class="load-status">Re-entering the conversation</div>
+</div>
+
+<!-- ============ THREE.JS CANVAS ============ -->
+<canvas id="three-canvas"></canvas>
+
+<!-- ============ TOP BAR ============ -->
+<div class="top-bar">
+  <a class="back" id="back-link" href="../?room=2">←&nbsp; Back to Gallery</a>
+  <span class="proj-id">DiscussAgain</span>
+</div>
+
+<!-- ============ STOP PROGRESS DOTS ============ -->
+<div class="stop-rail" id="stop-rail" aria-hidden="true"></div>
+
+<!-- ============ SCROLL HINT ============ -->
+<div class="scroll-hint" id="scroll-hint">scroll &nbsp;↓</div>
+
+<!-- ============ DRAG HINT (shown once on first draggable stop) ============ -->
+<div class="drag-hint" id="drag-hint">
+  <span class="arrow">←</span> drag to pan <span class="arrow">→</span>
+</div>
+
+<!-- ============ MAIN CONTENT ============ -->
+<main class="case">
+
+  <section id="stop-hero" class="stop" data-stop="0">
+    <div class="hero-wrap">
+      <h1 class="hero-title" id="hero-title">Discuss<span class="accent">Again</span></h1>
+    </div>
+    <div>
+      <p class="stop-num">Case Study · UIST '26</p>
+      <p class="lead">Turning one-off offline group discussions into repeatable practice — a multi-agent reconstruction that lets you re-enter your own conversation and try again.</p>
+      <div class="meta-row">
+        <span>Research · UIST 2026</span>
+        <span>2024.09 — 2026.04</span>
+        <span>System · Multi-agent · Interaction</span>
+      </div>
+    </div>
+    <!-- Hero content card replaces paper title screenshot — visible top-right -->
+    <div class="content-card reveal" id="hero-card" style="bottom: 8vh; right: 6vw;">
+      <p class="label">UIST '26 — Submission</p>
+      <p class="heading">Turning one-off offline group discussions into repeatable practice for interaction competence.</p>
+      <div class="stat-row">
+        <div class="stat"><span class="num">04</span><span class="cap">Stage pipeline</span></div>
+        <div class="stat"><span class="num">N=18</span><span class="cap">Field study</span></div>
+        <div class="stat"><span class="num">RT</span><span class="cap">Agent runtime</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="stop-problem" class="stop right" data-stop="1">
+    <div class="anchor-side reveal">
+      <p class="stop-num">The problem</p>
+      <h2>One discussion. <span class="accent">One chance.</span></h2>
+      <p class="lead">Group discussions are how we rehearse social-interaction competence. Yet they evaporate the moment they end — no rewind, no second take, no targeted retry.</p>
+      <p class="body">Especially painful in language learning and educational settings, where a quiet learner often only realises what they wanted to say five minutes later.</p>
+    </div>
+    <!-- Replaces paper p2 screenshot — three quoted reasons -->
+    <div class="content-card reveal" id="problem-card" style="top: 14vh; left: 5vw;">
+      <p class="label">Why this matters</p>
+      <p class="quote">"I finally understood what I should have said — five minutes after we'd already moved on."</p>
+      <ul>
+        <li>Group conversation = the primary site of interaction-competence learning</li>
+        <li>One-off discussions can't be debugged, replayed, or targeted</li>
+        <li>Language learners + quiet students lose disproportionately</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="stop-pipeline" class="stop" data-stop="2">
+    <div class="anchor-side reveal">
+      <p class="stop-num">The pipeline</p>
+      <h2>From transcript to <span class="accent">replayable agents.</span></h2>
+      <p class="lead">A four-stage pipeline: capture → speaker-attribute → persona-distill → multi-agent re-enact. Each participant becomes a steered LLM agent with memory of the original arc.</p>
+      <p class="body">Designed so you can drop in, pause anyone, hijack the floor, and watch the conversation re-route around your new contribution.</p>
+    </div>
+  </section>
+
+  <section id="stop-system" class="stop right" data-stop="3">
+    <div class="anchor-side reveal">
+      <p class="stop-num">System &amp; framework</p>
+      <h2>Steering the <span class="accent">replay.</span></h2>
+      <p class="lead">Floor manager, turn-taking model, persona memory, and a competence-tracking dashboard — composed into a real-time agent orchestration runtime.</p>
+      <p class="body">Built with FastAPI + WebSocket backend; React frontend; agents driven by GPT-class models with custom turn-taking heuristics.</p>
+    </div>
+  </section>
+
+  <section id="stop-demo" class="stop" data-stop="4">
+    <div class="demo-frame-wrap">
+      <div class="demo-frame">
+        <span class="demo-tag">Walk-through</span>
+        <video class="demo-video"
+               src="assets/demo.mp4"
+               poster="assets/demo-poster.webp"
+               autoplay muted loop playsinline controls
+               preload="metadata"></video>
+      </div>
+    </div>
+  </section>
+
+  <section id="stop-findings" class="stop right" data-stop="5">
+    <div class="anchor-side reveal">
+      <p class="stop-num">Findings</p>
+      <h2>What replay <span class="accent">unlocks.</span></h2>
+      <p class="lead">Across a user study, participants reported greater willingness to take risks knowing the conversation could be rewound — and better recall of competence-relevant moments.</p>
+      <p class="body">Quantitative: significant improvement on self-rated readiness for similar future discussions. Qualitative: "I finally understood what I should have said."</p>
+    </div>
+  </section>
+
+  <section id="stop-reflect" class="stop" data-stop="6">
+    <div class="anchor-side reveal">
+      <p class="stop-num">Reflection</p>
+      <h2>Practice rooms, <span class="accent">not transcripts.</span></h2>
+      <p class="lead">Multi-agent systems make a new kind of practice room possible — one where your past conversations can be re-entered, not just reviewed. Submitted to UIST 2026.</p>
+      <p class="body">My contribution: interaction design for the floor-control UI, the post-replay dashboard, and the full design system bridging research paper figures and the deployed prototype.</p>
+      <div class="close-cta">
+        <a id="bottom-back">← Return to the gallery</a>
+        <span class="credits">© 2026 Kelcy Han</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import Lenis from 'lenis';
+
+// ============================================================
+// IFRAME-AWARE BACK NAV
+// ============================================================
+const inIframe = window.top !== window.self;
+if (inIframe) document.body.classList.add('in-iframe');
+function goBack(e) {
+  if (e) e.preventDefault();
+  if (inIframe) window.parent.postMessage({ type: 'close-route' }, '*');
+  else window.location.href = '../?room=2';
+}
+document.getElementById('back-link').addEventListener('click', goBack);
+document.getElementById('bottom-back').addEventListener('click', goBack);
+
+// ============================================================
+// SETUP — Three.js scene, camera, lights, environment
+// ============================================================
+const canvas = document.getElementById('three-canvas');
+let W = window.innerWidth, H = window.innerHeight;
+
+const renderer = new THREE.WebGLRenderer({
+  canvas, alpha: true, antialias: true, powerPreference: 'high-performance'
+});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(W, H);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, W / H, 0.1, 200);
+camera.position.set(0, 0, 8);
+
+// Environment (PMREM-baked room env for reflections on transmission material)
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+// Lights
+const keyLight = new THREE.DirectionalLight(0xfff1d8, 1.1);
+keyLight.position.set(4, 6, 5);
+scene.add(keyLight);
+const rimLight = new THREE.DirectionalLight(0xE85D75, 0.6);
+rimLight.position.set(-5, -2, 3);
+scene.add(rimLight);
+const ambient = new THREE.AmbientLight(0xffe6c2, 0.18);
+scene.add(ambient);
+
+// ============================================================
+// MATERIALS — glass, ceramic, metallic accent
+// ============================================================
+function makeGlassMaterial(colorHex) {
+  return new THREE.MeshPhysicalMaterial({
+    color: colorHex,
+    metalness: 0.0,
+    roughness: 0.04,
+    transmission: 0.85,
+    thickness: 0.6,
+    ior: 1.5,
+    clearcoat: 1.0,
+    clearcoatRoughness: 0.04,
+    envMapIntensity: 1.2,
+    attenuationColor: 0xfff5e0,
+    attenuationDistance: 2.5,
+    side: THREE.DoubleSide,
+  });
+}
+function makeCeramicMaterial(colorHex) {
+  return new THREE.MeshPhysicalMaterial({
+    color: colorHex,
+    metalness: 0.0,
+    roughness: 0.35,
+    clearcoat: 0.6,
+    clearcoatRoughness: 0.25,
+    envMapIntensity: 0.8,
+  });
+}
+
+const matCream  = makeGlassMaterial(0xF4E8D0);
+const matHoney  = makeGlassMaterial(0xE85D75);
+const matJade   = makeGlassMaterial(0xA6C2A8);
+const matTeal   = makeGlassMaterial(0x3C5A5E);
+const matRust   = makeCeramicMaterial(0x8B4A2B);
+
+// Meshes that should sinusoidally bob in y over time (organic floating feel).
+// Each entry expected to have userData.bob = { baseY, freq, phase, amp }.
+const bobMeshes = [];
+
+// ============================================================
+// CAMERA STOPS — 7 stops after merging 02→03 and 05→06.
+// Purely vertical layout: each new section rolls up from the bottom
+// as the camera descends, matching unseen.co/true scroll feel.
+// Y_GAP must exceed the visible vertical extent at FOV 32 / z=8
+// (~4.6 units) so adjacent stops never bleed into the viewport.
+// ============================================================
+const Y_GAP = 6.8;
+const STOPS = [
+  { name: 'hero',            y:  0 * -Y_GAP },  // 01 Case Study
+  { name: 'intro-research',  y:  1 * -Y_GAP },  // 02 Introduction & Research
+  { name: 'insights',        y:  2 * -Y_GAP },  // 03 Design Criteria
+  { name: 'product-brand',   y:  3 * -Y_GAP },  // 04 Product & Brand
+  { name: 'spatial',         y:  4 * -Y_GAP },  // 05 Spatial
+  { name: 'blueprint',       y:  5 * -Y_GAP },  // 06 Service Blueprint
+  { name: 'reflect',         y:  6 * -Y_GAP },  // 07 Reflection
+];
+
+// ============================================================
+// BUILD 3D OBJECTS — bigger PDF planes (drag-pannable), organic glass
+// spheres scattered with per-sphere bob, coral GLB asset, mouse-reactive
+// sand particle field across all stops.
+// ============================================================
+const TEX_LOADER = new THREE.TextureLoader();
+let pdfLoadedCount = 0;
+const loadStartedAt = performance.now();
+function onPdfLoaded() { pdfLoadedCount++; maybeFinishLoading(); }
+
+// PDF planes — kept in an array so we can drag-pan whichever the camera
+// is closest to (horizontal scroll within a stop, à la true / unseen).
+const pdfPlanes = [];  // { mesh, stopIdx, baseX, halfW }
+
+function makePdfPlane(url, w, h, stopIdx, baseX = 0, z = -0.4) {
+  const tex = TEX_LOADER.load(url, t => { t.needsUpdate = true; onPdfLoaded(); }, undefined, () => onPdfLoaded());
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  const geo = new THREE.PlaneGeometry(w, h, 1, 1);
+  const mat = new THREE.MeshStandardMaterial({
+    map: tex,
+    metalness: 0.0,
+    roughness: 0.55,
+    envMapIntensity: 0.3,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(baseX, STOPS[stopIdx].y, z);
+  scene.add(mesh);
+  // Dynamic drag range: enough that BOTH edges of the PDF can reach the viewport
+  // edge given the camera distance and FOV. Adds 0.5 buffer for breathing room.
+  const distance = 8.0 - z;
+  const visibleHalfW = distance * Math.tan((32 / 2) * Math.PI / 180);
+  const pdfHalfW = w / 2;
+  const dragRange = Math.max(0.8, pdfHalfW + Math.abs(baseX) - visibleHalfW + 0.5);
+  pdfPlanes.push({ mesh, stopIdx, baseX, halfW: pdfHalfW, dragRange });
+  return mesh;
+}
+
+// Width baseline (world units). DA assets span several aspects (wide
+// pipeline figure, square dashboard, portrait paper pages, 16:9 demo video)
+// — each plane uses its own w/h so nothing distorts.
+const W_BASE = 7.5;
+
+// ----- STOP 0 — HERO: atmospheric glass orbs replace paper title screenshot --
+{
+  // Three calm orbs floating where the screenshot used to be — they keep
+  // the right side of the hero alive without occluding the DOM content card.
+  const orbColors = [0x6B9DA2, 0xE85D75, 0xE6DBC9];
+  const layout = [
+    [ 3.0, -0.4, 0.4, 0.28, 0.5, 0.0],
+    [ 2.0, -1.4, 0.7, 0.20, 0.7, 1.2],
+    [ 3.6,  0.8, 0.2, 0.16, 0.9, 2.4],
+  ];
+  for (let i = 0; i < 3; i++) {
+    const [x, yOff, z, scale, freq, phase] = layout[i];
+    const sg = new THREE.SphereGeometry(scale, 40, 30);
+    const s = new THREE.Mesh(sg, makeGlassMaterial(orbColors[i]));
+    s.position.set(x, STOPS[0].y + yOff, z);
+    s.userData.bob = { baseY: STOPS[0].y + yOff, freq, phase, amp: 0.09 };
+    bobMeshes.push(s); scene.add(s);
+  }
+}
+
+// ----- STOP 1 — PROBLEM: orbs representing "evaporating" discussions (no PDF) --
+{
+  // Five glass orbs of varying size fade across the LEFT side of the stop
+  // — visual stand-in for "discussions that vanish the moment they end".
+  const colors = [0x6B9DA2, 0xA6C2A8, 0xE85D75, 0x6B9DA2, 0xE6DBC9];
+  const layout = [
+    [-3.0,  1.4, 0.5, 0.26, 0.6, 0.0],
+    [-2.0,  2.0, 0.2, 0.18, 0.8, 1.4],
+    [-3.4,  0.0, 0.7, 0.32, 0.7, 2.6],
+    [-2.6, -1.2, 0.3, 0.22, 0.9, 0.4],
+    [-3.1, -2.0, 0.5, 0.14, 1.0, 3.1],
+  ];
+  for (let i = 0; i < 5; i++) {
+    const [x, yOff, z, scale, freq, phase] = layout[i];
+    const sg = new THREE.SphereGeometry(scale, 40, 30);
+    const s = new THREE.Mesh(sg, makeGlassMaterial(colors[i]));
+    s.position.set(x, STOPS[1].y + yOff, z);
+    s.userData.bob = { baseY: STOPS[1].y + yOff, freq, phase, amp: 0.10 };
+    bobMeshes.push(s); scene.add(s);
+  }
+}
+
+// ----- STOP 2 — PIPELINE: the four-stage pipeline figure (wide) ----------
+{
+  const ar = 1.744;
+  const w = W_BASE * 1.05;
+  const h = w / ar;
+  makePdfPlane('assets/pipeline.png', w, h, 2, 0.6);
+}
+
+// ----- STOP 3 — SYSTEM: framework figure RIGHT + 4 glass agent-orbs LEFT --
+{
+  const ar = 2.289;  // very wide framework diagram
+  const w = W_BASE * 0.85;
+  const h = w / ar;
+  makePdfPlane('assets/framework.png', w, h, 3, 1.4);
+  // 4 agent orbs (paired with the 4-stage pipeline + multi-agent reference)
+  const agentColors = [0xE85D75, 0x6B9DA2, 0xA6C2A8, 0xA8C9B8];
+  const layout = [
+    [-3.0,  0.8, 0.4, 0.26, 0.6, 0.0],
+    [-3.3, -0.6, 0.1, 0.22, 0.7, 1.2],
+    [-2.4, -1.6, 0.5, 0.18, 0.9, 2.0],
+    [-3.1,  1.8, 0.2, 0.20, 0.8, 3.0],
+  ];
+  for (let i = 0; i < 4; i++) {
+    const [x, yOff, z, scale, freq, phase] = layout[i];
+    const sg = new THREE.SphereGeometry(scale, 40, 30);
+    const s = new THREE.Mesh(sg, makeGlassMaterial(agentColors[i]));
+    s.position.set(x, STOPS[3].y + yOff, z);
+    s.userData.bob = { baseY: STOPS[3].y + yOff, freq, phase, amp: 0.08 };
+    bobMeshes.push(s); scene.add(s);
+  }
+}
+
+// ----- STOP 4 — DEMO VIDEO: VideoTexture plane (centerpiece) ------------
+{
+  const video = document.createElement('video');
+  video.src = 'assets/demo.mp4';
+  video.muted = true;
+  video.loop = true;
+  video.playsInline = true;
+  video.preload = 'auto';
+  video.crossOrigin = 'anonymous';
+  video.style.display = 'none';
+  document.body.appendChild(video);
+  const tryPlay = () => video.play().catch(() => {});
+  video.addEventListener('canplay', tryPlay, { once: true });
+  document.addEventListener('pointerdown', tryPlay, { once: true });
+
+  const ar = 16 / 9;
+  const w = W_BASE * 1.0;
+  const h = w / ar;
+  const videoTex = new THREE.VideoTexture(video);
+  videoTex.colorSpace = THREE.SRGBColorSpace;
+  videoTex.minFilter = THREE.LinearFilter;
+  videoTex.magFilter = THREE.LinearFilter;
+
+  const geo = new THREE.PlaneGeometry(w, h);
+  const mat = new THREE.MeshBasicMaterial({ map: videoTex });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(0, STOPS[4].y, -0.3);
+  scene.add(mesh);
+  // Make it drag-pannable like the PDFs
+  const distance = 8.0 - mesh.position.z;
+  const visibleHalfW = distance * Math.tan((32 / 2) * Math.PI / 180);
+  const pdfHalfW = w / 2;
+  const dragRange = Math.max(0.4, pdfHalfW - visibleHalfW + 0.5);
+  pdfPlanes.push({ mesh, stopIdx: 4, baseX: 0, halfW: pdfHalfW, dragRange });
+
+  // Soft glow ring sitting just behind the video to give it sculpted presence
+  const ringGeo = new THREE.RingGeometry(w * 0.55, w * 0.85, 64);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0xE85D75, transparent: true, opacity: 0.10,
+    side: THREE.DoubleSide, depthWrite: false,
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.position.set(0, STOPS[4].y, -1.4);
+  scene.add(ring);
+}
+
+// ----- STOP 5 — FINDINGS: dashboard screenshot (near-square) ------------
+{
+  const ar = 1.198;
+  const w = W_BASE * 0.95;
+  const h = w / ar;
+  makePdfPlane('assets/dashboard.png', w, h, 5, -1.4);
+}
+
+// Stop 6 (reflect) — DOM text only, no 3D content.
+
+// DiscussAgain doesn't need the coral bookends — the demo video and
+// paper figures carry the visual weight. Sand particles + glass spheres
+// + the warm radial bg provide the depth.
+
+// ============================================================
+// FLOATING SAND — Three.js Points field with cursor-repulsion.
+// Cream-tinted, semi-transparent, additive blending; spans the full
+// vertical scroll-range so it's visible at every stop.
+// ============================================================
+const SAND_COUNT = 720;
+const sandPositions = new Float32Array(SAND_COUNT * 3);
+const sandVelocities = new Float32Array(SAND_COUNT * 3);
+const sandSizes = new Float32Array(SAND_COUNT);
+const sandBaseAlpha = new Float32Array(SAND_COUNT);
+const Y_TOTAL_SPAN = Y_GAP * (STOPS.length - 1) + 4;  // a bit of overhang either end
+for (let i = 0; i < SAND_COUNT; i++) {
+  sandPositions[3*i]     = (Math.random() - 0.5) * 18;
+  sandPositions[3*i + 1] = (Math.random() * Y_TOTAL_SPAN - Y_TOTAL_SPAN) + 2;
+  sandPositions[3*i + 2] = (Math.random() - 0.5) * 5 + 1;  // mostly in front of PDFs
+  sandVelocities[3*i]     = (Math.random() - 0.5) * 0.0025;
+  sandVelocities[3*i + 1] = (Math.random() - 0.4) * 0.0015;  // slight downward drift
+  sandVelocities[3*i + 2] = (Math.random() - 0.5) * 0.001;
+  sandSizes[i] = 0.02 + Math.random() * 0.06;
+  sandBaseAlpha[i] = 0.35 + Math.random() * 0.45;
+}
+const sandGeom = new THREE.BufferGeometry();
+sandGeom.setAttribute('position', new THREE.BufferAttribute(sandPositions, 3));
+sandGeom.setAttribute('size',     new THREE.BufferAttribute(sandSizes, 1));
+sandGeom.setAttribute('aAlpha',   new THREE.BufferAttribute(sandBaseAlpha, 1));
+const sandMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime:  { value: 0 },
+    uColor: { value: new THREE.Color(0xF4E8D0) },
+    uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+  },
+  vertexShader: `
+    attribute float size;
+    attribute float aAlpha;
+    varying float vAlpha;
+    uniform float uPixelRatio;
+    uniform float uTime;
+    void main() {
+      vAlpha = aAlpha;
+      vec3 p = position;
+      // Tiny shimmer
+      p.x += sin(uTime * 0.6 + position.y * 0.7) * 0.015;
+      vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
+      gl_PointSize = size * 300.0 * uPixelRatio / -mvPosition.z;
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 uColor;
+    varying float vAlpha;
+    void main() {
+      // Soft circular sprite
+      vec2 uv = gl_PointCoord - 0.5;
+      float d = length(uv);
+      float a = smoothstep(0.5, 0.05, d) * vAlpha;
+      gl_FragColor = vec4(uColor, a);
+    }
+  `,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+});
+const sandPoints = new THREE.Points(sandGeom, sandMat);
+sandPoints.frustumCulled = false;
+scene.add(sandPoints);
+
+// ============================================================
+// BOB ARRAY — meshes that should sin-bob in y over time.
+// Initialized above the build blocks so .push() works during build.
+// ============================================================
+// (Moved declaration above for use by build blocks; this comment is a tag)
+
+// ============================================================
+// SCROLL & MOUSE INTERACTION
+// ============================================================
+const lenis = new Lenis({
+  duration: 1.2,
+  easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+  smoothWheel: true,
+  smoothTouch: false,
+});
+window.lenis = lenis;  // expose for debugging / programmatic scroll
+
+let scrollY = 0;
+lenis.on('scroll', ({ scroll }) => { scrollY = scroll; });
+
+let mx = 0, my = 0;        // current
+let tmx = 0, tmy = 0;      // target
+window.addEventListener('mousemove', (e) => {
+  tmx = (e.clientX / window.innerWidth) * 2 - 1;
+  tmy = (e.clientY / window.innerHeight) * 2 - 1;
+});
+window.addEventListener('touchmove', (e) => {
+  if (e.touches.length) {
+    tmx = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+    tmy = (e.touches[0].clientY / window.innerHeight) * 2 - 1;
+  }
+}, { passive: true });
+
+// ============================================================
+// REVEAL ON SCROLL (DOM text)
+// ============================================================
+const revealEls = document.querySelectorAll('.reveal');
+const revObs = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      revObs.unobserve(e.target);
+    }
+  }
+}, { threshold: 0.15, rootMargin: '0px 0px -5% 0px' });
+revealEls.forEach(el => revObs.observe(el));
+
+// Hide scroll hint once user has scrolled past the hero
+const scrollHint = document.getElementById('scroll-hint');
+window.addEventListener('scroll', () => {
+  if (scrollHint && window.scrollY > window.innerHeight * 0.3) {
+    scrollHint.classList.add('hidden');
+  }
+}, { passive: true });
+
+// ============================================================
+// STOP RAIL DOTS
+// ============================================================
+const rail = document.getElementById('stop-rail');
+for (let i = 0; i < STOPS.length; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot';
+  rail.appendChild(d);
+}
+const dots = Array.from(rail.querySelectorAll('.dot'));
+
+// ============================================================
+// HORIZONTAL DRAG-PAN for the PDF nearest the current camera y.
+// Picks plane by camera-y proximity (not strict stopIdx) so dragging
+// works during the transition between stops too. Per-plane dragRange
+// (computed in makePdfPlane) ensures both edges always reach the viewport.
+// ============================================================
+let dragging = false;
+let dragMoved = false;
+let dragStartX = 0;
+let dragStartPdfX = 0;
+let dragTargetPlane = null;
+
+function getActivePdfPlaneByY(camY) {
+  let best = null;
+  let bestDist = Infinity;
+  for (const p of pdfPlanes) {
+    const stopY = STOPS[p.stopIdx].y;
+    const d = Math.abs(stopY - camY);
+    if (d < bestDist) { bestDist = d; best = p; }
+  }
+  // Only return if close enough — within one Y_GAP — else there's no PDF in view
+  return (best && bestDist < Y_GAP * 0.7) ? best : null;
+}
+
+window.addEventListener('pointerdown', (e) => {
+  // Skip if pointer started on an interactive DOM element
+  if (e.target.closest('a, button, [role="button"], input, textarea')) return;
+  if (e.target.closest('.reveal, .meta-row')) return;
+  dragTargetPlane = getActivePdfPlaneByY(camera.position.y);
+  if (!dragTargetPlane) return;
+  dragging = true;
+  dragMoved = false;
+  dragStartX = e.clientX;
+  dragStartPdfX = dragTargetPlane.mesh.position.x;
+  document.body.classList.add('dragging');
+  // First drag completes the tutorial → never show again
+  hideDragHint(true);
+});
+window.addEventListener('pointermove', (e) => {
+  if (!dragging || !dragTargetPlane) return;
+  if (Math.abs(e.clientX - dragStartX) > 3) dragMoved = true;
+  // 8 world units across full viewport width ≈ 1:1 visual drag at avg PDF z
+  const dx = (e.clientX - dragStartX) / window.innerWidth * 8;
+  let nx = dragStartPdfX + dx;
+  const baseX = dragTargetPlane.baseX;
+  const range = dragTargetPlane.dragRange;
+  nx = Math.max(baseX - range, Math.min(baseX + range, nx));
+  dragTargetPlane.mesh.position.x = nx;
+});
+function endDrag() {
+  dragging = false;
+  dragTargetPlane = null;
+  document.body.classList.remove('dragging');
+}
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
+
+// ============================================================
+// CURSOR HINT + ONE-TIME DRAG TOOLTIP
+// ============================================================
+let lastCanDrag = null;
+function updateDragCursor(camY) {
+  if (dragging) return;
+  const can = !!getActivePdfPlaneByY(camY);
+  if (can !== lastCanDrag) {
+    document.body.classList.toggle('can-drag', can);
+    lastCanDrag = can;
+  }
+}
+
+const dragHintEl = document.getElementById('drag-hint');
+let dragHintShown = false;
+let dragHintTimer = null;
+const DRAG_HINT_KEY = 'metacogreef_drag_hint_seen';
+function showDragHint() {
+  if (dragHintShown) return;
+  try { if (sessionStorage.getItem(DRAG_HINT_KEY)) return; } catch (e) {}
+  if (!dragHintEl) return;
+  dragHintShown = true;
+  dragHintEl.classList.add('visible');
+  dragHintTimer = setTimeout(() => hideDragHint(false), 5000);
+}
+function hideDragHint(persistent) {
+  if (dragHintEl) dragHintEl.classList.remove('visible');
+  if (dragHintTimer) { clearTimeout(dragHintTimer); dragHintTimer = null; }
+  if (persistent) {
+    try { sessionStorage.setItem(DRAG_HINT_KEY, '1'); } catch (e) {}
+  }
+}
+
+// ============================================================
+// MAIN LOOP — vertical-only camera, sand drift, organic bob,
+// hero parallax, dot rail
+// ============================================================
+let currentStopIdx = 0;
+function lerpStop() {
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  const t = docH > 0 ? Math.max(0, Math.min(1, scrollY / docH)) : 0;
+  const idx = t * (STOPS.length - 1);
+  const i0 = Math.max(0, Math.min(STOPS.length - 1, Math.floor(idx)));
+  const i1 = Math.min(i0 + 1, STOPS.length - 1);
+  const f = idx - i0;
+  const sf = f * f * (3 - 2 * f);
+  const targetY = STOPS[i0].y * (1 - sf) + STOPS[i1].y * sf;
+  // Subtle vertical-only mouse parallax — no side-sway
+  camera.position.x = mx * 0.30;
+  camera.position.y = targetY + (-my * 0.20);
+  camera.position.z = 8.0;
+  camera.lookAt(camera.position.x * 0.4, targetY, 0);
+  currentStopIdx = i0;
+  return { i0, targetY };
+}
+
+function tickDots(i0) {
+  for (let i = 0; i < dots.length; i++) {
+    dots[i].classList.toggle('active', i === i0);
+  }
+}
+
+// Hero DOM title — deeper rotation amplitude for a more tactile 3D feel.
+const heroTitleEl = document.getElementById('hero-title');
+function tickHeroTitle() {
+  if (!heroTitleEl) return;
+  if (window.scrollY > window.innerHeight * 1.2) return;
+  const rx = (-my * 10).toFixed(2);
+  const ry = (mx * 14).toFixed(2);
+  heroTitleEl.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+}
+
+function tickBobs(time) {
+  const tSec = time * 0.001;
+  for (const m of bobMeshes) {
+    const b = m.userData.bob;
+    if (!b) continue;
+    m.position.y = b.baseY + Math.sin(tSec * b.freq + b.phase) * b.amp;
+    if (m.userData.spin) {
+      m.rotation.y += 0.0025;
+    }
+  }
+}
+
+// Sand particle drift + cursor repulsion in world space.
+const tmpV = new THREE.Vector3();
+function tickSand(time, targetY) {
+  const pos = sandGeom.attributes.position.array;
+  sandMat.uniforms.uTime.value = time * 0.001;
+  // Mouse ray → approximate world point at the active y-band
+  const mouseWorldX = mx * 6 + camera.position.x;
+  const mouseWorldY = -my * 4 + targetY;
+  const halfYSpan = Y_TOTAL_SPAN / 2;
+  for (let i = 0; i < SAND_COUNT; i++) {
+    pos[3*i]     += sandVelocities[3*i];
+    pos[3*i + 1] += sandVelocities[3*i + 1];
+    pos[3*i + 2] += sandVelocities[3*i + 2];
+
+    // Cursor repulsion
+    const dx = pos[3*i]     - mouseWorldX;
+    const dy = pos[3*i + 1] - mouseWorldY;
+    const d2 = dx*dx + dy*dy;
+    if (d2 < 9.0) {
+      const f = 0.012 / (d2 + 0.6);
+      pos[3*i]     += dx * f;
+      pos[3*i + 1] += dy * f;
+    }
+    // Wrap horizontally + y across the full vertical span
+    if (pos[3*i]     >  9.5) pos[3*i]     = -9.5;
+    if (pos[3*i]     < -9.5) pos[3*i]     =  9.5;
+    if (pos[3*i + 1] >  3.0) pos[3*i + 1] = -Y_TOTAL_SPAN + 1.5;
+    if (pos[3*i + 1] < -Y_TOTAL_SPAN) pos[3*i + 1] = 3.0;
+  }
+  sandGeom.attributes.position.needsUpdate = true;
+}
+
+let framesRendered = 0;
+function tick(time) {
+  try {
+    mx += (tmx - mx) * 0.06;
+    my += (tmy - my) * 0.06;
+    lenis.raf(time);
+    const { i0, targetY } = lerpStop();
+    tickDots(i0);
+    tickHeroTitle();
+    tickBobs(time);
+    tickSand(time, targetY);
+    updateDragCursor(camera.position.y);
+    // Show the drag hint the first time the camera lands on a non-hero draggable stop
+    if (!dragHintShown && i0 >= 1 && getActivePdfPlaneByY(camera.position.y)) {
+      showDragHint();
+    }
+    renderer.render(scene, camera);
+    framesRendered++;
+    if (framesRendered === 6) maybeFinishLoading();
+  } catch (err) {
+    console.warn('MetacogReef tick error (continuing):', err);
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// ============================================================
+// LOADING SCREEN handoff — fade out when WebGL is rendering AND
+// most PDFs have loaded. Hard ceiling at 4s in case of slow assets.
+// ============================================================
+const loadingScreen = document.getElementById('loading-screen');
+let loadingDone = false;
+// Last letter starts flip at 0.48s + 1.05s anim = 1.53s; status fades in at 1.6s.
+// Hold the loader at least until the wordmark animation has fully resolved.
+const LOADING_MIN_MS = 1900;
+function maybeFinishLoading() {
+  if (loadingDone) return;
+  const elapsed = performance.now() - loadStartedAt;
+  if (elapsed < LOADING_MIN_MS) {
+    setTimeout(maybeFinishLoading, LOADING_MIN_MS - elapsed + 60);
+    return;
+  }
+  if (framesRendered >= 6 && (pdfLoadedCount >= 3 || elapsed > 2600)) {
+    finishLoading();
+  }
+}
+function finishLoading() {
+  if (loadingDone) return;
+  loadingDone = true;
+  if (loadingScreen) loadingScreen.classList.add('gone');
+  // Notify parent that the case study is ready (lets the parent fade out its
+  // own shell-level loading overlay the instant the inner content is paintable).
+  if (inIframe) {
+    try { window.parent.postMessage({ type: 'route-ready', path: 'DiscussAgain/' }, '*'); } catch (e) {}
+  }
+}
+// Hard ceiling — never trap the user behind the loader
+setTimeout(finishLoading, 4500);
+
+// ============================================================
+// RESIZE
+// ============================================================
+function onResize() {
+  W = window.innerWidth; H = window.innerHeight;
+  renderer.setSize(W, H);
+  camera.aspect = W / H;
+  camera.updateProjectionMatrix();
+  sandMat.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
+}
+window.addEventListener('resize', onResize);
+onResize();
+</script>
+
+</body>
+</html>
