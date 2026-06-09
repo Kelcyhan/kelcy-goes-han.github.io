@@ -484,6 +484,20 @@
   <span class="proj-id">MetacogReef</span>
 </div>
 
+<script>
+(() => {
+  const inIframe = window.top !== window.self;
+  if (inIframe) document.body.classList.add('in-iframe');
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest && e.target.closest('#back-link, #bottom-back');
+    if (!trigger) return;
+    e.preventDefault();
+    if (window.top !== window.self) window.parent.postMessage({ type: 'close-route' }, '*');
+    else window.location.href = '../?room=2';
+  }, true);
+})();
+</script>
+
 <!-- ============ STOP PROGRESS DOTS ============ -->
 <div class="stop-rail" id="stop-rail" aria-hidden="true"></div>
 
