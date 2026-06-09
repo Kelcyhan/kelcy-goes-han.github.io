@@ -665,6 +665,78 @@
     font-weight: 700;
   }
 
+  /* Feature study stop — make the research rationale a primary content area
+     instead of a small corner note. */
+  section.stop.feature-study {
+    min-height: 100vh;
+    padding: 12vh 6vw 14vh !important;
+    display: grid;
+    grid-template-columns: minmax(280px, 0.85fr) minmax(360px, 1.15fr);
+    align-items: center;
+    gap: clamp(2rem, 5vw, 5rem);
+  }
+  section.stop.feature-study > .anchor-side.reveal,
+  section.stop.feature-study.right > .anchor-side.reveal {
+    position: relative !important;
+    inset: auto !important;
+    width: auto !important;
+    max-width: 560px !important;
+    padding: 0 !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    text-align: left !important;
+  }
+  section.stop.feature-study > .anchor-side.reveal .lead,
+  section.stop.feature-study > .anchor-side.reveal .body {
+    margin-left: 0 !important;
+  }
+  section.stop.feature-study h2 {
+    font-size: clamp(36px, 5vw, 72px);
+    max-width: 11ch;
+  }
+  section.stop.feature-study .lead {
+    font-size: clamp(17px, 1.45vw, 22px);
+    max-width: 34ch;
+  }
+  section.stop.feature-study > .content-card {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: 760px !important;
+    padding: clamp(2rem, 3.6vw, 3.5rem) !important;
+    justify-self: end;
+    pointer-events: auto;
+    background:
+      linear-gradient(135deg, rgba(20, 32, 42, 0.88) 0%, rgba(20, 32, 42, 0.62) 100%),
+      radial-gradient(ellipse 80% 60% at 100% 0%, rgba(232, 93, 117, 0.16) 0%, transparent 62%);
+    border-color: rgba(232, 93, 117, 0.36);
+  }
+  section.stop.feature-study .content-card .label {
+    font-size: 0.72rem;
+  }
+  section.stop.feature-study .content-card .quote {
+    font-size: clamp(22px, 2.6vw, 40px);
+    line-height: 1.2;
+    margin-bottom: 1.4rem;
+  }
+  section.stop.feature-study .content-card ul {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  section.stop.feature-study .content-card li {
+    font-size: clamp(13px, 0.95vw, 15px);
+    padding-left: 0;
+    padding-top: 0.9rem;
+    border-top: 1px solid rgba(232, 93, 117, 0.28);
+  }
+  section.stop.feature-study .content-card li::before {
+    content: none;
+  }
+
   /* ============ LOADING SCREEN ============
      Shown immediately on page load, hides once WebGL scene + first PDF are ready.
      The wordmark uses a per-letter flip-in (rotateX) — same family of trick unseen
@@ -761,6 +833,20 @@
   /* ============ MOBILE ============ */
   @media (max-width: 768px) {
     section.stop { padding: 0 5vw; }
+    section.stop.feature-study {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      padding: 12vh 5vw 14vh !important;
+    }
+    section.stop.feature-study h2 {
+      max-width: 100%;
+    }
+    section.stop.feature-study > .content-card {
+      justify-self: stretch;
+    }
+    section.stop.feature-study .content-card ul {
+      grid-template-columns: 1fr;
+    }
     .top-bar { padding: 1rem 1.2rem; }
     .stop-rail { right: 12px; }
   }
@@ -828,7 +914,7 @@
     </div>
   </section>
 
-  <section id="stop-problem" class="stop right" data-stop="1">
+  <section id="stop-problem" class="stop right feature-study" data-stop="1">
     <div class="anchor-side reveal">
       <p class="stop-num">The problem</p>
       <h2>One discussion. <span class="accent">One chance.</span></h2>

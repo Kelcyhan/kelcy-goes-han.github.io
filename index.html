@@ -1386,6 +1386,7 @@ function advanceTransition(now) {
 
 function pushInput(direction) {
   // Block input during active transition, and briefly after one completes (debounce repeat scrolls)
+  if (document.body.classList.contains('route-open')) return;
   if (state.transitionTo !== null) return;
   if (performance.now() - lastTransitionEndMs < REPEAT_LOCKOUT_MS) return;
   const target = resolveTarget(state.room, direction);
@@ -1404,6 +1405,10 @@ window.addEventListener('wheel', e => {
 }, { passive: false });
 
 window.addEventListener('keydown', e => {
+  if (document.body.classList.contains('route-open')) {
+    if (e.key === 'Escape') closeRoute({ replace: true });
+    return;
+  }
   if (e.key === 'ArrowDown')       pushInput('down');
   else if (e.key === 'ArrowUp')    pushInput('up');
   else if (e.key === 'ArrowRight') pushInput('right');
@@ -1416,9 +1421,11 @@ window.addEventListener('keydown', e => {
 // Touch — capture swipe direction at touchend, single fire per swipe
 let touchStart = null;
 window.addEventListener('touchstart', e => {
+  if (document.body.classList.contains('route-open')) return;
   touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
 }, { passive: false });
 window.addEventListener('touchend', e => {
+  if (document.body.classList.contains('route-open')) return;
   if (!touchStart) return;
   const t = e.changedTouches[0];
   const dx = t.clientX - touchStart.x;
@@ -1437,6 +1444,7 @@ window.addEventListener('touchend', e => {
 // If target is reachable in one transition, animate. Otherwise queue a two-leg route via R1.
 let navQueue = [];
 window.goRoom = function(roomNum) {
+  if (document.body.classList.contains('route-open')) return;
   if (state.transitionTo !== null) return;
   if (state.room === roomNum) return;
   if (TRANSITIONS[state.room]?.[roomNum]) {
@@ -1485,8 +1493,36 @@ const SITE_ROOT = (() => {
   const u = new URL('.', document.baseURI);
   return u.href;
 })();
+function rootPath(search = '') {
+  const u = new URL(search || '.', SITE_ROOT);
+  return u.pathname + u.search + u.hash;
+}
 function resolveRoute(path) {
   return new URL(path, SITE_ROOT).href;
+}
+function setRoomInstant(roomNum) {
+  navQueue = [];
+  state.transitionTo = null;
+  state.progress = 0;
+  state.room = roomNum;
+  if (roomNum === 2) {
+    state.previousRoom = 1;
+    state.lastTransitionScene = 'scene2';
+    state.lastTransitionFrame = SCENES.scene2.count - 1;
+    r2IdleStartMs = performance.now();
+  } else if (roomNum === 3) {
+    state.previousRoom = 1;
+    state.lastTransitionScene = 'scene3';
+    state.lastTransitionFrame = SCENES.scene3.count - 1;
+    r2IdleStartMs = -Infinity;
+  } else {
+    state.previousRoom = null;
+    state.lastTransitionScene = null;
+    state.lastTransitionFrame = 0;
+    r2IdleStartMs = -Infinity;
+  }
+  renderStage();
+  updateOverlays();
 }
 // Track iframe ready state across navigations so the loading overlay can dim
 // the moment the case-study DOM is actually ready to display.
@@ -1510,6 +1546,7 @@ function attachIframeReady(path) {
   }
 }
 function openRouteInternal(path) {
+  setRoomInstant(2);
   const absUrl = resolveRoute(path);
   if (routeIframe.dataset.path !== path) {
     routeIframe.dataset.path = path;
@@ -1529,6 +1566,7 @@ function openRouteInternal(path) {
   document.body.classList.add('route-open');
 }
 function closeRouteInternal() {
+  setRoomInstant(2);
   routeShell.classList.remove('active');
   routeShell.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('route-open');
@@ -1551,11 +1589,12 @@ if (document.readyState === 'loading') {
   preloadFirstRoute();
 }
 function openRoute(path) {
-  history.pushState({ route: path }, '', path);
+  history.pushState({ route: path, room: 2 }, '', path);
   openRouteInternal(path);
 }
-function closeRoute() {
-  history.pushState({}, '', '/');
+function closeRoute({ replace = false } = {}) {
+  const method = replace ? 'replaceState' : 'pushState';
+  history[method]({ room: 2 }, '', rootPath('?room=2'));
   closeRouteInternal();
 }
 window.openRoute  = openRoute;
@@ -1563,7 +1602,12 @@ window.closeRoute = closeRoute;
 
 window.addEventListener('popstate', (e) => {
   if (e.state && e.state.route) openRouteInternal(e.state.route);
-  else closeRouteInternal();
+  else if (e.state && e.state.room) {
+    setRoomInstant(e.state.room);
+    closeRouteInternal();
+  } else {
+    closeRouteInternal();
+  }
 });
 
 // Iframe child posts {type:'close-route'} when user clicks "Back to Kelcy",
@@ -1572,15 +1616,7 @@ window.addEventListener('popstate', (e) => {
 window.addEventListener('message', (e) => {
   if (!e.data) return;
   if (e.data.type === 'close-route') {
-    // After closing the case-study iframe, the user should land in Gallery
-    // (Room 2) — that's where the project cards live. If state.room is anywhere
-    // else (e.g. the iframe was opened via a hash deep-link before the user
-    // ever navigated to Gallery), snap to Gallery first.
-    if (state.room !== 2 && state.transitionTo !== 2) {
-      state.room = 2;
-      state.lastTransitionFrame = 0;
-    }
-    closeRoute();
+    closeRoute({ replace: true });
   }
   else if (e.data.type === 'route-ready') routeShell.classList.add('iframe-ready');
 });
@@ -1593,10 +1629,9 @@ window.addEventListener('message', (e) => {
   if (match) {
     // Project cards live in Gallery — anyone arriving at a project deep-link
     // should land in Gallery once they close the case study.
-    state.room = 2;
-    state.lastTransitionFrame = 0;
+    setRoomInstant(2);
     const path = match[1] + '/';
-    history.replaceState({ route: path }, '', '/' + path);
+    history.replaceState({ route: path, room: 2 }, '', rootPath(path));
     openRouteInternal(path);
   }
   // Honor ?room=N query (used by case-study back links to land on Gallery)
@@ -1604,8 +1639,8 @@ window.addEventListener('message', (e) => {
     const params = new URLSearchParams(location.search);
     const r = parseInt(params.get('room') || '0', 10);
     if (r >= 1 && r <= 3 && r !== state.room) {
-      state.room = r;
-      state.lastTransitionFrame = 0;
+      setRoomInstant(r);
+      history.replaceState({ room: r }, '', rootPath('?room=' + r));
     }
   } catch (e) {}
 })();
