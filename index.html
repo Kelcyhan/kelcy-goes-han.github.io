@@ -270,16 +270,44 @@
   .card-arrow {
     position: absolute;
     top: 38%; right: 14%;
-    font-family: var(--subtitle-font);
-    font-size: 1.0rem;
-    color: rgba(244, 232, 208, 0.65);
+    width: 18px;
+    height: 18px;
     opacity: 0.85;
     transition: transform 0.4s ease-out, opacity 0.3s;
+  }
+  .card-arrow::before,
+  .card-arrow::after {
+    content: '';
+    position: absolute;
+    display: block;
+    background: rgba(244, 232, 208, 0.65);
+  }
+  .card-arrow::before {
+    width: 16px;
+    height: 1.5px;
+    top: 9px;
+    left: 1px;
+    transform: rotate(-45deg);
+    transform-origin: center;
+  }
+  .card-arrow::after {
+    width: 8px;
+    height: 8px;
+    top: 2px;
+    right: 1px;
+    background: transparent;
+    border-top: 1.5px solid rgba(244, 232, 208, 0.65);
+    border-right: 1.5px solid rgba(244, 232, 208, 0.65);
   }
   .card.has-route:hover .card-arrow {
     transform: translate(4px, -4px);
     opacity: 1;
-    color: var(--cream);
+  }
+  .card.has-route:hover .card-arrow::before {
+    background: var(--cream);
+  }
+  .card.has-route:hover .card-arrow::after {
+    border-color: var(--cream);
   }
   .card .ttl {
     font-family: var(--title-font); font-style: italic;
@@ -435,8 +463,39 @@
     .nav-rooms .nav-num { display: none; }
     #r1-content { left: 5%; bottom: 18%; }
     #r1-content h1 { font-size: 11vw; }
-    .card { width: 70vw; }
-    #bgm-player { bottom: 6px; left: 6px; width: 96px; height: 96px; }
+    .card {
+      width: clamp(118px, 32vw, 148px);
+      height: clamp(118px, 32vw, 148px);
+      padding: 0.85rem;
+    }
+    .card .ttl { font-size: clamp(0.9rem, 4vw, 1.08rem); }
+    .card .tag { font-size: 0.52rem; letter-spacing: 0.18em; }
+    .card-arrow {
+      top: 34%;
+      right: 13%;
+      width: 14px;
+      height: 14px;
+    }
+    .card-arrow::before {
+      width: 13px;
+      top: 7px;
+    }
+    .card-arrow::after {
+      width: 6px;
+      height: 6px;
+      top: 2px;
+    }
+    .card:nth-child(1) { left: 16% !important; top: 32% !important; }
+    .card:nth-child(2) { left: 52% !important; top: 28% !important; }
+    .card:nth-child(3) { left: 18% !important; top: 53% !important; }
+    .card:nth-child(4) { left: 52% !important; top: 54% !important; }
+    .card:nth-child(5) { left: 35% !important; top: 42% !important; }
+    #bgm-player {
+      bottom: 6px;
+      left: 6px;
+      width: 96px;
+      height: 96px;
+    }
   }
 </style>
 </head>
@@ -1472,7 +1531,7 @@ for (const p of PROJECTS) {
   c.className = 'card has-route tint-' + (p.tint || 'reef');
   c.style.left = p.x; c.style.top = p.y;
   c.innerHTML = '<p class="ttl">' + p.ttl + '</p><p class="tag">' + p.tag + '</p>'
-    + '<span class="card-arrow">↗</span>';
+    + '<span class="card-arrow" aria-hidden="true"></span>';
   c.addEventListener('click', (e) => { e.stopPropagation(); openRoute(p.route); });
   cards.appendChild(c);
 }
