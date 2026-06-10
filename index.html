@@ -387,14 +387,13 @@
     will-change: transform;
   }
   #bgm-player:hover { transform: scale(1.18); }
+  #bgm-player .bgm-droplet-source {
+    display: none;
+  }
   #bgm-player .bgm-droplet {
     width: 100%;
     height: 100%;
-    object-fit: cover;
     pointer-events: none;
-    /* SVG filter chain — bright cream tint + luma-to-alpha so black bg disappears
-       and the droplet reads as semi-transparent warm glass. */
-    filter: url(#bgm-luma-alpha);
     transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
     transform: scale(1);
     display: block;
@@ -403,7 +402,7 @@
   /* Paused: liquid frozen, droplet contracted (shape-only language for "stopped") */
   #bgm-player.paused .bgm-droplet {
     transform: scale(0.74);
-    filter: url(#bgm-luma-alpha-dim);
+    opacity: 0.68;
   }
 
   /* ================ ROUTE SHELL (iframe covers stage while case study is open) ================ */
@@ -531,38 +530,11 @@
 
   <div id="r2-cards"></div>
 
-  <!-- Hidden SVG filters — convert the mp4 to a cream-tinted translucent glass droplet.
-       Matrix: brighten 5x + cream tint (cream R/G/B = 244/232/208 ÷ 255 × 5/3 per channel),
-       then luma-to-alpha with cap so the droplet reads as semi-transparent glass. -->
-  <svg width="0" height="0" style="position:absolute; pointer-events:none;" aria-hidden="true">
-    <defs>
-      <filter id="bgm-luma-alpha" color-interpolation-filters="sRGB">
-        <feColorMatrix type="matrix" values="
-          1.595 1.595 1.595 0  0
-          1.515 1.515 1.515 0  0
-          1.360 1.360 1.360 0  0
-          3     3     3     0 -0.15" />
-        <feComponentTransfer>
-          <feFuncA type="linear" slope="0.85" intercept="0"/>
-        </feComponentTransfer>
-      </filter>
-      <filter id="bgm-luma-alpha-dim" color-interpolation-filters="sRGB">
-        <feColorMatrix type="matrix" values="
-          0.957 0.957 0.957 0  0
-          0.910 0.910 0.910 0  0
-          0.816 0.816 0.816 0  0
-          3     3     3     0 -0.15" />
-        <feComponentTransfer>
-          <feFuncA type="linear" slope="0.55" intercept="0"/>
-        </feComponentTransfer>
-      </filter>
-    </defs>
-  </svg>
-
   <div id="bgm-player" role="button" tabindex="0" aria-label="Toggle background music">
-    <video class="bgm-droplet" muted loop playsinline autoplay preload="auto" disablepictureinpicture>
+    <video class="bgm-droplet-source" muted loop playsinline autoplay preload="auto" disablepictureinpicture>
       <source src="assets/video/water_drop.mp4" type="video/mp4">
     </video>
+    <canvas class="bgm-droplet" width="160" height="160" aria-hidden="true"></canvas>
     <audio id="bgm-audio" loop preload="auto" src="assets/audio/bgm.mp3"></audio>
   </div>
 
@@ -1731,15 +1703,86 @@ function tick(now) {
 // ============================================================
 (function initBgmPlayer() {
   const player = document.getElementById('bgm-player');
-  const video = player.querySelector('video.bgm-droplet');
+  const video = player.querySelector('video.bgm-droplet-source');
+  const canvas = player.querySelector('canvas.bgm-droplet');
   const audio = document.getElementById('bgm-audio');
-  if (!player || !video || !audio) return;
+  if (!player || !video || !canvas || !audio) return;
   audio.volume = 0.42;
 
   // Default: PLAYING (autoplay). Video is muted so video.play() always works.
   // Audio.play() may be blocked by browser → fall back to first-interaction.
   let playing = true;
   let audioStarted = false;
+  let renderRaf = 0;
+
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  const renderDropletFrame = () => {
+    if (!ctx || !video.videoWidth || !video.videoHeight) return;
+
+    const target = Math.min(192, Math.max(128, Math.ceil(player.clientWidth * 1.5)));
+    if (canvas.width !== target || canvas.height !== target) {
+      canvas.width = target;
+      canvas.height = target;
+    }
+
+    const videoRatio = video.videoWidth / video.videoHeight;
+    const canvasRatio = canvas.width / canvas.height;
+    let sx = 0;
+    let sy = 0;
+    let sw = video.videoWidth;
+    let sh = video.videoHeight;
+    if (videoRatio > canvasRatio) {
+      sw = video.videoHeight * canvasRatio;
+      sx = (video.videoWidth - sw) / 2;
+    } else {
+      sh = video.videoWidth / canvasRatio;
+      sy = (video.videoHeight - sh) / 2;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+    let frame;
+    try {
+      frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    } catch (e) {
+      return;
+    }
+
+    const data = frame.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i] / 255;
+      const g = data[i + 1] / 255;
+      const b = data[i + 2] / 255;
+      const luma = (r + g + b) / 3;
+      const alpha = clamp01((luma * 9 - 0.15) * 0.85);
+      const glow = clamp01(luma * 4.8);
+
+      data[i] = 244 * glow;
+      data[i + 1] = 232 * glow;
+      data[i + 2] = 208 * glow;
+      data[i + 3] = 255 * alpha;
+    }
+    ctx.putImageData(frame, 0, 0);
+  };
+
+  const renderLoop = () => {
+    renderDropletFrame();
+    if (!video.paused && !video.ended) {
+      renderRaf = requestAnimationFrame(renderLoop);
+    }
+  };
+
+  const startRenderLoop = () => {
+    cancelAnimationFrame(renderRaf);
+    renderLoop();
+  };
+
+  video.addEventListener('loadeddata', renderDropletFrame);
+  video.addEventListener('seeked', renderDropletFrame);
+  video.addEventListener('play', startRenderLoop);
+  video.addEventListener('pause', renderDropletFrame);
 
   // Restore audio currentTime if returning from /MetacogReef
   try {
