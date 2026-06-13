@@ -891,12 +891,12 @@ function makePdfPlane(url, w, h, stopIdx, baseX = 0, z = -0.4) {
   const visibleHalfW = distance * Math.tan((32 / 2) * Math.PI / 180);
   const pdfHalfW = w / 2;
   const dragRange = Math.max(0.8, pdfHalfW + Math.abs(baseX) - visibleHalfW + 0.5);
-  pdfPlanes.push({ mesh, stopIdx, baseX, halfW: pdfHalfW, dragRange });
+  pdfPlanes.push({ mesh, stopIdx, baseX, halfW: pdfHalfW, halfH: h / 2, dragRange });
   return mesh;
 }
 
-// Width baseline (world units). PointFit assets are tall Figma stripes
-// (aspect ~0.96) and portrait phone videos (aspect ~0.50).
+// Width baseline (world units). Home assets are exported by Figma section:
+// Landing 1440x1343, Benefits 1440x830, News+Footer 1440x1451.
 const W_BASE = 7.5;
 
 // helper for video plane (used on stop 5 for two phone-screen recordings)
@@ -938,29 +938,29 @@ function makeVideoPlane(src, w, h, stopIdx, baseX = 0, z = -0.4, ringColor = nul
   return mesh;
 }
 
-// ----- STOP 0 — HERO: Figma hero strip as wide backdrop ---------------
+// ----- STOP 0 — HERO: Home / Landing section as wide backdrop ----------
 {
-  const ar = 2304 / 2392;  // ≈ 0.963
+  const ar = 1440 / 1343;
   const h = W_BASE * 0.75;
   const w = h * ar;
   makePdfPlane('assets/home_p1.webp', w, h, 0, 2.4, -1.7);
   pdfPlanes[pdfPlanes.length - 1].mesh.position.y = STOPS[0].y - 0.4;
 }
 
-// ----- STOP 1 — WHY SWEAT: About p2 (conventional vs revolutionary) LEFT --
+// ----- STOP 1 — WHY SWEAT: About p1 (hero + vision, cropped before trends) LEFT --
 {
-  const ar = 2304 / 2264;
+  const ar = 1440 / 1015;
   const h = W_BASE * 0.65;
   const w = h * ar;
-  makePdfPlane('assets/about_p2.webp', w, h, 1, -1.8);
+  makePdfPlane('assets/about_p1.webp', w, h, 1, -1.8);
 }
 
-// ----- STOP 2 — CRITERIA: About p1 (San Millán quote) + 3 mint anchor orbs --
+// ----- STOP 2 — CRITERIA: About p2 (position map + San Millán quote) + 3 mint anchor orbs --
 {
-  const ar = 2304 / 2263;
+  const ar = 1440 / 1690;
   const h = W_BASE * 0.65;
   const w = h * ar;
-  makePdfPlane('assets/about_p1.webp', w, h, 2, 1.6);
+  makePdfPlane('assets/about_p2.webp', w, h, 2, 1.6);
   // Three mint diagnostic anchors — Calm / Clinical / Athletic
   const mintColors = [0x7FE3C4, 0xA6C2A8, 0x6BB39E];
   const layout = [
@@ -978,12 +978,14 @@ function makeVideoPlane(src, w, h, stopIdx, baseX = 0, z = -0.4, ringColor = nul
   }
 }
 
-// ----- STOP 3 — PRODUCT & BRAND: Home p2 (features+carousel) LEFT + 4 palette pearls RIGHT --
+// ----- STOP 3 — PRODUCT & BRAND: Figma carousel prototype video LEFT + 4 palette pearls RIGHT --
 {
-  const ar = 2304 / 2392;
-  const h = W_BASE * 0.7;
-  const w = h * ar;
-  makePdfPlane('assets/home_p2.webp', w, h, 3, -1.7);
+  // The recording is 2884x1608. Use its native aspect ratio so the carousel
+  // does not stretch, and keep the whole plane inside the left side viewport.
+  const ar = 2884 / 1608;
+  const w = W_BASE * 0.58;
+  const h = w / ar;
+  makeVideoPlane('assets/carousel.mov', w, h, 3, -1.25, -0.4, 0x7FE3C4);
   // Palette pearls — slate, mint, cream, ink
   const palette = [
     { c: 0x0E1A1F, scale: 0.42, mat: 'ceramic' },
@@ -1021,9 +1023,9 @@ function makeVideoPlane(src, w, h, stopIdx, baseX = 0, z = -0.4, ringColor = nul
   makeVideoPlane('assets/pt-home-training.mp4', w, h, 4,  1.7, -0.4, 0x7FE3C4);
 }
 
-// ----- STOP 5 — BLUEPRINT: Home p3 (footer/CTA) wide on LEFT, drag-pannable --
+// ----- STOP 5 — BLUEPRINT: Home / News + Footer, drag-pannable --------
 {
-  const ar = 2304 / 2393;
+  const ar = 1440 / 1451;
   const h = W_BASE * 0.85;
   const w = h * ar;
   makePdfPlane('assets/home_p3.webp', w, h, 5, 0);
@@ -1191,12 +1193,41 @@ function getActivePdfPlaneByY(camY) {
   return (best && bestDist < Y_GAP * 0.7) ? best : null;
 }
 
+function isPointerInsidePlane(p, clientX, clientY) {
+  if (!p || clientX === undefined || clientY === undefined) return false;
+  const corners = [
+    [-p.halfW, -p.halfH],
+    [ p.halfW, -p.halfH],
+    [ p.halfW,  p.halfH],
+    [-p.halfW,  p.halfH],
+  ].map(([dx, dy]) => {
+    const v = new THREE.Vector3(
+      p.mesh.position.x + dx,
+      p.mesh.position.y + dy,
+      p.mesh.position.z
+    ).project(camera);
+    return {
+      x: (v.x * 0.5 + 0.5) * window.innerWidth,
+      y: (-v.y * 0.5 + 0.5) * window.innerHeight,
+    };
+  });
+  const minX = Math.min(...corners.map(c => c.x));
+  const maxX = Math.max(...corners.map(c => c.x));
+  const minY = Math.min(...corners.map(c => c.y));
+  const maxY = Math.max(...corners.map(c => c.y));
+  return clientX >= minX && clientX <= maxX && clientY >= minY && clientY <= maxY;
+}
+
 window.addEventListener('pointerdown', (e) => {
   // Skip if pointer started on an interactive DOM element
   if (e.target.closest('a, button, [role="button"], input, textarea')) return;
   if (e.target.closest('.reveal, .meta-row')) return;
   dragTargetPlane = getActivePdfPlaneByY(camera.position.y);
   if (!dragTargetPlane) return;
+  if (!isPointerInsidePlane(dragTargetPlane, e.clientX, e.clientY)) {
+    dragTargetPlane = null;
+    return;
+  }
   dragging = true;
   dragMoved = false;
   dragStartX = e.clientX;
