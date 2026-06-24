@@ -234,6 +234,8 @@
   .card:nth-child(2) { animation-delay: -1.8s; }
   .card:nth-child(3) { animation-delay: -3.6s; }
   .card:nth-child(4) { animation-delay: -5.4s; }
+  .card:nth-child(5) { animation-delay: -2.7s; }
+  .card:nth-child(6) { animation-delay: -4.8s; }
   .card:hover {
     transform: translateY(-10px) scale(1.06);
     filter: brightness(1.08);
@@ -266,6 +268,10 @@
       radial-gradient(circle at 32% 28%, rgba(160,210,240,0.32) 0%, rgba(160,210,240,0.04) 28%, transparent 52%),
       radial-gradient(circle at 65% 75%, rgba(80,180,210,0.18) 0%, transparent 55%),
       radial-gradient(circle at 50% 50%, rgba(8,14,22,0.45) 0%, rgba(2,4,8,0.55) 100%); }
+  .card.tint-voice    { background:
+      radial-gradient(circle at 32% 28%, rgba(229,244,255,0.35) 0%, rgba(229,244,255,0.05) 28%, transparent 52%),
+      radial-gradient(circle at 68% 74%, rgba(157,255,104,0.24) 0%, transparent 55%),
+      radial-gradient(circle at 50% 50%, rgba(22,78,96,0.34) 0%, rgba(5,17,24,0.54) 100%); }
 
   .card-arrow {
     position: absolute;
@@ -484,11 +490,12 @@
       height: 6px;
       top: 2px;
     }
-    .card:nth-child(1) { left: 16% !important; top: 32% !important; }
-    .card:nth-child(2) { left: 52% !important; top: 28% !important; }
-    .card:nth-child(3) { left: 18% !important; top: 53% !important; }
-    .card:nth-child(4) { left: 52% !important; top: 54% !important; }
-    .card:nth-child(5) { left: 35% !important; top: 42% !important; }
+    .card:nth-child(1) { left: 12% !important; top: 27% !important; }
+    .card:nth-child(2) { left: 54% !important; top: 24% !important; }
+    .card:nth-child(3) { left: 12% !important; top: 45% !important; }
+    .card:nth-child(4) { left: 54% !important; top: 45% !important; }
+    .card:nth-child(5) { left: 12% !important; top: 63% !important; }
+    .card:nth-child(6) { left: 54% !important; top: 63% !important; }
     #bgm-player {
       bottom: 6px;
       left: 6px;
@@ -1494,6 +1501,7 @@ const PROJECTS = [
   { ttl: 'MetacogReef',  tag: 'Service · 2024',    x: '8%',  y: '20%', tint: 'reef',  route: 'MetacogReef/' },
   { ttl: 'DiscussAgain', tag: 'UIST · 2026',       x: '63%', y: '14%', tint: 'amber', route: 'DiscussAgain/' },
   { ttl: 'PointFit',     tag: 'Health · 2024',     x: '12%', y: '58%', tint: 'mint',  route: 'PointFit/' },
+  { ttl: 'AI Speaking Lab', tag: 'AI Edu · 2026',   x: '34%', y: '37%', tint: 'voice', route: 'AISpeakingLab/' },
   { ttl: 'SupplyNet',    tag: 'Research · 2026',   x: '54%', y: '55%', tint: 'rust',  route: 'SupplyNet/' },
   { ttl: 'Swarm',        tag: 'Art Demo · 2025',   x: '78%', y: '35%', tint: 'swarm', route: 'Swarm/' },
 ];

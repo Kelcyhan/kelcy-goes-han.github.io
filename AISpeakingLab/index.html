@@ -1,0 +1,1073 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Speaking Lab - Kelcy Han</title>
+<style>
+  :root {
+    --bg: #050604;
+    --ink: #f6f2e8;
+    --muted: rgba(246,242,232,.68);
+    --soft: rgba(246,242,232,.12);
+    --green: #d9ff39;
+    --aqua: #79dec3;
+    --orange: #f57a37;
+    --title: "Averia Libre", "Sansita", "Space Grotesk", system-ui, sans-serif;
+    --body: Inter, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    min-width: 320px;
+    overflow-x: hidden;
+    background:
+      linear-gradient(rgba(217,255,57,.055) 1px, transparent 1px) 0 0/72px 72px,
+      linear-gradient(90deg, rgba(217,255,57,.055) 1px, transparent 1px) 0 0/72px 72px,
+      radial-gradient(circle at 84% 18%, rgba(121,222,195,.13), transparent 30%),
+      radial-gradient(circle at 10% 68%, rgba(217,255,57,.11), transparent 32%),
+      var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(5,6,4,.92), transparent 48%, rgba(5,6,4,.76));
+  }
+
+  img, video { display: block; max-width: 100%; }
+  h1, h2, h3, p { margin: 0; }
+  a { color: inherit; }
+
+  .progress {
+    position: fixed;
+    inset: 0 auto auto 0;
+    z-index: 100;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--aqua), var(--green), var(--orange));
+    box-shadow: 0 0 24px rgba(217,255,57,.58);
+  }
+
+  .top-bar {
+    position: fixed;
+    inset: 18px 28px auto;
+    z-index: 90;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .top-bar a,
+  .top-bar span,
+  .pill {
+    pointer-events: auto;
+    border: 1px solid rgba(246,242,232,.16);
+    border-radius: 999px;
+    background: rgba(5,8,5,.62);
+    backdrop-filter: blur(18px);
+    padding: 10px 14px;
+    color: rgba(246,242,232,.88);
+    text-decoration: none;
+    font: 900 11px/1 var(--body);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  main { position: relative; z-index: 2; }
+
+  .hero {
+    position: relative;
+    min-height: 100svh;
+    display: grid;
+    align-items: end;
+    padding: 18vh 5vw 9vh;
+    overflow: hidden;
+  }
+
+  .photo-fill {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+  }
+
+  .photo-fill img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(.94) contrast(1.03) brightness(.96);
+  }
+
+  .photo-fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgba(5,6,4,.76), rgba(5,6,4,.1) 54%, rgba(5,6,4,.54)),
+      linear-gradient(180deg, rgba(5,6,4,.02), rgba(5,6,4,.64));
+  }
+
+  .hero-copy {
+    max-width: 980px;
+    transform-style: preserve-3d;
+  }
+
+  .eyebrow {
+    color: var(--green);
+    font: 900 12px/1 var(--body);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  .hero h1 {
+    margin-top: 18px;
+    max-width: 960px;
+    color: var(--ink);
+    font: italic 900 clamp(72px,13vw,190px)/.78 var(--title);
+    letter-spacing: 0;
+    text-transform: uppercase;
+    transform: perspective(1100px) rotateX(9deg) rotateY(-12deg);
+    text-shadow:
+      0 1px 0 #7f8d2c,
+      0 2px 0 #4f5b1c,
+      0 3px 0 #273111,
+      0 28px 54px rgba(0,0,0,.78),
+      0 0 38px rgba(217,255,57,.28);
+  }
+
+  .hero h1 span { color: var(--green); }
+
+  .lead {
+    max-width: 620px;
+    margin-top: 24px;
+    color: rgba(246,242,232,.82);
+    font-size: clamp(16px,1.2vw,20px);
+    line-height: 1.6;
+  }
+
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    max-width: 940px;
+    margin-top: 28px;
+  }
+
+  .meta div,
+  .note {
+    border: 1px solid rgba(246,242,232,.14);
+    border-radius: 10px;
+    background: rgba(5,8,5,.62);
+    backdrop-filter: blur(12px);
+    padding: 14px;
+  }
+
+  .meta strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--green);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .meta p,
+  .note p,
+  .flow-card p,
+  .caption,
+  .body-copy {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .section {
+    position: relative;
+    padding: 12vh 5vw;
+  }
+
+  .section.tight { padding-top: 8vh; }
+
+  .section-head {
+    display: grid;
+    grid-template-columns: minmax(260px, 420px) 1fr;
+    gap: clamp(24px,5vw,80px);
+    align-items: end;
+    margin-bottom: 34px;
+  }
+
+  .section h2,
+  .closing h2 {
+    color: var(--ink);
+    font: italic 900 clamp(38px,5vw,84px)/.88 var(--title);
+    letter-spacing: 0;
+    text-transform: uppercase;
+    text-shadow: 0 1px 0 #657325, 0 2px 0 #303816, 0 18px 36px rgba(0,0,0,.65);
+  }
+
+  .section h2 span,
+  .closing h2 span { color: var(--green); }
+
+  .demo-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(270px, .85fr);
+    gap: clamp(20px,4vw,56px);
+    align-items: center;
+  }
+
+  .device {
+    position: relative;
+    border: 1px solid rgba(246,242,232,.18);
+    border-radius: 22px;
+    background: #050705;
+    padding: 14px;
+    box-shadow: 0 44px 120px rgba(0,0,0,.62);
+    transform: perspective(1500px) rotateX(7deg) rotateY(-13deg);
+  }
+
+  .device::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background:
+      linear-gradient(110deg, rgba(255,255,255,.14), transparent 24%, transparent 76%, rgba(255,255,255,.06)),
+      radial-gradient(circle at 18% 0%, rgba(217,255,57,.16), transparent 34%);
+    mix-blend-mode: screen;
+  }
+
+  .device video,
+  .device img {
+    width: 100%;
+    border-radius: 14px;
+    background: #000;
+  }
+
+  .video-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .flow-carousel {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .carousel-btn {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(246,242,232,.16);
+    border-radius: 50%;
+    background: rgba(5,8,5,.74);
+    color: var(--green);
+    cursor: pointer;
+  }
+
+  .carousel-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  .flow-track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(300px, 32%);
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding: 6px 2px 18px;
+  }
+
+  .flow-track::-webkit-scrollbar { display: none; }
+
+  .flow-card {
+    min-height: 0;
+    border: 1px solid rgba(246,242,232,.14);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 80% 20%, rgba(217,255,57,.14), transparent 36%),
+      rgba(246,242,232,.045);
+    padding: 16px;
+    scroll-snap-align: start;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 14px;
+  }
+
+  .flow-thumb {
+    aspect-ratio: 16 / 9;
+    border: 1px solid rgba(246,242,232,.12);
+    border-radius: 12px;
+    background: #020302;
+    overflow: hidden;
+  }
+
+  .flow-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .flow-copy {
+    display: grid;
+    align-content: start;
+  }
+
+  .flow-card strong {
+    display: block;
+    margin: 12px 0 8px;
+    color: var(--ink);
+    font: italic 900 clamp(28px,3vw,44px)/.9 var(--title);
+  }
+
+  .index {
+    color: var(--green);
+    font: 900 11px/1 var(--body);
+    letter-spacing: .14em;
+  }
+
+  .step-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .step-tags span {
+    border: 1px solid rgba(246,242,232,.12);
+    border-radius: 999px;
+    background: rgba(0,0,0,.22);
+    padding: 7px 9px;
+    color: rgba(246,242,232,.72);
+    font: 800 10px/1 var(--body);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .ui-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0,1fr));
+    gap: 18px;
+    align-items: start;
+    grid-auto-flow: dense;
+  }
+
+  .shot {
+    position: relative;
+    border: 1px solid rgba(246,242,232,.14);
+    border-radius: 18px;
+    background: rgba(5,8,5,.68);
+    box-shadow: 0 34px 90px rgba(0,0,0,.42);
+    overflow: hidden;
+    align-self: start;
+    height: fit-content;
+  }
+
+  .shot.large { grid-column: span 7; }
+  .shot.medium { grid-column: span 5; }
+  .shot.wide { grid-column: span 12; }
+  .shot.small { grid-column: span 4; }
+
+  .shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .shot.contain img {
+    height: auto;
+    object-fit: contain;
+    background: #000;
+  }
+
+  .shot.figma-crop img {
+    display: block;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .shot.figma-crop {
+    display: block;
+    line-height: 0;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .feature-card {
+    position: relative;
+    min-height: 0;
+    border: 1px solid rgba(246,242,232,.14);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 82% 16%, rgba(217,255,57,.18), transparent 34%),
+      linear-gradient(135deg, rgba(246,242,232,.08), rgba(246,242,232,.025));
+    overflow: hidden;
+    padding: 30px;
+    display: grid;
+    grid-template-rows: auto auto auto 1fr;
+    gap: 14px;
+  }
+
+  .feature-card h3 {
+    max-width: 430px;
+    color: var(--ink);
+    font: italic 900 clamp(32px,3.8vw,60px)/.86 var(--title);
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .feature-card h3 span { color: var(--green); }
+
+  .feature-card p {
+    max-width: 390px;
+    margin-top: 0;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .feature-specs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .feature-specs span {
+    border: 1px solid rgba(246,242,232,.12);
+    border-radius: 999px;
+    background: rgba(0,0,0,.2);
+    padding: 9px 10px;
+    color: rgba(246,242,232,.76);
+    font: 900 10px/1 var(--body);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .feature-visual {
+    position: relative;
+    min-height: 230px;
+    border: 1px solid rgba(246,242,232,.12);
+    border-radius: 16px;
+    background:
+      linear-gradient(rgba(217,255,57,.06) 1px, transparent 1px) 0 0/48px 48px,
+      linear-gradient(90deg, rgba(217,255,57,.06) 1px, transparent 1px) 0 0/48px 48px,
+      rgba(0,0,0,.18);
+    overflow: hidden;
+  }
+
+  .camera-field {
+    position: absolute;
+    inset: 18px;
+    border: 1px solid rgba(121,222,195,.16);
+    border-radius: 999px;
+    background:
+      radial-gradient(circle, transparent 0 44px, rgba(121,222,195,.12) 45px 46px, transparent 47px 74px, rgba(217,255,57,.11) 75px 76px, transparent 77px),
+      radial-gradient(circle at 50% 50%, rgba(217,255,57,.09), transparent 48%);
+  }
+
+  .candidate-dot {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(246,242,232,.18);
+    background: rgba(217,255,57,.22);
+    box-shadow: 0 0 24px rgba(217,255,57,.18);
+  }
+
+  .candidate-dot:nth-child(1) { left: 18%; top: 34%; }
+  .candidate-dot:nth-child(2) { right: 18%; top: 34%; }
+  .candidate-dot:nth-child(3) { left: 26%; bottom: 22%; }
+  .candidate-dot:nth-child(4) { right: 26%; bottom: 22%; }
+
+  .camera-visual {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    width: 106px;
+    height: 168px;
+    transform: translateX(-50%);
+    border-radius: 50px 50px 24px 24px;
+    background: linear-gradient(180deg, #252925, #050605 68%);
+    box-shadow: 0 34px 80px rgba(0,0,0,.56), 0 0 42px rgba(217,255,57,.14);
+  }
+
+  .camera-visual::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -24px;
+    width: 154px;
+    height: 54px;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 28% 50%, #050605 0 12px, #3a3f38 13px 23px, transparent 24px),
+      radial-gradient(circle at 72% 50%, #050605 0 12px, #3a3f38 13px 23px, transparent 24px),
+      linear-gradient(180deg, #343a33, #161915);
+    box-shadow: inset 0 0 28px rgba(255,255,255,.08);
+  }
+
+  .camera-visual::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 38px;
+    width: 10px;
+    height: 78px;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: linear-gradient(var(--orange) 0 26px, transparent 26px 42px, #f3efe6 42px 82px, transparent 82px 98px, var(--green) 98px);
+  }
+
+  .diarization-visual {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    top: 22px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .local-chip {
+    justify-self: start;
+    border: 1px solid rgba(217,255,57,.26);
+    border-radius: 999px;
+    background: rgba(217,255,57,.11);
+    padding: 8px 11px;
+    color: var(--green);
+    font: 900 10px/1 var(--body);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .voice-row {
+    display: grid;
+    grid-template-columns: 44px 1fr 54px;
+    gap: 12px;
+    align-items: center;
+    border: 1px solid rgba(246,242,232,.12);
+    border-radius: 14px;
+    background: rgba(0,0,0,.22);
+    padding: 10px 12px;
+  }
+
+  .feedback-showcase {
+    display: grid;
+    grid-template-columns: minmax(250px, .58fr) minmax(0, 1.42fr);
+    gap: clamp(18px,3vw,38px);
+    align-items: center;
+  }
+
+  #feedback-mobile { padding-top: 8vh; }
+
+  .phone-stack {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+  }
+
+  .phone-shot {
+    position: relative;
+    width: 100%;
+    max-height: 390px;
+    border: 1px solid rgba(246,242,232,.16);
+    border-radius: 22px;
+    background: #050705;
+    box-shadow: 0 30px 90px rgba(0,0,0,.54);
+    overflow: hidden;
+  }
+
+  .phone-shot img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+  .phone-shot.primary { z-index: 2; transform: rotate(-3deg); }
+  .phone-shot.secondary { z-index: 1; transform: rotate(3deg) translateY(20px); opacity: .9; }
+
+  .feedback-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    align-items: start;
+    padding: 4px 0;
+  }
+
+  .feedback-grid::-webkit-scrollbar { display: none; }
+
+  .feedback-card {
+    border: 1px solid rgba(246,242,232,.14);
+    border-radius: 18px;
+    background: rgba(5,8,5,.58);
+    overflow: hidden;
+    box-shadow: 0 26px 70px rgba(0,0,0,.36);
+    align-self: start;
+    height: fit-content;
+    line-height: 0;
+  }
+
+  .feedback-card img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+  .feedback-card.wide {
+    grid-column: auto;
+  }
+
+  .feedback-card.tall {
+    grid-row: span 2;
+  }
+
+  .voice-row b {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(217,255,57,.16);
+    color: var(--green);
+  }
+
+  .wave-line {
+    height: 22px;
+    border-radius: 999px;
+    background: repeating-linear-gradient(90deg, rgba(121,222,195,.85) 0 3px, transparent 3px 10px);
+    mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  }
+
+  .voice-row span {
+    color: rgba(246,242,232,.66);
+    font: 900 11px/1 var(--body);
+    letter-spacing: .12em;
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr);
+    gap: clamp(20px,4vw,54px);
+    align-items: center;
+  }
+
+  .setup-showcase {
+    margin-top: 34px;
+  }
+
+  .setup-showcase .shot {
+    grid-column: span 6;
+  }
+
+  .task-strip {
+    display: grid;
+    gap: 14px;
+  }
+
+  .task-strip img {
+    width: 100%;
+    border: 1px solid rgba(246,242,232,.14);
+    border-radius: 14px;
+    box-shadow: 0 22px 58px rgba(0,0,0,.38);
+  }
+
+  .closing {
+    position: relative;
+    min-height: 92svh;
+    display: grid;
+    align-items: end;
+    padding: 16vh 5vw 9vh;
+    overflow: hidden;
+  }
+
+  .closing .panel {
+    max-width: 720px;
+  }
+
+  .closing-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 26px;
+  }
+
+  .rail {
+    position: fixed;
+    right: 28px;
+    top: 50%;
+    z-index: 80;
+    display: grid;
+    gap: 12px;
+    transform: translateY(-50%);
+  }
+
+  .rail a {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(246,242,232,.28);
+    text-decoration: none;
+  }
+
+  .rail a.active {
+    background: var(--green);
+    transform: scale(1.7);
+    box-shadow: 0 0 18px var(--green);
+  }
+
+  @media (max-width: 1000px) {
+    .meta,
+    .feature-grid,
+    .closing-list { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .section-head,
+    .demo-stage,
+    .feedback-showcase,
+    .split { grid-template-columns: 1fr; }
+    .shot.large,
+    .shot.medium,
+    .setup-showcase .shot,
+    .shot.small { grid-column: span 12; }
+  }
+
+  @media (max-width: 640px) {
+    .top-bar { inset: 14px; }
+    .top-bar span { display: none; }
+    .hero,
+    .section,
+    .closing { padding-left: 20px; padding-right: 20px; }
+    .hero h1 { font-size: clamp(58px,18vw,92px); }
+    .meta,
+    .feature-grid,
+    .closing-list { grid-template-columns: 1fr; }
+    .feature-specs { grid-template-columns: 1fr; }
+    .flow-carousel { grid-template-columns: 1fr; }
+    .carousel-btn { display: none; }
+    .flow-track { grid-auto-columns: 86%; }
+    .feedback-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .phone-stack { grid-template-columns: 1fr 1fr; }
+    .phone-shot { max-height: 340px; }
+    .rail { display: none; }
+    .device { transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<nav class="top-bar">
+  <a id="back-link" href="../?room=2">&larr; Back to Gallery</a>
+  <span>AI Speaking Lab</span>
+</nav>
+<nav class="rail" aria-label="Case sections">
+  <a href="#intro" class="active" aria-label="Intro"></a>
+  <a href="#demo" aria-label="Demo"></a>
+  <a href="#features" aria-label="Features"></a>
+  <a href="#flow" aria-label="Flow"></a>
+  <a href="#ui" aria-label="UI"></a>
+  <a href="#setup" aria-label="Setup"></a>
+  <a href="#feedback-mobile" aria-label="Mobile feedback"></a>
+  <a href="#close" aria-label="Close"></a>
+</nav>
+
+<main>
+  <section class="hero" id="intro">
+    <div class="photo-fill"><img src="assets/photos/aisl-table-close.jpg" alt="AI Speaking Lab physical classroom prototype on a table"></div>
+    <div class="hero-copy">
+      <div class="eyebrow">UI/UX Design · AI education product</div>
+      <h1>AI Speaking<br><span>Lab</span></h1>
+      <p class="lead">A classroom speaking-assessment system that connects a shared desktop flow, physical topic/tag cards, camera guidance, and personal feedback.</p>
+      <div class="meta">
+        <div><strong>Role</strong><p>UX flow, product UI, prototype showcase</p></div>
+        <div><strong>Context</strong><p>DSE-style speaking practice in group settings</p></div>
+        <div><strong>Interface</strong><p>Desktop station + mobile feedback</p></div>
+        <div><strong>Goal</strong><p>Make AI assessment visible, guided, and recoverable</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="demo">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Actual product demo</div>
+        <h2>Start with the <span>real interface.</span></h2>
+      </div>
+      <p class="body-copy">The portfolio page should behave like a product showcase: the first proof is the working UI, not a long explanation. This demo video is pulled from the ASL web project assets.</p>
+    </div>
+    <div class="demo-stage">
+      <div class="device">
+        <video src="assets/aslweb/onboarding_old.mp4" poster="assets/aslweb/presentation_cover_card.png" autoplay muted loop playsinline controls></video>
+      </div>
+      <div class="note">
+        <div class="eyebrow">Flow cue</div>
+        <p>Students enter through a shared station. The system uses large states, simple prompts, and physical references so the group can understand what is happening in the room.</p>
+        <div class="video-controls">
+          <span class="pill">Onboarding</span>
+          <span class="pill">Camera</span>
+          <span class="pill">Topic</span>
+          <span class="pill">Feedback</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section tight" id="features">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Product features</div>
+        <h2>Designed around the <span>room.</span></h2>
+      </div>
+      <p class="body-copy">The product is not just a screen flow. It depends on classroom-aware sensing: a panoramic camera captures the group context, while offline speaker diarization separates who spoke when without relying on cloud audio processing.</p>
+    </div>
+    <div class="feature-grid">
+      <article class="feature-card">
+        <h3>Panoramic <span>camera</span></h3>
+        <p>A shared 360-degree capture point keeps every candidate visible, reducing setup anxiety and making group speaking behavior easier to review.</p>
+        <div class="feature-specs">
+          <span>360° room view</span>
+          <span>Group framing</span>
+          <span>Body guidance</span>
+          <span>Visible setup</span>
+        </div>
+        <div class="feature-visual" aria-hidden="true">
+          <div class="camera-field">
+            <i class="candidate-dot"></i>
+            <i class="candidate-dot"></i>
+            <i class="candidate-dot"></i>
+            <i class="candidate-dot"></i>
+          </div>
+          <div class="camera-visual"></div>
+        </div>
+      </article>
+      <article class="feature-card">
+        <h3>Offline speaker <span>diarization</span></h3>
+        <p>Local diarization separates speakers and timestamps turns in the room, supporting privacy-sensitive assessment and faster feedback generation.</p>
+        <div class="feature-specs">
+          <span>Local audio</span>
+          <span>Speaker turns</span>
+          <span>Time evidence</span>
+          <span>Private feedback</span>
+        </div>
+        <div class="feature-visual" aria-hidden="true">
+          <div class="diarization-visual">
+            <div class="local-chip">Offline processing</div>
+            <div class="voice-row"><b>A</b><i class="wave-line"></i><span>00:12</span></div>
+            <div class="voice-row"><b>B</b><i class="wave-line"></i><span>00:28</span></div>
+            <div class="voice-row"><b>C</b><i class="wave-line"></i><span>00:41</span></div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section tight" id="flow">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">UX flow</div>
+        <h2>From setup to <span>reflection.</span></h2>
+      </div>
+      <p class="body-copy">The case study focuses on the experience sequence: what users need to understand before, during, and after a speaking session.</p>
+    </div>
+    <div class="flow-carousel">
+      <button class="carousel-btn" type="button" data-flow-dir="-1" aria-label="Previous flow step">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+      </button>
+      <div class="flow-track" id="flow-track">
+        <article class="flow-card">
+          <div class="flow-thumb"><img src="assets/figma-ui/figma-screen-02.jpg" alt=""></div>
+          <div class="flow-copy"><div class="index">01</div><strong>Choose mode</strong><p>Solo, presentation, interview, or discussion.</p><div class="step-tags"><span>Task entry</span><span>Shared screen</span></div></div>
+        </article>
+        <article class="flow-card">
+          <div class="flow-thumb"><img src="assets/figma-ui/figma-screen-07.jpg" alt=""></div>
+          <div class="flow-copy"><div class="index">02</div><strong>Set camera</strong><p>Translate capture constraints into visible body guidance.</p><div class="step-tags"><span>Panoramic capture</span><span>Body frame</span></div></div>
+        </article>
+        <article class="flow-card">
+          <div class="flow-thumb"><img src="assets/figma-ui/figma-screen-06.jpg" alt=""></div>
+          <div class="flow-copy"><div class="index">03</div><strong>Bind tags</strong><p>Use physical markers so identity is visible to students and system.</p><div class="step-tags"><span>QR login</span><span>Tag status</span></div></div>
+        </article>
+        <article class="flow-card">
+          <div class="flow-thumb"><img src="assets/figma-ui/figma-screen-16.jpg" alt=""></div>
+          <div class="flow-copy"><div class="index">04</div><strong>Confirm topic</strong><p>Bridge paper topic cards with a screen-confirmed prompt.</p><div class="step-tags"><span>Card scan</span><span>Fallback</span></div></div>
+        </article>
+        <article class="flow-card">
+          <div class="flow-thumb"><img src="assets/figma-ui/figma-screen-21.jpg" alt=""></div>
+          <div class="flow-copy"><div class="index">05</div><strong>Record</strong><p>Keep the active state, part, timing, and prompt readable.</p><div class="step-tags"><span>Timer</span><span>Session state</span></div></div>
+        </article>
+        <article class="flow-card">
+          <div class="flow-thumb"><img src="assets/feedback-ui/feedback-summary.jpg" alt=""></div>
+          <div class="flow-copy"><div class="index">06</div><strong>Feedback</strong><p>Move private coaching to individual devices.</p><div class="step-tags"><span>Mobile report</span><span>Evidence</span></div></div>
+        </article>
+      </div>
+      <button class="carousel-btn" type="button" data-flow-dir="1" aria-label="Next flow step">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+      </button>
+    </div>
+  </section>
+
+  <section class="section" id="ui">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Figma UI screens</div>
+        <h2>The actual designed <span>flow.</span></h2>
+      </div>
+      <p class="body-copy">These screenshots are cropped from the Figma case-study node you linked. They show the intended desktop flow: onboarding, task entry, system checks, group login, camera setup, identity confirmation, topic selection, recording, and report generation.</p>
+    </div>
+    <div class="ui-grid">
+      <figure class="shot large figma-crop">
+        <img src="assets/figma-ui/figma-screen-02.jpg" alt="Figma UI showing AI Speaking Lab task selection">
+      </figure>
+      <figure class="shot medium figma-crop">
+        <img src="assets/figma-ui/figma-screen-04.jpg" alt="Figma UI showing completed system checks for camera microphone and network">
+      </figure>
+      <figure class="shot medium figma-crop">
+        <img src="assets/figma-ui/figma-screen-06.jpg" alt="Figma UI showing get ready QR login and tag connection states">
+      </figure>
+      <figure class="shot large figma-crop">
+        <img src="assets/figma-ui/figma-screen-07.jpg" alt="Figma UI showing camera positioning instructions">
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" id="setup">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Identity + voice binding</div>
+        <h2>Make recognition <span>observable.</span></h2>
+      </div>
+      <p class="body-copy">The Figma flow exposes recognition status instead of hiding it: candidate tags, camera confirmation, voice sample, and retry states are all visible to the room.</p>
+    </div>
+    <div class="ui-grid setup-showcase">
+      <figure class="shot figma-crop">
+        <img src="assets/figma-ui/figma-screen-12.jpg" alt="Figma UI showing candidate identity confirmation">
+      </figure>
+      <figure class="shot figma-crop">
+        <img src="assets/figma-ui/figma-screen-13.jpg" alt="Figma UI showing voice binding instruction">
+      </figure>
+    </div>
+  </section>
+
+  <section class="section tight">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Topic · record · report</div>
+        <h2>The session becomes <span>trackable.</span></h2>
+      </div>
+      <p class="body-copy">The later Figma screens cue the final classroom sequence: topic detection, preparation timer, active recording state, report generation, and QR handoff for personal feedback.</p>
+    </div>
+    <div class="ui-grid">
+      <figure class="shot small figma-crop"><img src="assets/figma-ui/figma-screen-16.jpg" alt="Figma UI showing topic selection modal"></figure>
+      <figure class="shot small figma-crop"><img src="assets/figma-ui/figma-screen-21.jpg" alt="Figma UI showing active recording session"></figure>
+      <figure class="shot small figma-crop"><img src="assets/figma-ui/figma-screen-22.jpg" alt="Figma UI showing performance report generation"></figure>
+    </div>
+  </section>
+
+  <section class="section" id="feedback-mobile">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Mobile feedback</div>
+        <h2>Personal coaching on <span>the student's phone.</span></h2>
+      </div>
+      <p class="body-copy">The feedback flow moves from classroom-level reporting to individual mobile guidance: students bind their phone, choose focus areas, wait for processing, then review metrics, timeline evidence, and targeted improvement suggestions.</p>
+    </div>
+    <div class="feedback-showcase">
+      <div class="phone-stack">
+        <figure class="phone-shot primary"><img src="assets/feedback-ui/feedback-summary.jpg" alt="Mobile individual report summary"></figure>
+        <figure class="phone-shot secondary"><img src="assets/feedback-ui/feedback-timeline.jpg" alt="Mobile oral performance timeline"></figure>
+      </div>
+      <div class="feedback-grid">
+        <figure class="feedback-card"><img src="assets/feedback-ui/feedback-login.jpg" alt="Mobile account login UI"></figure>
+        <figure class="feedback-card"><img src="assets/feedback-ui/feedback-tag.jpg" alt="Mobile tag binding UI"></figure>
+        <figure class="feedback-card tall"><img src="assets/feedback-ui/feedback-focus.jpg" alt="Mobile focus area selection UI"></figure>
+        <figure class="feedback-card"><img src="assets/feedback-ui/feedback-waiting.jpg" alt="Mobile session waiting UI"></figure>
+        <figure class="feedback-card wide"><img src="assets/feedback-ui/feedback-ready.jpg" alt="Mobile feedback setup complete UI"></figure>
+        <figure class="feedback-card"><img src="assets/feedback-ui/feedback-voice.jpg" alt="Mobile voice performance detail UI"></figure>
+        <figure class="feedback-card"><img src="assets/feedback-ui/feedback-detail.jpg" alt="Mobile feedback detail UI"></figure>
+        <figure class="feedback-card"><img src="assets/feedback-ui/feedback-evidence.jpg" alt="Mobile evidence and transcript UI"></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing" id="close">
+    <div class="photo-fill"><img src="assets/photos/aisl-table-wide.jpg" alt="AI Speaking Lab prototype in classroom setup"></div>
+    <div class="panel">
+      <div class="eyebrow">Design outcome</div>
+      <h2>AI feedback that fits the <span>room.</span></h2>
+      <div class="closing-list">
+        <div class="note"><p>Students know what to do next through large shared states.</p></div>
+        <div class="note"><p>Teachers can run the session through a predictable setup flow.</p></div>
+        <div class="note"><p>Physical objects and digital UI reinforce the same assessment logic.</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const progress = document.getElementById("progress");
+  const sections = [...document.querySelectorAll("main > section[id]")];
+  const dots = [...document.querySelectorAll(".rail a")];
+  const flowTrack = document.getElementById("flow-track");
+
+  document.querySelectorAll("[data-flow-dir]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!flowTrack) return;
+      const direction = Number(button.dataset.flowDir || 1);
+      flowTrack.scrollBy({ left: direction * flowTrack.clientWidth * .72, behavior: "smooth" });
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    const back = event.target.closest && event.target.closest("#back-link");
+    if (!back) return;
+    event.preventDefault();
+    if (window.top !== window.self) window.parent.postMessage({ type: "close-route" }, "*");
+    else window.location.href = "../?room=2";
+  }, true);
+
+  function update() {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.width = `${max > 0 ? window.scrollY / max * 100 : 0}%`;
+    const center = window.scrollY + window.innerHeight * .45;
+    let active = sections[0]?.id;
+    sections.forEach(section => {
+      if (center >= section.offsetTop) active = section.id;
+    });
+    dots.forEach(dot => dot.classList.toggle("active", dot.getAttribute("href") === `#${active}`));
+  }
+
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
+  update();
+
+  window.addEventListener("load", () => {
+    if (window.top !== window.self) window.parent.postMessage({ type: "route-ready", path: "AISpeakingLab/" }, "*");
+  }, { once: true });
+})();
+</script>
+</body>
+</html>
