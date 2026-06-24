@@ -73,12 +73,20 @@
     border-radius: 999px;
     background: rgba(5,8,5,.62);
     backdrop-filter: blur(18px);
-    padding: 10px 14px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 18px;
     color: rgba(246,242,232,.88);
     text-decoration: none;
     font: 900 11px/1 var(--body);
     letter-spacing: .16em;
     text-transform: uppercase;
+  }
+
+  .pill {
+    min-height: 0;
+    padding: 10px 14px;
   }
 
   main { position: relative; z-index: 2; }
@@ -96,12 +104,24 @@
     position: absolute;
     inset: 0;
     z-index: -2;
+    background: #050604;
+    overflow: hidden;
+  }
+
+  .photo-fill::before {
+    content: "";
+    position: absolute;
+    inset: -24px;
+    background: var(--photo-url) center/cover no-repeat;
+    filter: blur(20px) saturate(.92) brightness(.68);
+    transform: scale(1.04);
   }
 
   .photo-fill img {
+    position: relative;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     filter: saturate(.94) contrast(1.03) brightness(.96);
   }
 
@@ -580,59 +600,33 @@
   }
 
   .feedback-showcase {
-    display: grid;
-    grid-template-columns: minmax(250px, .58fr) minmax(0, 1.42fr);
-    gap: clamp(18px,3vw,38px);
-    align-items: center;
+    display: block;
   }
 
   #feedback-mobile { padding-top: 8vh; }
 
-  .phone-stack {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-    align-items: start;
-  }
-
-  .phone-shot {
-    position: relative;
-    width: 100%;
-    max-height: 390px;
-    border: 1px solid rgba(246,242,232,.16);
-    border-radius: 22px;
-    background: #050705;
-    box-shadow: 0 30px 90px rgba(0,0,0,.54);
-    overflow: hidden;
-  }
-
-  .phone-shot img {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-  }
-  .phone-shot.primary { z-index: 2; transform: rotate(-3deg); }
-  .phone-shot.secondary { z-index: 1; transform: rotate(3deg) translateY(20px); opacity: .9; }
-
   .feedback-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
+    display: flex;
+    gap: 8px;
     align-items: start;
-    padding: 4px 0;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding: 4px 0 18px;
+    scrollbar-width: none;
   }
 
   .feedback-grid::-webkit-scrollbar { display: none; }
 
   .feedback-card {
     border: 1px solid rgba(246,242,232,.14);
-    border-radius: 18px;
+    border-radius: 14px;
     background: rgba(5,8,5,.58);
     overflow: hidden;
     box-shadow: 0 26px 70px rgba(0,0,0,.36);
-    align-self: start;
+    flex: 0 0 clamp(150px, 13vw, 205px);
     height: fit-content;
     line-height: 0;
+    scroll-snap-align: start;
   }
 
   .feedback-card img {
@@ -641,11 +635,15 @@
     object-fit: contain;
   }
   .feedback-card.wide {
-    grid-column: auto;
+    flex-basis: clamp(170px, 14vw, 220px);
   }
 
   .feedback-card.tall {
-    grid-row: span 2;
+    flex-basis: clamp(170px, 15vw, 230px);
+  }
+
+  .feedback-card.report {
+    flex-basis: clamp(170px, 14.5vw, 225px);
   }
 
   .voice-row b {
@@ -770,9 +768,10 @@
     .flow-carousel { grid-template-columns: 1fr; }
     .carousel-btn { display: none; }
     .flow-track { grid-auto-columns: 86%; }
-    .feedback-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .phone-stack { grid-template-columns: 1fr 1fr; }
-    .phone-shot { max-height: 340px; }
+    .feedback-card,
+    .feedback-card.wide,
+    .feedback-card.tall,
+    .feedback-card.report { flex-basis: 62vw; }
     .rail { display: none; }
     .device { transform: none; }
   }
@@ -781,7 +780,7 @@
 <body>
 <div class="progress" id="progress"></div>
 <nav class="top-bar">
-  <a id="back-link" href="../?room=2">&larr; Back to Gallery</a>
+  <a id="back-link" href="../index.html?room=2">&larr; Back to Gallery</a>
   <span>AI Speaking Lab</span>
 </nav>
 <nav class="rail" aria-label="Case sections">
@@ -797,7 +796,7 @@
 
 <main>
   <section class="hero" id="intro">
-    <div class="photo-fill"><img src="assets/photos/aisl-table-close.jpg" alt="AI Speaking Lab physical classroom prototype on a table"></div>
+    <div class="photo-fill" style="--photo-url: url('assets/photos/aisl-table-wide.jpg')"><img src="assets/photos/aisl-table-wide.jpg" alt="AI Speaking Lab prototype in classroom setup"></div>
     <div class="hero-copy">
       <div class="eyebrow">UI/UX Design · AI education product</div>
       <h1>AI Speaking<br><span>Lab</span></h1>
@@ -995,25 +994,23 @@
       <p class="body-copy">The feedback flow moves from classroom-level reporting to individual mobile guidance: students bind their phone, choose focus areas, wait for processing, then review metrics, timeline evidence, and targeted improvement suggestions.</p>
     </div>
     <div class="feedback-showcase">
-      <div class="phone-stack">
-        <figure class="phone-shot primary"><img src="assets/feedback-ui/feedback-summary.jpg" alt="Mobile individual report summary"></figure>
-        <figure class="phone-shot secondary"><img src="assets/feedback-ui/feedback-timeline.jpg" alt="Mobile oral performance timeline"></figure>
-      </div>
       <div class="feedback-grid">
         <figure class="feedback-card"><img src="assets/feedback-ui/feedback-login.jpg" alt="Mobile account login UI"></figure>
         <figure class="feedback-card"><img src="assets/feedback-ui/feedback-tag.jpg" alt="Mobile tag binding UI"></figure>
         <figure class="feedback-card tall"><img src="assets/feedback-ui/feedback-focus.jpg" alt="Mobile focus area selection UI"></figure>
         <figure class="feedback-card"><img src="assets/feedback-ui/feedback-waiting.jpg" alt="Mobile session waiting UI"></figure>
         <figure class="feedback-card wide"><img src="assets/feedback-ui/feedback-ready.jpg" alt="Mobile feedback setup complete UI"></figure>
-        <figure class="feedback-card"><img src="assets/feedback-ui/feedback-voice.jpg" alt="Mobile voice performance detail UI"></figure>
-        <figure class="feedback-card"><img src="assets/feedback-ui/feedback-detail.jpg" alt="Mobile feedback detail UI"></figure>
+        <figure class="feedback-card report"><img src="assets/feedback-ui/feedback-summary.jpg" alt="Mobile individual report summary"></figure>
+        <figure class="feedback-card report"><img src="assets/feedback-ui/feedback-voice.jpg" alt="Mobile voice performance detail UI"></figure>
+        <figure class="feedback-card report"><img src="assets/feedback-ui/feedback-timeline.jpg" alt="Mobile oral performance timeline"></figure>
+        <figure class="feedback-card report"><img src="assets/feedback-ui/feedback-detail.jpg" alt="Mobile feedback detail UI"></figure>
         <figure class="feedback-card"><img src="assets/feedback-ui/feedback-evidence.jpg" alt="Mobile evidence and transcript UI"></figure>
       </div>
     </div>
   </section>
 
   <section class="closing" id="close">
-    <div class="photo-fill"><img src="assets/photos/aisl-table-wide.jpg" alt="AI Speaking Lab prototype in classroom setup"></div>
+    <div class="photo-fill" style="--photo-url: url('assets/photos/aisl-table-close.jpg')"><img src="assets/photos/aisl-table-close.jpg" alt="AI Speaking Lab physical classroom prototype on a table"></div>
     <div class="panel">
       <div class="eyebrow">Design outcome</div>
       <h2>AI feedback that fits the <span>room.</span></h2>
@@ -1041,13 +1038,39 @@
     });
   });
 
-  document.addEventListener("click", (event) => {
-    const back = event.target.closest && event.target.closest("#back-link");
-    if (!back) return;
+  const backLink = document.getElementById("back-link");
+  let lastBackActivation = 0;
+  function goBack(event) {
     event.preventDefault();
-    if (window.top !== window.self) window.parent.postMessage({ type: "close-route" }, "*");
-    else window.location.href = "../?room=2";
-  }, true);
+    event.stopPropagation();
+    const now = performance.now();
+    if (now - lastBackActivation < 320) return;
+    lastBackActivation = now;
+    const galleryUrl = new URL("../index.html?room=2", window.location.href).href;
+    if (window.top !== window.self) {
+      try {
+        if (typeof window.parent.closeRoute === "function") {
+          window.parent.closeRoute({ replace: true });
+          return;
+        }
+      } catch (error) {}
+      window.parent.postMessage({ type: "close-route" }, "*");
+      return;
+    }
+    window.location.assign(galleryUrl);
+  }
+  backLink?.addEventListener("click", goBack);
+  document.querySelector(".top-bar")?.addEventListener("click", (event) => {
+    if (event.target.closest("#back-link")) return;
+    const rect = backLink?.getBoundingClientRect();
+    if (!rect) return;
+    const withinBackHitArea =
+      event.clientX >= rect.left - 10 &&
+      event.clientX <= rect.right + 10 &&
+      event.clientY >= rect.top - 10 &&
+      event.clientY <= rect.bottom + 10;
+    if (withinBackHitArea) goBack(event);
+  });
 
   function update() {
     const max = document.documentElement.scrollHeight - window.innerHeight;
