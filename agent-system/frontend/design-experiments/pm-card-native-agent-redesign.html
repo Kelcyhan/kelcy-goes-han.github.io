@@ -1,0 +1,1486 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PM Card Native Agent Redesign</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg-base: #f4f7fb;
+      --bg-panel: rgba(255,255,255,.72);
+      --bg-card: rgba(255,255,255,.68);
+      --bg-card-hover: rgba(255,255,255,.88);
+      --bg-ingrained: rgba(58, 74, 103, .065);
+      --bg-raised: rgba(255,255,255,.92);
+      --text: #182233;
+      --muted: #5f6c80;
+      --subtle: #93a0b2;
+      --ghost: #b8c2cf;
+      --border: rgba(41, 56, 79, .12);
+      --border-soft: rgba(41, 56, 79, .075);
+      --border-strong: rgba(41, 56, 79, .18);
+      --accent: #6e95f6;
+      --accent-bright: #3d72e8;
+      --accent-dim: rgba(110, 149, 246, .14);
+      --domain: #25b8b1;
+      --domain-bg: rgba(37, 184, 177, .12);
+      --agent: #d98613;
+      --agent-bg: rgba(217, 134, 19, .12);
+      --active: #6e95f6;
+      --complete: #34a853;
+      --attention: #e8952d;
+      --inactive: #8b8b9a;
+      --red: #e05a4b;
+      --shadow-card: 0 1px 3px rgba(28, 40, 62, .08), 0 0 0 1px rgba(255,255,255,.72);
+      --shadow-hover: 0 8px 24px rgba(28, 40, 62, .12), 0 0 0 1px rgba(255,255,255,.78);
+      --shadow-float: 0 18px 48px rgba(28, 40, 62, .16), 0 0 0 1px rgba(255,255,255,.82);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font-sans: "DM Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", "Fira Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 84% 0%, rgba(110,149,246,.12), transparent 28%),
+        linear-gradient(rgba(41,56,79,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(41,56,79,.035) 1px, transparent 1px),
+        var(--bg-base);
+      background-size: auto, 40px 40px, 40px 40px, auto;
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.55;
+      letter-spacing: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 48px 300px minmax(560px, 1fr);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .icon-rail {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 7px;
+      border-right: 1px solid var(--border);
+      background: rgba(255,255,255,.56);
+      backdrop-filter: blur(14px);
+    }
+
+    .round-action {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg-raised);
+      color: var(--muted);
+      box-shadow: var(--shadow-card);
+    }
+
+    .rail-dot {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: var(--subtle);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .rail-dot.active {
+      border-color: rgba(110,149,246,.42);
+      background: var(--accent-dim);
+      color: var(--accent-bright);
+      box-shadow: 0 0 0 3px rgba(110,149,246,.08);
+    }
+
+    .rail-dot::after {
+      content: "";
+      position: absolute;
+      right: 4px;
+      top: 4px;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--complete);
+      box-shadow: 0 0 0 2px var(--bg-raised);
+    }
+
+    .rail-dot.waiting::after { background: var(--attention); }
+    .rail-dot.error::after { background: var(--red); }
+
+    .rail-spacer { flex: 1; }
+
+    .pm-panel {
+      min-width: 0;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+      background: rgba(255,255,255,.54);
+      backdrop-filter: blur(16px);
+    }
+
+    .pm-scroll {
+      height: 100%;
+      overflow-y: auto;
+      padding: 10px 16px 18px;
+    }
+
+    .pm-top {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 38px;
+      margin: -10px -16px 10px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--border-soft);
+      background: rgba(255,255,255,.76);
+      backdrop-filter: blur(16px);
+    }
+
+    .left-mode-switch {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 4px;
+      margin-bottom: 10px;
+      padding: 4px;
+      border: 1px solid var(--border-soft);
+      border-radius: 999px;
+      background: rgba(255,255,255,.62);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
+    }
+
+    .left-mode-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 30px;
+      min-width: 0;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .left-mode-btn.active {
+      background: rgba(255,255,255,.92);
+      color: var(--accent-bright);
+      box-shadow: var(--shadow-card);
+    }
+
+    .focus-panel {
+      display: none;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.54));
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .focus-panel.active { display: block; }
+
+    .focus-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 34px;
+      padding: 0 11px;
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--subtle);
+      font-size: 10px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .focus-head span:last-child {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    .focus-body { padding: 8px; }
+
+    .inbox-row {
+      display: grid;
+      grid-template-columns: 8px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      min-height: 46px;
+      padding: 7px 8px;
+      border-radius: var(--radius-md);
+      color: var(--muted);
+      background: transparent;
+    }
+
+    .inbox-row + .inbox-row { margin-top: 3px; }
+    .inbox-row:hover { background: rgba(58,74,103,.065); }
+    .inbox-row.selected {
+      background: rgba(110,149,246,.10);
+      box-shadow: inset 0 0 0 1px rgba(110,149,246,.16);
+    }
+
+    .inbox-title {
+      display: block;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 850;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .inbox-sub {
+      display: block;
+      margin-top: 1px;
+      overflow: hidden;
+      color: var(--subtle);
+      font-size: 10px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .jump-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 23px;
+      padding: 0 7px;
+      border: 1px solid var(--border-soft);
+      border-radius: 999px;
+      background: rgba(255,255,255,.6);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pin-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .pin-tile {
+      min-height: 58px;
+      padding: 8px;
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.46);
+      color: var(--muted);
+    }
+
+    .pin-tile b {
+      display: block;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pin-tile span {
+      display: block;
+      margin-top: 4px;
+      overflow: hidden;
+      font-size: 10px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .project-map-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 28px;
+      padding: 4px 7px;
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .project-map-row.active {
+      background: rgba(110,149,246,.10);
+      color: var(--accent-bright);
+    }
+
+    .project-map-row.indent { padding-left: 22px; }
+
+    .stack-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 2px 0 9px;
+      color: var(--subtle);
+      font-size: 10px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .stack-label::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border-soft);
+    }
+
+    .crumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .crumb b {
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .node-card,
+    .entity-card,
+    .new-task-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.88), rgba(255,255,255,.58));
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .node-card {
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .node-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.28;
+      letter-spacing: 0;
+    }
+
+    .desc {
+      margin: 12px 0 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .status-select {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 24px;
+      padding: 0 9px;
+      border: 1px solid rgba(52,168,83,.24);
+      border-radius: 999px;
+      background: rgba(52,168,83,.11);
+      color: #238044;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 4px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-soft);
+    }
+
+    .segmented.three {
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      padding: 8px 10px 10px;
+      border-top: 1px solid var(--border-soft);
+    }
+
+    .seg-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      min-width: 0;
+      height: 31px;
+      border: 0;
+      border-radius: var(--radius-md);
+      background: rgba(58,74,103,.06);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .seg-btn.active {
+      background: rgba(110,149,246,.15);
+      color: var(--accent-bright);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.64);
+    }
+
+    .panel-shell {
+      margin-top: 8px;
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-md);
+      background: rgba(239,244,250,.62);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 34px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--subtle);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .panel-head .count {
+      margin-left: auto;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .panel-body { padding: 9px; }
+
+    .file-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .mini-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .mini-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--subtle);
+    }
+
+    .mini-btn:hover { background: rgba(58,74,103,.08); color: var(--text); }
+
+    .empty-box {
+      height: 130px;
+      border-radius: 8px;
+      background: rgba(225,232,242,.55);
+    }
+
+    .entity-card {
+      position: relative;
+      margin-bottom: 12px;
+      transition: box-shadow .15s, transform .15s, border-color .15s, background .15s;
+    }
+
+    .entity-card:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-hover);
+      background: rgba(255,255,255,.82);
+    }
+
+    .entity-card.domain {
+      border-left: 3px solid var(--domain);
+    }
+
+    .entity-card.task {
+      border-color: rgba(110,149,246,.34);
+    }
+
+    .entity-card.task.waiting {
+      border-color: rgba(232,149,45,.42);
+    }
+
+    .card-main {
+      padding: 10px 12px;
+    }
+
+    .identity {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .entity-mark {
+      position: relative;
+      width: 22px;
+      height: 22px;
+      flex: 0 0 22px;
+    }
+
+    .entity-mark.folder::before {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 6px;
+      width: 9px;
+      height: 5px;
+      border-radius: 3px 3px 0 0;
+      background: rgba(37,184,177,.48);
+    }
+
+    .entity-mark.folder::after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      bottom: 5px;
+      width: 16px;
+      height: 11px;
+      border-radius: 4px;
+      background: var(--domain);
+    }
+
+    .entity-mark.task::before {
+      content: "";
+      position: absolute;
+      inset: 4px 5px;
+      border-radius: 4px;
+      background: #4f6f8f;
+    }
+
+    .entity-mark.task::after {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: 8px;
+      height: 2px;
+      border-radius: 2px;
+      background: rgba(255,255,255,.62);
+      box-shadow: 0 5px 0 rgba(255,255,255,.55);
+    }
+
+    .id {
+      color: var(--subtle);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-desc {
+      margin: 5px 0 0 28px;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 21px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: rgba(255,255,255,.55);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge.active {
+      border-color: rgba(110,149,246,.24);
+      background: rgba(110,149,246,.12);
+      color: #3d72e8;
+    }
+
+    .badge.waiting {
+      border-color: rgba(232,149,45,.26);
+      background: rgba(232,149,45,.12);
+      color: #9b620f;
+    }
+
+    .live-pill {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 22px;
+      padding: 0 8px;
+      border: 1px solid rgba(217,134,19,.28);
+      border-radius: 999px;
+      background: var(--agent-bg);
+      color: #9b5d08;
+      font-size: 10px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .adot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--agent);
+      box-shadow: 0 0 0 3px rgba(217,134,19,.16);
+    }
+
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bar {
+      flex: 1;
+      height: 3px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(58,74,103,.12);
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--active);
+    }
+
+    .tabs-panel {
+      display: none;
+      border-top: 1px solid var(--border-soft);
+      background: rgba(246,249,253,.54);
+    }
+
+    .tabs-panel.show { display: block; }
+
+    .card-panel-body {
+      padding: 8px 12px 10px;
+      max-height: 230px;
+      overflow: auto;
+      border-top: 1px solid var(--border-soft);
+    }
+
+    .agent-section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 9px;
+    }
+
+    .section-title {
+      flex: 1;
+      min-width: 0;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .new-agent {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 25px;
+      padding: 0 9px;
+      border: 1px solid rgba(110,149,246,.26);
+      border-radius: 7px;
+      background: rgba(110,149,246,.12);
+      color: var(--accent-bright);
+      font-size: 10px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .agent-row {
+      display: grid;
+      grid-template-columns: 8px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      min-height: 32px;
+      padding: 5px 6px;
+      border-radius: 7px;
+      color: var(--muted);
+    }
+
+    .agent-row:hover { background: rgba(58,74,103,.065); }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--complete);
+    }
+
+    .status-dot.waiting { background: var(--attention); }
+    .status-dot.error { background: var(--red); }
+
+    .agent-name {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 750;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .agent-sub {
+      display: block;
+      margin-top: 1px;
+      overflow: hidden;
+      color: var(--subtle);
+      font-size: 10px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .agent-action {
+      height: 23px;
+      padding: 0 7px;
+      border: 1px solid var(--border-soft);
+      border-radius: 6px;
+      background: rgba(255,255,255,.56);
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .agent-action.primary {
+      border-color: rgba(232,149,45,.28);
+      background: rgba(232,149,45,.12);
+      color: #9b620f;
+    }
+
+    .section-divider {
+      margin: 8px 0 5px;
+      color: var(--subtle);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .file-row {
+      display: grid;
+      grid-template-columns: 14px minmax(0, 1fr) auto;
+      gap: 7px;
+      align-items: center;
+      min-height: 26px;
+      padding: 2px 4px;
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 10px;
+    }
+
+    .file-row:last-child { border-bottom: 0; }
+
+    .file-name {
+      overflow: hidden;
+      color: var(--text);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .new-task-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 78px;
+      border-style: dashed;
+      color: var(--muted);
+      font-weight: 700;
+      background: rgba(255,255,255,.34);
+    }
+
+    .workspace {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 38px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.58);
+      backdrop-filter: blur(16px);
+    }
+
+    .top-tabs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .session-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 28px;
+      max-width: 230px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255,255,255,.76);
+      box-shadow: var(--shadow-card);
+      color: var(--text);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .tiny-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--attention);
+    }
+
+    .chat-area {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .chat-titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 70px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-soft);
+      background: rgba(255,255,255,.35);
+    }
+
+    .agent-context {
+      min-width: 0;
+    }
+
+    .agent-context b {
+      display: block;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .agent-context span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .chat-mode {
+      display: flex;
+      gap: 3px;
+      padding: 3px;
+      border: 1px solid var(--border-soft);
+      border-radius: 999px;
+      background: rgba(255,255,255,.48);
+    }
+
+    .chat-mode button {
+      height: 30px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .chat-mode button.active {
+      background: rgba(255,255,255,.9);
+      box-shadow: var(--shadow-card);
+      color: var(--text);
+    }
+
+    .blank-workspace {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .handoff-card {
+      position: absolute;
+      top: 38px;
+      left: 28px;
+      width: min(520px, calc(100% - 56px));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.7);
+      box-shadow: var(--shadow-float);
+      overflow: hidden;
+    }
+
+    .handoff-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .handoff-head b { font-size: 13px; }
+    .handoff-body { padding: 12px 14px; color: var(--muted); font-size: 12px; }
+
+    .handoff-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .handoff-tile {
+      min-height: 72px;
+      padding: 9px;
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      background: rgba(255,255,255,.58);
+    }
+
+    .handoff-tile strong {
+      display: block;
+      color: var(--text);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .composer {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 88px;
+      padding: 12px 18px 18px;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,.52);
+    }
+
+    .composer-box {
+      flex: 1;
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      border: 1px solid rgba(37,184,177,.28);
+      border-radius: 18px;
+      background: rgba(255,255,255,.68);
+      color: var(--muted);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+    }
+
+    .send {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #82a6ff, #5b7ff0);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(91,127,240,.32);
+    }
+
+    @media (max-width: 1000px) {
+      body { overflow: auto; }
+      .app { min-width: 1000px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav class="icon-rail">
+      <button class="round-action" title="System">◎</button>
+      <button class="rail-dot active waiting" title="Go to card 1.1">1.1</button>
+      <button class="rail-dot" title="Go to card 1.2">1.2</button>
+      <button class="rail-dot error" title="Blocked card 1.3">1.3</button>
+      <div class="rail-spacer"></div>
+      <button class="round-action" title="New">＋</button>
+    </nav>
+
+    <aside class="pm-panel">
+      <div class="pm-scroll">
+        <div class="pm-top">
+          <div class="crumb"><span>Locusly</span><span>›</span><b>AcmeWebApp</b></div>
+        </div>
+
+        <div class="left-mode-switch" aria-label="Left navigation mode">
+          <button class="left-mode-btn active" data-left-mode="active">Active</button>
+          <button class="left-mode-btn" data-left-mode="pinned">Pinned</button>
+          <button class="left-mode-btn" data-left-mode="projects">Projects</button>
+        </div>
+
+        <section class="focus-panel active" data-left-panel="active">
+          <div class="focus-head"><span>Agent Inbox</span><span>3</span></div>
+          <div class="focus-body">
+            <div class="inbox-row selected" data-jump-card="1.1">
+              <span class="status-dot waiting"></span>
+              <div>
+                <span class="inbox-title">PM Panel Design Partner</span>
+                <span class="inbox-sub">Review card-native agent section</span>
+              </div>
+              <span class="jump-chip">1.1</span>
+            </div>
+            <div class="inbox-row" data-jump-card="1.2">
+              <span class="status-dot"></span>
+              <div>
+                <span class="inbox-title">Runtime Refactor Agent</span>
+                <span class="inbox-sub">Running · sync lifecycle with task path</span>
+              </div>
+              <span class="jump-chip">1.2</span>
+            </div>
+            <div class="inbox-row" data-jump-card="1.3">
+              <span class="status-dot error"></span>
+              <div>
+                <span class="inbox-title">Regression Sweep</span>
+                <span class="inbox-sub">Blocked · fixture decision needed</span>
+              </div>
+              <span class="jump-chip">1.3</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="focus-panel" data-left-panel="pinned">
+          <div class="focus-head"><span>Pinned</span><span>4</span></div>
+          <div class="focus-body">
+            <div class="pin-grid">
+              <div class="pin-tile" data-jump-card="1.1"><b>Design Partner</b><span>Agent · review</span></div>
+              <div class="pin-tile" data-jump-card="1.1"><b>Frontend</b><span>Domain · active</span></div>
+              <div class="pin-tile" data-jump-card="1.3"><b>Rail Scope</b><span>Task · waiting</span></div>
+              <div class="pin-tile"><b>Acme Web App</b><span>Project · active</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="focus-panel" data-left-panel="projects">
+          <div class="focus-head"><span>Project Map</span><span>1 open</span></div>
+          <div class="focus-body">
+            <div class="project-map-row active">▾ Acme Web App</div>
+            <div class="project-map-row indent active" data-jump-card="1.1">▸ 1.1 Frontend</div>
+            <div class="project-map-row indent" data-jump-card="1.2">▸ 1.2 Backend</div>
+            <div class="project-map-row indent" data-jump-card="1.3">• 1.3 Session rail scoping</div>
+          </div>
+        </section>
+
+        <div class="stack-label">Current project cards</div>
+
+        <section class="node-card">
+          <div class="node-title-row">
+            <h1>Acme Web App</h1>
+            <button class="status-select">Active ▾</button>
+          </div>
+          <p class="desc">Customer dashboard that loads &lt;1s, supports 10k sessions by Q3.</p>
+
+          <div class="segmented" data-tabs="node">
+            <button class="seg-btn active" data-target="node-files">□ Files</button>
+            <button class="seg-btn" data-target="node-agents">◇ Agents <span>4</span></button>
+          </div>
+
+          <div class="panel-shell">
+            <div class="panel-head"><span id="node-panel-title">Files</span><span class="count" id="node-panel-count">0</span></div>
+            <div class="panel-body">
+              <div class="node-panel" id="node-files">
+                <div class="file-toolbar">
+                  <span>Files (0)</span>
+                  <div class="mini-actions">
+                    <button class="mini-btn">＋</button>
+                    <button class="mini-btn">⇧</button>
+                    <button class="mini-btn">☑</button>
+                  </div>
+                </div>
+                <div class="empty-box"></div>
+              </div>
+              <div class="node-panel" id="node-agents" hidden>
+                <div class="agent-section-header">
+                  <div class="section-title">Agents attached to this node</div>
+                  <button class="new-agent">▶ New Agent</button>
+                </div>
+                <div class="agent-row">
+                  <span class="status-dot waiting"></span>
+                  <div><span class="agent-name">Litreview coder</span><span class="agent-sub">needs login · thematic coding of 13 papers</span></div>
+                  <button class="agent-action primary">Open</button>
+                </div>
+                <div class="agent-row">
+                  <span class="status-dot"></span>
+                  <div><span class="agent-name">Design audit</span><span class="agent-sub">running · reviews card IA and PM panel hierarchy</span></div>
+                  <button class="agent-action">View</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="entity-card domain waiting" data-card="1.1">
+          <div class="card-main">
+            <div class="identity">
+              <span class="entity-mark folder"></span>
+              <span class="id">1.1</span>
+              <span class="title">Frontend — App Shell + Components</span>
+            </div>
+            <div class="card-desc">PM cards, right context, session entry points.</div>
+            <div class="card-meta">
+              <span class="badge active">Active</span>
+              <div class="progress"><div class="bar"><span style="width:62%"></span></div><span class="id">5/8</span></div>
+              <button class="live-pill" data-open-agent="card-11-agent"><span class="adot"></span> 2</button>
+            </div>
+          </div>
+          <div class="tabs-panel show" id="card-11-panel">
+            <div class="segmented three" data-tabs="card-11">
+              <button class="seg-btn" data-target="card-11-files">□ Files</button>
+              <button class="seg-btn active" data-target="card-11-agent">◇ Agent</button>
+              <button class="seg-btn" data-target="card-11-more">⋯ More</button>
+            </div>
+            <div class="card-panel-body">
+              <div class="card-tab" id="card-11-files" hidden>
+                <div class="file-row"><span>□</span><span class="file-name">NodeHeader.tsx</span><span>40K</span></div>
+                <div class="file-row"><span>□</span><span class="file-name">ChildCardGrid.tsx</span><span>46K</span></div>
+                <div class="file-row"><span>□</span><span class="file-name">SessionRail.tsx</span><span>35K</span></div>
+              </div>
+              <div class="card-tab" id="card-11-agent">
+                <div class="agent-section-header">
+                  <div class="section-title">Card-native agents</div>
+                  <button class="new-agent">▶ New Agent</button>
+                </div>
+                <div class="agent-row">
+                  <span class="status-dot waiting"></span>
+                  <div><span class="agent-name">PM Panel Design Partner</span><span class="agent-sub">review needed · proposed card-native agent section</span></div>
+                  <button class="agent-action primary">Review</button>
+                </div>
+                <div class="agent-row">
+                  <span class="status-dot"></span>
+                  <div><span class="agent-name">UI Refactor Scout</span><span class="agent-sub">running · mapping Files/Agent/More panels</span></div>
+                  <button class="agent-action">Open</button>
+                </div>
+                <div class="section-divider">Past</div>
+                <div class="agent-row">
+                  <span class="status-dot"></span>
+                  <div><span class="agent-name">PM Badge Polish</span><span class="agent-sub">done · fixed no-wrap dropdown status badge</span></div>
+                  <button class="agent-action">Summary</button>
+                </div>
+              </div>
+              <div class="card-tab" id="card-11-more" hidden>
+                <div class="agent-row">
+                  <span class="status-dot"></span>
+                  <div><span class="agent-name">Archive / Delete stay here</span><span class="agent-sub">More remains for object management, not sessions.</span></div>
+                  <button class="agent-action">Manage</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="entity-card domain" data-card="1.2">
+          <div class="card-main">
+            <div class="identity">
+              <span class="entity-mark folder"></span>
+              <span class="id">1.2</span>
+              <span class="title">Backend — API Gateway + Auth</span>
+            </div>
+            <div class="card-desc">Gateway, auth, session APIs and SSE refresh.</div>
+            <div class="card-meta">
+              <span class="badge active">Active</span>
+              <div class="progress"><div class="bar"><span style="width:38%"></span></div><span class="id">3/8</span></div>
+              <button class="live-pill" data-open-agent="card-12-agent"><span class="adot"></span> 1</button>
+            </div>
+          </div>
+          <div class="tabs-panel" id="card-12-panel">
+            <div class="segmented three" data-tabs="card-12">
+              <button class="seg-btn active" data-target="card-12-files">□ Files</button>
+              <button class="seg-btn" data-target="card-12-agent">◇ Agent</button>
+              <button class="seg-btn" data-target="card-12-more">⋯ More</button>
+            </div>
+            <div class="card-panel-body">
+              <div class="card-tab" id="card-12-files">
+                <div class="file-row"><span>□</span><span class="file-name">api.ts</span><span>33K</span></div>
+                <div class="file-row"><span>□</span><span class="file-name">pm-store.ts</span><span>48K</span></div>
+              </div>
+              <div class="card-tab" id="card-12-agent" hidden>
+                <div class="agent-section-header">
+                  <div class="section-title">Agents on this card</div>
+                  <button class="new-agent">▶ New Agent</button>
+                </div>
+                <div class="agent-row">
+                  <span class="status-dot"></span>
+                  <div><span class="agent-name">Runtime Refactor Agent</span><span class="agent-sub">running · sync lifecycle with task path</span></div>
+                  <button class="agent-action">Open</button>
+                </div>
+              </div>
+              <div class="card-tab" id="card-12-more" hidden></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="entity-card task" data-card="1.3">
+          <div class="card-main">
+            <div class="identity">
+              <span class="entity-mark task"></span>
+              <span class="id">1.3</span>
+              <span class="title">Session rail scoping rules</span>
+              <button class="live-pill" data-open-agent="card-13-agent"><span class="adot"></span> 1</button>
+            </div>
+            <div class="card-desc">Rail locates live work, card Agent tab owns interaction.</div>
+            <div class="card-meta">
+              <span class="badge waiting">Waiting</span>
+              <div class="progress"><div class="bar"><span style="width:70%"></span></div><span class="id">7/10</span></div>
+            </div>
+          </div>
+          <div class="tabs-panel" id="card-13-panel">
+            <div class="segmented three" data-tabs="card-13">
+              <button class="seg-btn" data-target="card-13-files">□ Files</button>
+              <button class="seg-btn active" data-target="card-13-agent">◇ Agent</button>
+              <button class="seg-btn" data-target="card-13-more">⋯ More</button>
+            </div>
+            <div class="card-panel-body">
+              <div class="card-tab" id="card-13-agent">
+                <div class="agent-section-header">
+                  <div class="section-title">Needs attention</div>
+                  <button class="new-agent">▶ New Agent</button>
+                </div>
+                <div class="agent-row">
+                  <span class="status-dot error"></span>
+                  <div><span class="agent-name">Regression Sweep</span><span class="agent-sub">blocked · fixture decision needed</span></div>
+                  <button class="agent-action primary">Resolve</button>
+                </div>
+              </div>
+              <div class="card-tab" id="card-13-files" hidden></div>
+              <div class="card-tab" id="card-13-more" hidden></div>
+            </div>
+          </div>
+        </section>
+
+        <button class="new-task-card">＋ New task</button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <div class="topbar">
+        <div class="top-tabs">
+          <div class="session-tab"><span class="tiny-dot"></span> Litreview coder <span>×</span></div>
+        </div>
+        <div class="crumb"><span>Browser</span><b>Chat</b><span>Terminal</span></div>
+      </div>
+      <section class="chat-area">
+        <div class="chat-titlebar">
+          <div class="agent-context">
+            <b>task-agent · Thematic coding of 13 papers</b>
+            <span>Attached to AcmeWebApp / 1.1 Frontend. The card Agent tab is the object-level control surface.</span>
+          </div>
+          <div class="chat-mode">
+            <button>Browser</button>
+            <button class="active">Chat</button>
+            <button>Terminal</button>
+          </div>
+        </div>
+        <div class="blank-workspace">
+          <div class="handoff-card">
+            <div class="handoff-head"><span class="status-dot waiting"></span><b>Why this replaces the right Agent Dock</b></div>
+            <div class="handoff-body">
+              The global rail only locates live work and highlights attention. Actual interaction happens where the work object already lives: inside each card's Agent section, next to Files and More.
+              <div class="handoff-grid">
+                <div class="handoff-tile"><strong>Rail</strong>Locate live sessions and jump to the owning card.</div>
+                <div class="handoff-tile"><strong>Card pill</strong>Shows local agent count and attention state.</div>
+                <div class="handoff-tile"><strong>Agent tab</strong>Open chat, review output, spawn new task agent.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="composer-box">Ask anything</div>
+          <button class="round-action">＋</button>
+          <button class="send">↗</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function openCardAgent(cardKey) {
+      const card = document.querySelector(`[data-card="${cardKey}"]`);
+      if (!card) return;
+      const panel = card.querySelector('.tabs-panel');
+      panel?.classList.add('show');
+      const agentTarget = cardKey === '1.1'
+        ? 'card-11-agent'
+        : cardKey === '1.2'
+          ? 'card-12-agent'
+          : 'card-13-agent';
+      card.querySelectorAll('.card-tab').forEach((tab) => { tab.hidden = tab.id !== agentTarget; });
+      card.querySelectorAll('.seg-btn').forEach((tabButton) => {
+        tabButton.classList.toggle('active', tabButton.dataset.target === agentTarget);
+      });
+      document.querySelectorAll('.tabs-panel').forEach((item) => {
+        if (item !== panel) item.classList.remove('show');
+      });
+      card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.left-mode-btn').forEach((button) => {
+      button.addEventListener('click', () => {
+        const mode = button.dataset.leftMode;
+        document.querySelectorAll('.left-mode-btn').forEach((item) => {
+          item.classList.toggle('active', item === button);
+        });
+        document.querySelectorAll('.focus-panel').forEach((panel) => {
+          panel.classList.toggle('active', panel.dataset.leftPanel === mode);
+        });
+      });
+    });
+
+    document.querySelectorAll('[data-jump-card]').forEach((item) => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.inbox-row').forEach((row) => row.classList.toggle('selected', row === item));
+        openCardAgent(item.dataset.jumpCard);
+      });
+    });
+
+    function activateTab(group, target) {
+      document.querySelectorAll(`[data-tabs="${group}"] .seg-btn`).forEach((button) => {
+        button.classList.toggle('active', button.dataset.target === target);
+      });
+      const prefix = group === 'node' ? 'node-' : `${group}-`;
+      document.querySelectorAll(`[id^="${prefix}"]`).forEach((panel) => {
+        if (panel.classList.contains('segmented')) return;
+      });
+    }
+
+    document.querySelectorAll('.seg-btn[data-target]').forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const group = button.closest('[data-tabs]')?.dataset.tabs;
+        if (!group) return;
+        const target = button.dataset.target;
+        button.closest('[data-tabs]').querySelectorAll('.seg-btn').forEach((item) => {
+          item.classList.toggle('active', item === button);
+        });
+        const host = group === 'node'
+          ? button.closest('.node-card')
+          : button.closest('.entity-card');
+        host.querySelectorAll(group === 'node' ? '.node-panel' : '.card-tab').forEach((panel) => {
+          panel.hidden = panel.id !== target;
+        });
+        if (group === 'node') {
+          document.getElementById('node-panel-title').textContent = target === 'node-files' ? 'Files' : 'Agents';
+          document.getElementById('node-panel-count').textContent = target === 'node-files' ? '0' : '4';
+        }
+      });
+    });
+
+    document.querySelectorAll('.entity-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const panel = card.querySelector('.tabs-panel');
+        if (!panel) return;
+        document.querySelectorAll('.tabs-panel').forEach((item) => {
+          if (item !== panel) item.classList.remove('show');
+        });
+        panel.classList.add('show');
+      });
+    });
+
+    document.querySelectorAll('[data-open-agent]').forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const target = button.dataset.openAgent;
+        const card = button.closest('.entity-card');
+        const panel = card.querySelector('.tabs-panel');
+        panel.classList.add('show');
+        const group = target.replace(/-agent$/, '');
+        card.querySelectorAll('.card-tab').forEach((tab) => { tab.hidden = tab.id !== target; });
+        card.querySelectorAll('.seg-btn').forEach((tabButton) => {
+          tabButton.classList.toggle('active', tabButton.dataset.target === target);
+        });
+      });
+    });
+
+    document.querySelectorAll('.rail-dot').forEach((dot, index) => {
+      dot.addEventListener('click', () => {
+        const cardKey = index === 0 ? '1.1' : index === 1 ? '1.2' : '1.3';
+        openCardAgent(cardKey);
+      });
+    });
+  </script>
+</body>
+</html>

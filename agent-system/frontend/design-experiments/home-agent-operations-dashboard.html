@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Locusly Home - Operational Layout</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      --bg-base: #181825;
+      --bg-panel: #272742;
+      --bg-card: rgba(255,255,255,.05);
+      --bg-card-hover: rgba(255,255,255,.08);
+      --bg-ingrained: rgba(0,0,0,.12);
+      --color-text: #f0f0f5;
+      --color-muted: #a0a0b2;
+      --color-subtle: #6a6a80;
+      --border: rgba(255,255,255,.10);
+      --border-soft: rgba(255,255,255,.06);
+      --accent: #6e95f6;
+      --accent-bright: #82a6ff;
+      --accent-bg: rgba(59,130,246,.15);
+      --active: #6e95f6;
+      --attention: #e8952d;
+      --complete: #34a853;
+      --project: #5b6cff;
+      --agent: #d98613;
+      --glass-panel: rgba(43,56,75,.96);
+      --shadow-panel: 0 4px 24px rgba(0,0,0,.5);
+      font-family: var(--font-sans);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(110,149,246,.12), transparent 28%),
+        linear-gradient(180deg, #171724, #101018);
+      color: var(--color-text);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    button, input { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    .shell {
+      height: 100vh;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: 8px;
+    }
+    .rail, .workspace {
+      background: var(--glass-panel);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: var(--shadow-panel);
+      backdrop-filter: blur(14px);
+    }
+    .rail {
+      border-radius: 12px;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .workspace {
+      border-radius: 12px;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 50px minmax(0, 1fr);
+      min-width: 0;
+    }
+    .mark, .rail-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: var(--color-muted);
+      border: 1px solid transparent;
+    }
+    .mark {
+      color: var(--accent-bright);
+      background: var(--accent-bg);
+      border-color: rgba(110,149,246,.28);
+      font-weight: 800;
+    }
+    .rail-btn.active {
+      color: var(--color-text);
+      background: var(--bg-ingrained);
+      border-color: var(--border-soft);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.25);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--border-soft);
+      min-width: 0;
+    }
+    .brand {
+      min-width: 150px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 760;
+      font-size: 15px;
+    }
+    .search {
+      flex: 1;
+      min-width: 240px;
+      height: 32px;
+      border: 1px solid var(--border-soft);
+      background: var(--bg-ingrained);
+      border-radius: 8px;
+      color: var(--color-muted);
+      display: flex;
+      align-items: center;
+      padding: 0 11px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.18);
+    }
+    .kbd {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--color-subtle);
+      border: 1px solid var(--border-soft);
+      border-radius: 6px;
+      padding: 1px 6px;
+    }
+    .btn {
+      height: 30px;
+      border: 1px solid var(--border-soft);
+      background: var(--bg-ingrained);
+      color: var(--color-muted);
+      border-radius: 8px;
+      padding: 0 10px;
+      font-weight: 650;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.18);
+    }
+    .btn.primary {
+      color: white;
+      background: color-mix(in srgb, var(--accent) 74%, #1b2340);
+      border-color: rgba(130,166,255,.34);
+    }
+
+    .content {
+      min-height: 0;
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .home-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: end;
+      padding: 2px 2px 12px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 22px; line-height: 1.18; letter-spacing: 0; }
+    h2 { font-size: 13px; font-weight: 760; }
+    h3 { font-size: 12px; font-weight: 700; }
+    .muted { color: var(--color-muted); }
+    .subtle { color: var(--color-subtle); }
+
+    .project-strip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      max-width: 680px;
+    }
+    .project-chip, .pill {
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: var(--bg-ingrained);
+      color: var(--color-muted);
+      padding: 0 8px;
+      font-size: 11px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+    .pill.agent {
+      color: color-mix(in srgb, var(--agent) 82%, white);
+      background: color-mix(in srgb, var(--agent) 16%, transparent);
+      border-color: color-mix(in srgb, var(--agent) 32%, transparent);
+    }
+    .pill.attn {
+      color: color-mix(in srgb, var(--attention) 86%, white);
+      background: color-mix(in srgb, var(--attention) 13%, transparent);
+      border-color: color-mix(in srgb, var(--attention) 32%, transparent);
+    }
+    .pill.active {
+      color: var(--accent-bright);
+      background: var(--accent-bg);
+      border-color: rgba(110,149,246,.28);
+    }
+    .pill.done {
+      color: color-mix(in srgb, var(--complete) 84%, white);
+      background: color-mix(in srgb, var(--complete) 13%, transparent);
+      border-color: color-mix(in srgb, var(--complete) 28%, transparent);
+    }
+
+    .dash {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+    .disclosure-grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(420px, 1fr) minmax(340px, .78fr);
+      gap: 10px;
+      overflow: hidden;
+    }
+    .stack {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+    .panel-summary {
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--bg-card) 70%, transparent);
+      overflow: hidden;
+    }
+    .panel-summary[open] {
+      background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+      border-color: var(--border);
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-summary summary {
+      min-height: 62px;
+      align-items: center;
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr) auto;
+      gap: 10px;
+      padding: 10px 12px;
+      list-style: none;
+    }
+    .panel-summary summary::-webkit-details-marker { display: none; }
+    .chev {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: var(--color-subtle);
+      background: var(--bg-ingrained);
+      border: 1px solid var(--border-soft);
+      transition: transform .15s ease;
+    }
+    .panel-summary[open] .chev { transform: rotate(90deg); }
+    .panel-title {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+    .panel-title strong {
+      font-size: 14px;
+    }
+    .summary-chips {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .rule {
+      flex: 1;
+      height: 1px;
+      background: var(--border-soft);
+    }
+    .panel-body {
+      min-height: 0;
+      flex: 1 1 0;
+      overflow: auto;
+      padding: 0 12px 12px;
+    }
+
+    .agent-list, .queue-list, .line-list {
+      display: grid;
+      gap: 0;
+      border-top: 1px solid var(--border-soft);
+    }
+    .agent-row {
+      display: grid;
+      grid-template-columns: 20px minmax(150px, .72fr) minmax(0, 1.15fr) 106px;
+      gap: 8px;
+      align-items: center;
+      min-height: 43px;
+      padding: 7px 8px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .agent-row:hover { background: var(--bg-card-hover); }
+    .queue-row, .line-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 46px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .queue-row:last-child, .line-row:last-child, .agent-row:last-child { border-bottom: 0; }
+    .queue-row.need {
+      padding-left: 9px;
+      border-left: 2px solid var(--attention);
+      background: color-mix(in srgb, var(--attention) 7%, transparent);
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-subtle);
+    }
+    .dot.active { background: var(--active); box-shadow: 0 0 0 3px color-mix(in srgb, var(--active) 18%, transparent); }
+    .dot.attn { background: var(--attention); box-shadow: 0 0 0 3px color-mix(in srgb, var(--attention) 18%, transparent); }
+    .dot.done { background: var(--complete); box-shadow: 0 0 0 3px color-mix(in srgb, var(--complete) 18%, transparent); }
+    .title, .meta {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .title { font-weight: 700; }
+    .meta { color: var(--color-muted); }
+
+    .two-up {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .mini-progress {
+      width: 62px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--bg-ingrained);
+      overflow: hidden;
+    }
+    .mini-progress span {
+      display: block;
+      height: 100%;
+      width: var(--pct);
+      background: var(--accent);
+    }
+
+    .module-grid {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(460px, 1.18fr) minmax(360px, .82fr);
+      gap: 14px;
+      overflow: hidden;
+    }
+    .module-stack {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
+    }
+    .agent-module {
+      min-height: 0;
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+      border-left: 2px solid color-mix(in srgb, var(--agent) 54%, transparent);
+      padding-left: 12px;
+    }
+    .module-head {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .module-head .module-copy {
+      min-width: 0;
+      flex: 1;
+    }
+    .module-head strong {
+      display: block;
+      font-size: 14px;
+    }
+    .module-kpis {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--color-subtle);
+      font-size: 11px;
+      font-weight: 650;
+    }
+    .module-kpis span + span::before {
+      content: "";
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--color-subtle);
+      display: inline-block;
+      margin: 0 8px 2px 0;
+    }
+    .agent-detail {
+      min-height: 0;
+      overflow: auto;
+      border-top: 1px solid var(--border-soft);
+    }
+    .agent-row.featured {
+      min-height: 54px;
+      background: color-mix(in srgb, var(--agent) 8%, transparent);
+      border-left: 2px solid var(--agent);
+      padding-left: 8px;
+    }
+    .widget-module summary::-webkit-details-marker { display: none; }
+    .widget-module[open] .chev { transform: rotate(90deg); }
+    .chat-dock {
+      border: 1px solid rgba(110,149,246,.22);
+      background: linear-gradient(180deg, rgba(110,149,246,.08), rgba(255,255,255,.03));
+      border-radius: 10px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .chat-dock.command-bar {
+      min-height: 116px;
+      grid-template-columns: minmax(0, 1fr) 160px;
+      align-items: stretch;
+    }
+    .chat-dock.command-bar .module-head {
+      grid-column: 1 / -1;
+      min-height: 26px;
+    }
+    .chat-dock.command-bar .chat-input {
+      min-height: 54px;
+    }
+    .command-suggestions {
+      display: grid;
+      gap: 6px;
+      align-content: start;
+    }
+    .suggestion {
+      min-height: 24px;
+      border: 1px solid var(--border-soft);
+      border-radius: 8px;
+      background: var(--bg-ingrained);
+      color: var(--color-muted);
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      font-size: 11px;
+      font-weight: 650;
+    }
+    .chat-input {
+      min-height: 76px;
+      border: 1px solid var(--border-soft);
+      background: rgba(0,0,0,.16);
+      border-radius: 8px;
+      padding: 10px;
+      color: var(--color-muted);
+      display: flex;
+      align-items: flex-start;
+    }
+    .chat-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .project-rail {
+      display: grid;
+      gap: 8px;
+      padding: 10px 0;
+      border-top: 1px solid var(--border-soft);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .project-row {
+      display: grid;
+      grid-template-columns: 10px minmax(0, 1fr) 70px;
+      gap: 8px;
+      align-items: center;
+      min-height: 34px;
+    }
+    .project-meter {
+      height: 4px;
+      border-radius: 999px;
+      background: var(--bg-ingrained);
+      overflow: hidden;
+    }
+    .project-meter span {
+      display: block;
+      height: 100%;
+      width: var(--pct);
+      background: var(--accent);
+    }
+    .widget-module {
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      overflow: hidden;
+      background: color-mix(in srgb, var(--bg-card) 68%, transparent);
+    }
+    .widget-module summary {
+      list-style: none;
+      cursor: pointer;
+      min-height: 50px;
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr) auto;
+      gap: 9px;
+      align-items: center;
+      padding: 9px 11px;
+    }
+    .widget-board {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      padding: 0 11px 11px;
+    }
+    .widget-tile {
+      min-height: 72px;
+      border: 1px solid var(--border-soft);
+      background: var(--bg-ingrained);
+      border-radius: 8px;
+      padding: 9px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    @media (max-width: 980px) {
+      .module-grid, .disclosure-grid, .home-head, .two-up { grid-template-columns: 1fr; }
+      .content { overflow: auto; display: block; }
+      .panel-summary { margin-bottom: 10px; }
+      .panel-summary[open] { min-height: auto; }
+      .agent-module { min-height: 320px; }
+    }
+    @media (max-width: 760px) {
+      .shell { grid-template-columns: 1fr; padding: 0; }
+      .rail { display: none; }
+      .workspace { border-radius: 0; height: 100vh; }
+      .topbar { flex-wrap: wrap; height: auto; padding: 10px; }
+      .brand { min-width: auto; }
+      .search { order: 3; flex-basis: 100%; }
+      .agent-row { grid-template-columns: 18px minmax(0, 1fr); }
+      .agent-row .meta, .agent-row .pill { grid-column: 2; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="rail">
+      <div class="mark">O</div>
+      <span class="rail-btn active">H</span>
+      <span class="rail-btn">A</span>
+      <span class="rail-btn">Q</span>
+      <span class="rail-btn">F</span>
+      <div style="flex:1"></div>
+      <span class="rail-btn">...</span>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="brand"><span class="dot active"></span><span>Locusly</span></div>
+        <div class="search"><span>Search tasks, agents, files...</span><span class="kbd">Cmd K</span></div>
+        <button class="btn">New agent</button>
+        <button class="btn primary">New project</button>
+      </header>
+
+      <div class="content">
+        <section class="home-head">
+          <div>
+            <h1>Today</h1>
+            <p class="muted">2 handoffs need you. Acme Web App is closest to ship.</p>
+          </div>
+          <div class="project-strip">
+            <a class="project-chip" href="project-object-card-redesign.html"><span class="dot active"></span>Acme Web App</a>
+            <a class="project-chip" href="project-object-card-redesign.html"><span class="dot active"></span>CHI 2027</a>
+            <a class="project-chip" href="project-object-card-redesign.html"><span class="dot attn"></span>Mobile Launch</a>
+            <a class="project-chip" href="project-object-card-redesign.html">All projects</a>
+          </div>
+        </section>
+
+        <section class="chat-dock command-bar">
+          <div class="module-head">
+            <div class="module-copy">
+              <strong>Command Bar</strong>
+              <div class="module-kpis"><span>ask status</span><span>dispatch agents</span><span>attach context</span></div>
+            </div>
+            <span class="pill active">Home context</span>
+          </div>
+          <div class="chat-input">Ask for a project update, spawn an agent, or summarize blockers...</div>
+          <div class="command-suggestions">
+            <span class="suggestion">Summarize blockers</span>
+            <span class="suggestion">Spawn from Acme</span>
+            <span class="suggestion">Show queue risk</span>
+          </div>
+        </section>
+
+        <section class="dash">
+          <div class="module-grid">
+            <div class="module-stack">
+              <section class="agent-module">
+                <div class="module-head">
+                  <div class="module-copy">
+                    <strong>Agent Handoffs</strong>
+                    <div class="module-kpis"><span>needs user</span><span>ready to resume</span><span>opens workspace</span></div>
+                  </div>
+                  <span class="pill attn">2 pending</span>
+                </div>
+                <div class="agent-detail">
+                  <a class="agent-row featured" href="project-object-card-redesign.html">
+                    <span class="dot active"></span>
+                    <span class="title">Inbox triage</span>
+                    <span class="meta">2 receipts grouped into Acme Web App. Auth recovery is pending.</span>
+                    <span class="pill attn">Review</span>
+                  </a>
+                  <a class="agent-row" href="project-object-card-redesign.html">
+                    <span class="dot active"></span>
+                    <span class="title">OpenAPI v2 spec lockdown</span>
+                    <span class="meta">Spec stable for 6 days. Awaiting reviewer sign-off.</span>
+                    <span class="pill done">Ready</span>
+                  </a>
+                  <a class="agent-row" href="project-object-card-redesign.html">
+                    <span class="dot attn"></span>
+                    <span class="title">Extend semantic palette</span>
+                    <span class="meta">Plan ready: success, warning, danger token additions.</span>
+                    <span class="pill attn">Approve</span>
+                  </a>
+                  <a class="agent-row" href="project-object-card-redesign.html">
+                    <span class="dot attn"></span>
+                    <span class="title">Litreview coder</span>
+                    <span class="meta">Claude credentials expired. Re-auth needed before resume.</span>
+                    <span class="pill attn">Blocked</span>
+                  </a>
+                </div>
+              </section>
+            </div>
+
+            <aside class="module-stack">
+              <details class="widget-module" open>
+                <summary>
+                  <span class="chev">›</span>
+                  <span class="panel-title">
+                    <strong>Widgets</strong>
+                    <span class="muted">Pinned instruments</span>
+                  </span>
+                  <span class="pill">Customize</span>
+                </summary>
+                <div class="widget-board">
+                  <div class="widget-tile"><span class="title">Goals</span><span class="muted">7 / 11 tasks</span><span class="mini-progress" style="--pct:64%"><span></span></span></div>
+                  <div class="widget-tile"><span class="title">Spawner</span><span class="muted">stable</span><span class="mini-progress" style="--pct:88%"><span></span></span></div>
+                  <div class="widget-tile"><span class="title">Inbox</span><span class="muted">2 receipts</span><button class="btn">Review</button></div>
+                  <div class="widget-tile"><span class="title">Add widget</span><span class="muted">agent-built</span><button class="btn">Create</button></div>
+                </div>
+              </details>
+
+              <section>
+                <div class="module-head">
+                  <div class="module-copy">
+                    <strong>Projects</strong>
+                    <div class="module-kpis"><span>active contexts</span><span>jump target</span></div>
+                  </div>
+                  <button class="btn">New</button>
+                </div>
+                <div class="project-rail">
+                  <a class="project-row" href="project-object-card-redesign.html"><span class="dot active"></span><span class="title">Acme Web App</span><span class="project-meter" style="--pct:78%"><span></span></span></a>
+                  <a class="project-row" href="project-object-card-redesign.html"><span class="dot active"></span><span class="title">CHI 2027</span><span class="project-meter" style="--pct:42%"><span></span></span></a>
+                  <a class="project-row" href="project-object-card-redesign.html"><span class="dot attn"></span><span class="title">Research Paper</span><span class="project-meter" style="--pct:28%"><span></span></span></a>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

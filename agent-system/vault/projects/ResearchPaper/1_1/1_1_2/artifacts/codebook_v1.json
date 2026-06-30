@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "updated": "2026-06-04",
+  "codes": [
+    { "id": "EN-1", "label": "Engagement metric", "definition": "Paper reports DAU, MAU, session length, or return rate as a primary outcome." },
+    { "id": "RE-1", "label": "Reflection prompt", "definition": "System asks the user to consider their feelings, behavior, or values." },
+    { "id": "RE-2", "label": "Reflection scaffold", "definition": "System provides a structured frame (e.g., journaling template, 5-whys) to guide reflection." },
+    { "id": "AG-1", "label": "User agency", "definition": "User controls pacing, topic, or termination of the interaction." },
+    { "id": "AG-2", "label": "System initiative", "definition": "System initiates contact or topic shift unprompted." },
+    { "id": "PA-1", "label": "Parasocial framing", "definition": "System uses friendship, companionship, or relational language." },
+    { "id": "OU-1", "label": "Behavioral outcome", "definition": "Paper measures or reports change in user behavior outside the interaction." }
+  ]
+}

@@ -1,0 +1,1644 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent + Project Management IA Research</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --paper: #ffffff;
+      --paper-2: #fbfcfd;
+      --ink: #18202a;
+      --muted: #657083;
+      --soft: #dbe2ec;
+      --line: #e5e9f0;
+      --line-strong: #cbd4e1;
+      --blue: #3267d6;
+      --blue-soft: #e8efff;
+      --green: #27805f;
+      --green-soft: #e6f4ee;
+      --amber: #9a6615;
+      --amber-soft: #fff2d9;
+      --red: #b24747;
+      --red-soft: #ffe9e9;
+      --violet: #6f4fc9;
+      --violet-soft: #f0ebff;
+      --teal: #1b7f8c;
+      --teal-soft: #e2f5f7;
+      --shadow: 0 18px 48px rgba(27, 39, 58, .09);
+      --radius: 8px;
+      --radius-sm: 6px;
+      --rail: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .page {
+      min-height: 100vh;
+    }
+
+    .hero {
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.96), rgba(255,255,255,.82)),
+        radial-gradient(circle at 18% 15%, rgba(50,103,214,.18), transparent 30%),
+        linear-gradient(135deg, #f5f8ff, #f7f8f9 44%, #edf7f2);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 42px 28px 28px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 28px;
+      padding: 0 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: rgba(255,255,255,.7);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: var(--green);
+      box-shadow: 0 0 0 4px var(--green-soft);
+    }
+
+    h1 {
+      max-width: 920px;
+      margin: 22px 0 12px;
+      font-size: clamp(34px, 6vw, 64px);
+      line-height: .96;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 860px;
+      margin: 0;
+      color: #435066;
+      font-size: 18px;
+      line-height: 1.72;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 30px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.8);
+      color: #40506a;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .toc {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 12px 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(246,247,249,.88);
+      backdrop-filter: blur(10px);
+    }
+
+    .toc a {
+      flex: 0 0 auto;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      color: #354258;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    section {
+      margin: 28px 0;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .section-note {
+      max-width: 760px;
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 20px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .takeaway {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 14px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+
+    .takeaway .icon {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-sm);
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-weight: 800;
+    }
+
+    .takeaway strong,
+    .source-card strong,
+    .recommendation strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .takeaway p,
+    .source-card p,
+    .recommendation p,
+    .small-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.62;
+    }
+
+    .source-card {
+      min-height: 210px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+
+    .source-card .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+      color: #59667a;
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .source-card ul,
+    .bullets {
+      margin: 12px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .source-card li,
+    .bullets li {
+      position: relative;
+      margin: 9px 0;
+      padding-left: 18px;
+      color: #4d5a70;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .source-card li::before,
+    .bullets li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: .65em;
+      width: 6px;
+      height: 6px;
+      border-radius: 99px;
+      background: var(--blue);
+    }
+
+    .diagram {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .diagram-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      min-height: 48px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper-2);
+    }
+
+    .diagram-title strong {
+      font-size: 14px;
+    }
+
+    .diagram-body {
+      padding: 18px;
+    }
+
+    .ia-map {
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr) 260px 54px;
+      gap: 10px;
+      min-height: 390px;
+    }
+
+    .lane {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #fff;
+    }
+
+    .lane.dark {
+      background: var(--rail);
+      border-color: #263244;
+      color: #fff;
+    }
+
+    .lane-head {
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      color: #34445e;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .lane.dark .lane-head {
+      border-bottom-color: #263244;
+      color: #cbd5e1;
+    }
+
+    .lane-content {
+      flex: 1;
+      padding: 10px;
+    }
+
+    .tree-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 30px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      color: #3e4b61;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .tree-line.active {
+      background: var(--blue-soft);
+      color: #1c4fb9;
+      font-weight: 750;
+    }
+
+    .indent-1 { padding-left: 20px; }
+    .indent-2 { padding-left: 34px; }
+
+    .work-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .work-head h3 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 24px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: #526078;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .mini-pill.blue { background: var(--blue-soft); color: var(--blue); border-color: #c9d8ff; }
+    .mini-pill.green { background: var(--green-soft); color: var(--green); border-color: #bee4d2; }
+    .mini-pill.amber { background: var(--amber-soft); color: var(--amber); border-color: #f5d399; }
+    .mini-pill.violet { background: var(--violet-soft); color: var(--violet); border-color: #d8ccff; }
+
+    .task-row {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 46px;
+      margin-top: 10px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--paper-2);
+    }
+
+    .check {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      border: 2px solid var(--line-strong);
+      background: #fff;
+    }
+
+    .task-row b {
+      display: block;
+      font-size: 13px;
+    }
+
+    .task-row span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .inspector-block {
+      margin-bottom: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #fff;
+    }
+
+    .inspector-block b {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .inspector-block p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .agent-dot {
+      width: 28px;
+      height: 28px;
+      margin: 8px auto;
+      border-radius: 99px;
+      border: 2px solid rgba(255,255,255,.62);
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(39,128,95,.18);
+    }
+
+    .agent-dot.blue {
+      background: var(--blue);
+      box-shadow: 0 0 0 4px rgba(50,103,214,.18);
+    }
+
+    .agent-dot.amber {
+      background: #d99121;
+      box-shadow: 0 0 0 4px rgba(217,145,33,.22);
+    }
+
+    .agent-count {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 22px;
+      margin: 14px auto 0;
+      border-radius: 999px;
+      background: #f97316;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .rail-caption {
+      writing-mode: vertical-rl;
+      margin: 18px auto 0;
+      color: #cbd5e1;
+      font-size: 11px;
+      letter-spacing: 0;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: 1.1fr repeat(4, minmax(0, 1fr));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .compare div {
+      min-height: 64px;
+      padding: 12px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      color: #4a566b;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .compare div:nth-child(5n) {
+      border-right: 0;
+    }
+
+    .compare .head {
+      background: var(--paper-2);
+      color: #243044;
+      font-weight: 800;
+    }
+
+    .compare .row-head {
+      background: #fff;
+      color: #28364b;
+      font-weight: 800;
+    }
+
+    .state-flow {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .state-card {
+      position: relative;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      min-height: 230px;
+    }
+
+    .state-card::after {
+      content: "";
+      position: absolute;
+      right: -18px;
+      top: 50%;
+      width: 24px;
+      height: 1px;
+      background: var(--line-strong);
+    }
+
+    .state-card:last-child::after {
+      display: none;
+    }
+
+    .state-card h3,
+    .recommendation h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+
+    .state-visual {
+      display: grid;
+      place-items: center;
+      min-height: 110px;
+      margin: 12px 0;
+      border-radius: var(--radius-sm);
+      background: var(--paper-2);
+      border: 1px solid var(--line);
+    }
+
+    .rail-mini {
+      width: 38px;
+      height: 96px;
+      border-radius: 18px;
+      background: var(--rail);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .rail-mini span {
+      width: 14px;
+      height: 14px;
+      border-radius: 99px;
+      background: var(--green);
+    }
+
+    .drawer-mini {
+      width: 150px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 12px 28px rgba(20, 30, 50, .1);
+    }
+
+    .drawer-mini div {
+      min-height: 30px;
+      border-bottom: 1px solid var(--line);
+      padding: 7px 8px;
+      font-size: 11px;
+      color: #4d5a70;
+    }
+
+    .drawer-mini div:first-child {
+      background: var(--paper-2);
+      font-weight: 800;
+      color: #27364d;
+    }
+
+    .session-mini {
+      width: 190px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 12px 28px rgba(20, 30, 50, .1);
+    }
+
+    .session-mini .bar {
+      height: 34px;
+      background: var(--rail);
+    }
+
+    .session-mini .line {
+      height: 10px;
+      margin: 10px;
+      border-radius: 99px;
+      background: var(--line);
+    }
+
+    .split-model {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .bucket {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    .bucket h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .bucket .allowed,
+    .bucket .avoid {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .bucket .allowed {
+      background: var(--green-soft);
+      color: #235f49;
+      border: 1px solid #bde6d2;
+    }
+
+    .bucket .avoid {
+      background: var(--red-soft);
+      color: #8f3939;
+      border: 1px solid #ffd2d2;
+    }
+
+    .recommendation {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    .recommendation.primary {
+      border-color: #bcd0ff;
+      background: linear-gradient(180deg, #f7faff, #fff);
+    }
+
+    .mock-layout {
+      display: grid;
+      grid-template-columns: 180px minmax(320px, 1fr) 270px 52px;
+      gap: 8px;
+      height: 420px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #edf1f6;
+      box-shadow: var(--shadow);
+    }
+
+    .mock-pane {
+      min-width: 0;
+      border-radius: 6px;
+      border: 1px solid #d5dde8;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .mock-pane.dark {
+      background: var(--rail);
+      border-color: #202b3d;
+    }
+
+    .mock-top {
+      height: 36px;
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper-2);
+      color: #2d3b52;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .mock-pane.dark .mock-top {
+      border-bottom-color: #202b3d;
+      background: #0f172a;
+      color: #cbd5e1;
+    }
+
+    .mock-body {
+      padding: 10px;
+    }
+
+    .mock-line {
+      height: 10px;
+      margin: 10px 0;
+      border-radius: 999px;
+      background: #e2e8f0;
+    }
+
+    .mock-line.short { width: 58%; }
+    .mock-line.mid { width: 74%; }
+    .mock-line.blue { background: #bcd0ff; }
+    .mock-line.green { background: #bbdfd0; }
+    .mock-line.amber { background: #f4d28f; }
+
+    .mock-card {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--paper-2);
+    }
+
+    .rail-stack {
+      padding-top: 12px;
+    }
+
+    .rail-chip {
+      width: 28px;
+      height: 28px;
+      margin: 10px auto;
+      border-radius: 99px;
+      background: var(--blue);
+      border: 2px solid rgba(255,255,255,.65);
+    }
+
+    .rail-chip.green { background: var(--green); }
+    .rail-chip.amber { background: #d99121; }
+
+    .source-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .source-list a {
+      display: block;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #fff;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .dual-entry {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 74px minmax(0, 1fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .entry-pane {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      min-height: 300px;
+    }
+
+    .entry-pane h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .entry-pane .sub {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .entry-divider {
+      display: grid;
+      place-items: center;
+      color: #44546c;
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .entry-divider span {
+      display: grid;
+      place-items: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .chat-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .chat-row {
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--paper-2);
+    }
+
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 99px;
+      background: var(--blue);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.42);
+    }
+
+    .avatar.green { background: var(--green); }
+    .avatar.amber { background: #d99121; }
+
+    .chat-row b {
+      display: block;
+      font-size: 13px;
+    }
+
+    .chat-row span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .quick-composer {
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid #c9d8ff;
+      border-radius: var(--radius-sm);
+      background: var(--blue-soft);
+    }
+
+    .quick-composer b {
+      display: block;
+      margin-bottom: 8px;
+      color: #204caa;
+      font-size: 13px;
+    }
+
+    .composer-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 36px;
+      padding: 7px 9px;
+      border-radius: 6px;
+      background: #fff;
+      border: 1px solid #c5d5ff;
+      color: #61708a;
+      font-size: 12px;
+    }
+
+    .project-mini-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .project-mini {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--paper-2);
+    }
+
+    .project-mini.active {
+      background: var(--green-soft);
+      border-color: #bee4d2;
+    }
+
+    .project-mini b {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: #29364b;
+      font-size: 13px;
+    }
+
+    .project-mini p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .entry-note {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      background: var(--amber-soft);
+      border: 1px solid #f3d18f;
+      color: #7c5415;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    footer {
+      padding: 26px 0 56px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 980px) {
+      .grid.two,
+      .grid.three,
+      .grid.four,
+      .split-model,
+      .dual-entry,
+      .source-list {
+        grid-template-columns: 1fr;
+      }
+
+      .entry-divider {
+        min-height: 44px;
+      }
+
+      .ia-map,
+      .mock-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .lane,
+      .mock-pane {
+        min-height: 180px;
+      }
+
+      .lane.dark,
+      .mock-pane.dark {
+        min-height: 120px;
+      }
+
+      .state-flow {
+        grid-template-columns: 1fr;
+      }
+
+      .state-card::after {
+        display: none;
+      }
+
+      .compare {
+        display: block;
+      }
+
+      .compare div {
+        border-right: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="eyebrow"><span class="dot"></span> Agent + Project Management IA Research</div>
+        <h1>让 Agent 会话常驻系统，但不要占用项目管理的注意力主舞台</h1>
+        <p class="lead">
+          这份调研把 Linear、Jira、ClickUp、GitHub Copilot agent 的交互模式拆成信息架构原则，并针对当前 PM 面板的右侧上下文栏与 session rail 给出一个低负担方案：右侧栏做“对象检查器”，session rail 做“环境状态层”，完整会话进入抽屉或详情页。
+        </p>
+        <div class="meta-row">
+          <span class="pill">研究对象：agent sessions、project hierarchy、right inspector</span>
+          <span class="pill">输出：信息架构图、放置策略、界面线框</span>
+          <span class="pill">日期：2026-06-19</span>
+        </div>
+      </div>
+    </header>
+
+    <nav class="toc">
+      <a href="#summary">结论</a>
+      <a href="#dual-entry">双入口</a>
+      <a href="#benchmarks">工具模式</a>
+      <a href="#principles">IA 原则</a>
+      <a href="#sidebar">右侧栏诊断</a>
+      <a href="#rail">Session Rail</a>
+      <a href="#proposal">推荐方案</a>
+      <a href="#sources">来源</a>
+    </nav>
+
+    <main class="wrap">
+      <section id="summary">
+        <div class="section-head">
+          <div>
+            <h2>核心结论</h2>
+            <p class="section-note">Agent 会话不应该变成 PM 系统里的另一套项目层级。它更像“正在替你工作的参与者”和“需要你处理的事件流”。</p>
+          </div>
+          <span class="tag">Recommendation</span>
+        </div>
+
+        <div class="grid three">
+          <article class="takeaway">
+            <div class="icon">1</div>
+            <div>
+              <strong>项目层级是归档骨架，不是唯一入口</strong>
+              <p>Project / Domain / Task 决定上下文、权限和进度，但用户不应该每次都先钻树才能找 agent 聊天。</p>
+            </div>
+          </article>
+          <article class="takeaway">
+            <div class="icon">2</div>
+            <div>
+              <strong>右侧栏只回答“当前对象是什么”</strong>
+              <p>右侧上下文栏应聚焦选中任务的 brief、资源、证据、活动。Agent 只显示与该对象有关的摘要和入口。</p>
+            </div>
+          </article>
+          <article class="takeaway">
+            <div class="icon">3</div>
+            <div>
+              <strong>Session rail 同时是快速聊天入口</strong>
+              <p>常驻态显示最近和活跃会话；点击即可继续 chat / agent。层级归类放在展开态和详情中，而不是挡住直接交互。</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="dual-entry">
+        <div class="section-head">
+          <div>
+            <h2>修正：需要“双主入口”</h2>
+            <p class="section-note">你的担心是对的：如果只强调项目树，用户会失去和 chat/agent 直接交互的速度。更合理的是两套入口并存：Agent Dock 负责“现在我要找谁聊/谁在工作”，Project Tree 负责“这些工作最终归到哪里”。</p>
+          </div>
+          <span class="tag">Updated Thesis</span>
+        </div>
+
+        <div class="diagram">
+          <div class="diagram-title">
+            <strong>Agent-first interaction + Project-backed organization</strong>
+            <span class="tag">Dual Entry Model</span>
+          </div>
+          <div class="diagram-body">
+            <div class="dual-entry">
+              <article class="entry-pane">
+                <h3>Agent Dock：日常入口</h3>
+                <p class="sub">为快速沟通优化。默认展示最近、活跃、等待用户响应的 session，而不是完整项目层级。</p>
+                <div class="chat-stack">
+                  <div class="chat-row">
+                    <span class="avatar green"></span>
+                    <div><b>UI Design Agent</b><span>继续讨论右侧栏和 agent dock</span></div>
+                    <span class="mini-pill green">live</span>
+                  </div>
+                  <div class="chat-row">
+                    <span class="avatar"></span>
+                    <div><b>Build Agent</b><span>正在跑 PM panel layout experiment</span></div>
+                    <span class="mini-pill blue">running</span>
+                  </div>
+                  <div class="chat-row">
+                    <span class="avatar amber"></span>
+                    <div><b>Review Agent</b><span>等待你确认 session grouping</span></div>
+                    <span class="mini-pill amber">needs input</span>
+                  </div>
+                </div>
+                <div class="quick-composer">
+                  <b>Quick chat / delegate</b>
+                  <div class="composer-line">
+                    <span>Ask an agent, or start one from here...</span>
+                    <span class="tag">Enter</span>
+                  </div>
+                </div>
+              </article>
+
+              <div class="entry-divider"><span>AND</span></div>
+
+              <article class="entry-pane">
+                <h3>Project Tree：结构入口</h3>
+                <p class="sub">为长期管理优化。项目树不需要承担“最近聊天列表”的职责，尤其是很多项目并不常用。</p>
+                <div class="project-mini-list">
+                  <div class="project-mini active">
+                    <b>Agent System <span>active</span></b>
+                    <p>当前有 3 个活跃 sessions，默认浮到树的顶部或 Starred 区。</p>
+                  </div>
+                  <div class="project-mini">
+                    <b>Shopify Experiments <span>quiet</span></b>
+                    <p>无近期 session，折叠在普通项目区。</p>
+                  </div>
+                  <div class="project-mini">
+                    <b>Archive / Legacy <span>cold</span></b>
+                    <p>低频项目不占据日常 agent dock，只在搜索和树中出现。</p>
+                  </div>
+                </div>
+                <div class="entry-note">设计规则：最近会话、活跃会话、等待响应优先出现在 Agent Dock；项目树只负责稳定归属。低频项目不会污染日常会话入口。</div>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid three" style="margin-top:14px">
+          <article class="recommendation primary">
+            <h3>Agent Dock 不按树默认展开</h3>
+            <p>Dock 的默认排序应是 Recent / Active / Needs input，而不是 Project / Domain / Task。层级只作为每条 session 的轻量标签。</p>
+          </article>
+          <article class="recommendation">
+            <h3>项目归属自动补全</h3>
+            <p>用户从 quick chat 发起任务时，可以先不选项目；系统根据 cwd、文件、标题或用户后续选择自动挂到 project/domain/task。</p>
+          </article>
+          <article class="recommendation">
+            <h3>低频项目沉底</h3>
+            <p>项目树需要 Recent、Starred、Active scopes。没有活跃 session 的项目不要出现在 agent dock 的默认视图里。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="benchmarks">
+        <div class="section-head">
+          <div>
+            <h2>工具如何组织工作与 Agent</h2>
+            <p class="section-note">这些产品的共性不是界面长得像，而是它们都把“工作对象”和“执行者/自动化”分开处理。</p>
+          </div>
+          <span class="tag">Source-informed</span>
+        </div>
+
+        <div class="grid four">
+          <article class="source-card">
+            <div class="brand">
+              <strong>Linear</strong>
+              <span class="tag">Outcome first</span>
+            </div>
+            <p>Linear 把 project 定义为有明确结果和计划完成时间的工作单元；项目页提供 overview、properties、docs、links、milestones 和 project-specific issue views。</p>
+            <ul>
+              <li>项目是 outcome 容器，不是会话容器。</li>
+              <li>右侧 details sidebar 用来编辑属性和查看进度。</li>
+              <li>Initiatives 再向上汇总多个 projects 的健康度。</li>
+            </ul>
+          </article>
+
+          <article class="source-card">
+            <div class="brand">
+              <strong>Jira</strong>
+              <span class="tag">Views + issue detail</span>
+            </div>
+            <p>Jira 用 backlog、board、timeline、list、calendar、dashboard 等视图处理不同工作节奏；单个 work item 可在 side panel 中查看和配置字段、评论、附件、子项。</p>
+            <ul>
+              <li>主视图负责计划和排序。</li>
+              <li>侧栏负责当前 issue 的局部信息。</li>
+              <li>复杂信息被拆到不同视图，不堆在同一栏。</li>
+            </ul>
+          </article>
+
+          <article class="source-card">
+            <div class="brand">
+              <strong>ClickUp</strong>
+              <span class="tag">Hierarchy</span>
+            </div>
+            <p>ClickUp 明确把 Workspace、Spaces、Folders、Lists、Tasks、Subtasks 做成层级，并通过侧边栏展开访问。它的重点是位置、权限和可扩展结构。</p>
+            <ul>
+              <li>层级是系统可理解的空间模型。</li>
+              <li>任务和子任务承载具体执行。</li>
+              <li>侧边栏适合导航，不适合放所有上下文。</li>
+            </ul>
+          </article>
+
+          <article class="source-card">
+            <div class="brand">
+              <strong>GitHub Copilot Agents</strong>
+              <span class="tag">Delegation layer</span>
+            </div>
+            <p>GitHub 把 agent 描述为能在后台研究 repo、制定计划、改代码、跑测试并提交 PR 的异步工作者；用户从 Issue、VS Code、GitHub 页面等入口委派任务。</p>
+            <ul>
+              <li>Agent 是后台执行者，不是项目分类法。</li>
+              <li>关键交互是 delegate、monitor、review、iterate。</li>
+              <li>透明度通过日志、commit、PR 和 review 流体现。</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="principles">
+        <div class="section-head">
+          <div>
+            <h2>信息架构对比</h2>
+            <p class="section-note">如果把 PM 系统和 agent 系统混在一起，用户会同时面对“我要去哪”和“我要找谁继续聊”两个问题。建议用双入口处理：Agent Dock 解决即时交互，Project Tree 解决长期组织。</p>
+          </div>
+        </div>
+
+        <div class="compare">
+          <div class="head">维度</div>
+          <div class="head">Linear</div>
+          <div class="head">Jira</div>
+          <div class="head">ClickUp</div>
+          <div class="head">Agent PM 启发</div>
+
+          <div class="row-head">主对象</div>
+          <div>Issue、Project、Initiative</div>
+          <div>Work item、Sprint、Board</div>
+          <div>Task、List、Folder、Space</div>
+          <div>Project / Domain / Task 仍是主对象</div>
+
+          <div class="row-head">导航模型</div>
+          <div>项目与 issue views</div>
+          <div>Board / Backlog / Timeline</div>
+          <div>可展开层级树</div>
+          <div>左侧树 + 中央工作面</div>
+
+          <div class="row-head">右侧信息</div>
+          <div>属性、资源、进度图</div>
+          <div>字段、附件、评论、子项</div>
+          <div>位置相关的任务信息</div>
+          <div>当前对象检查器，不做 agent 总控台</div>
+
+          <div class="row-head">执行者</div>
+          <div>Owner / Team</div>
+          <div>Assignee / Automation</div>
+          <div>Assignee / Watcher</div>
+          <div>Agent session 是参与者和事件流</div>
+
+          <div class="row-head">减负方式</div>
+          <div>Views、tabs、sidebar toggle</div>
+          <div>多视图 + side panel</div>
+          <div>层级展开/收起</div>
+          <div>Recent/Active dock + scoped drawer + detail view</div>
+        </div>
+      </section>
+
+      <section>
+        <div class="diagram">
+          <div class="diagram-title">
+            <strong>推荐注意力分区：左导航，中工作，右检查器，最右 Agent Dock</strong>
+            <span class="tag">IA Map</span>
+          </div>
+          <div class="diagram-body">
+            <div class="ia-map">
+              <div class="lane">
+                <div class="lane-head">Project Tree</div>
+                <div class="lane-content">
+                  <div class="tree-line">▾ Agent System</div>
+                  <div class="tree-line indent-1">▾ PM Panel</div>
+                  <div class="tree-line indent-2 active">Task Detail UX</div>
+                  <div class="tree-line indent-2">Session Routing</div>
+                  <div class="tree-line indent-1">▸ Runtime</div>
+                  <div class="tree-line indent-1">▸ Evaluation</div>
+                </div>
+              </div>
+
+              <div class="lane">
+                <div class="lane-head">Work Surface</div>
+                <div class="lane-content">
+                  <div class="work-head">
+                    <div>
+                      <h3>Task Detail UX</h3>
+                      <div class="status-row">
+                        <span class="mini-pill blue">In progress</span>
+                        <span class="mini-pill green">2 agents active</span>
+                        <span class="mini-pill amber">1 review needed</span>
+                      </div>
+                    </div>
+                    <span class="mini-pill violet">Delegate</span>
+                  </div>
+                  <div class="task-row">
+                    <span class="check"></span>
+                    <div><b>梳理右侧上下文信息层级</b><span>Brief、Evidence、Activity 分层</span></div>
+                    <span class="tag">Design</span>
+                  </div>
+                  <div class="task-row">
+                    <span class="check"></span>
+                    <div><b>定义 session rail 的折叠态</b><span>只露出状态、数量和等待动作</span></div>
+                    <span class="tag">IA</span>
+                  </div>
+                  <div class="task-row">
+                    <span class="check"></span>
+                    <div><b>制作交互原型</b><span>Rail → Drawer → Session detail</span></div>
+                    <span class="tag">Proto</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="lane">
+                <div class="lane-head">Context Inspector</div>
+                <div class="lane-content">
+                  <div class="inspector-block">
+                    <b>Brief</b>
+                    <p>当前 task 的目标、验收标准、owner、依赖。</p>
+                  </div>
+                  <div class="inspector-block">
+                    <b>Evidence</b>
+                    <p>相关文件、设计稿、链接、决策记录。</p>
+                  </div>
+                  <div class="inspector-block">
+                    <b>Activity</b>
+                    <p>人和 agent 在这个对象上的最近动作。</p>
+                  </div>
+                  <div class="inspector-block">
+                    <b>Agents on this task</b>
+                    <p>只显示与当前对象有关的摘要与入口。</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="lane dark">
+                <div class="lane-head">Rail</div>
+                <div class="lane-content">
+                  <div class="agent-dot"></div>
+                  <div class="agent-dot blue"></div>
+                  <div class="agent-dot amber"></div>
+                  <div class="agent-count">3</div>
+                  <div class="rail-caption">AGENTS</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="sidebar">
+        <div class="section-head">
+          <div>
+            <h2>为什么当前右侧上下文栏会显得杂乱</h2>
+            <p class="section-note">问题通常不是信息太多，而是信息来自不同心智模型：对象属性、项目资源、agent 运行态、操作入口、日志都挤在同一个视觉层级。</p>
+          </div>
+        </div>
+
+        <div class="split-model">
+          <article class="bucket">
+            <h3>右侧 Context Inspector 应该放什么</h3>
+            <p class="small-copy">它回答“我当前选中的 project/domain/task 是什么，我需要理解什么才能继续工作”。</p>
+            <div class="allowed">适合：Brief、目标、验收标准、owner、状态、依赖、相关文件、决策记录、当前对象 activity、相关 agent 摘要。</div>
+            <div class="avoid">不适合：全局 session 列表、全部 agent 日志、跨项目 agent 队列、长运行输出、与当前对象无关的提醒。</div>
+          </article>
+
+          <article class="bucket">
+            <h3>Session Rail / Agent Dock 应该放什么</h3>
+            <p class="small-copy">它回答“系统里有哪些 agent 正在替我工作，哪些需要我的注意”。</p>
+            <div class="allowed">适合：运行/等待/失败计数、当前 scope 的活跃 agent、需要 review 的事项、快速跳转、暂停/恢复/查看详情。</div>
+            <div class="avoid">不适合：完整任务资料、项目计划正文、文件列表、过长的操作按钮、所有 session 默认展开。</div>
+          </article>
+        </div>
+      </section>
+
+      <section id="rail">
+        <div class="section-head">
+          <div>
+            <h2>Session Rail 的三段式交互</h2>
+            <p class="section-note">常驻并不等于展开，也不等于只做状态灯。更好的做法是：折叠态支持快速回到最近 chat，展开态再做 session 管理。</p>
+          </div>
+        </div>
+
+        <div class="diagram">
+          <div class="diagram-title">
+            <strong>Collapsed Rail → Scoped Drawer → Session Detail</strong>
+            <span class="tag">Interaction Flow</span>
+          </div>
+          <div class="diagram-body">
+            <div class="state-flow">
+              <article class="state-card">
+                <h3>1. Collapsed Rail</h3>
+                <p class="small-copy">默认显示最近/活跃/等待响应的 agent 头像或状态点。用户可以一键回到 chat，不必先找项目。</p>
+                <div class="state-visual">
+                  <div class="rail-mini"><span></span><span style="background:var(--blue)"></span><span style="background:#d99121"></span></div>
+                </div>
+                <ul class="bullets">
+                  <li>默认按 Recent / Active / Needs input 排序。</li>
+                  <li>hover 显示 agent 名称、项目归属和目标。</li>
+                  <li>红/橙状态才主动吸引注意。</li>
+                </ul>
+              </article>
+
+              <article class="state-card">
+                <h3>2. Scoped Drawer</h3>
+                <p class="small-copy">点击 rail 后展开 session 列表，默认还是最近/活跃优先；用户可切到 task、domain、project 或 all scope。</p>
+                <div class="state-visual">
+                  <div class="drawer-mini">
+                    <div>Task Detail UX</div>
+                    <div>Running · UI audit</div>
+                    <div>Waiting · Review diff</div>
+                    <div>Paused · Need input</div>
+                  </div>
+                </div>
+                <ul class="bullets">
+                  <li>默认 recent first，支持按 Project / Domain / Task 分组。</li>
+                  <li>每个 session 只显示四件事。</li>
+                  <li>提供 all sessions 搜索作为次级入口。</li>
+                </ul>
+              </article>
+
+              <article class="state-card">
+                <h3>3. Session Detail</h3>
+                <p class="small-copy">需要追踪日志、diff、计划、环境时，再进入完整详情页或覆盖层。</p>
+                <div class="state-visual">
+                  <div class="session-mini">
+                    <div class="bar"></div>
+                    <div class="line" style="width:72%"></div>
+                    <div class="line" style="width:52%"></div>
+                    <div class="line" style="width:84%"></div>
+                    <div class="line" style="width:64%"></div>
+                  </div>
+                </div>
+                <ul class="bullets">
+                  <li>展示完整 logs、files、diff、terminal。</li>
+                  <li>提供 pause、resume、handoff、archive。</li>
+                  <li>与 PM task 双向链接。</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="proposal">
+        <div class="section-head">
+          <div>
+            <h2>推荐落地方案</h2>
+            <p class="section-note">最终方案不是把 session rail 塞进右侧上下文栏，也不是让项目树接管聊天入口。Agent Dock 放在系统外缘，默认服务快速对话，必要时再切到项目 scope。</p>
+          </div>
+          <span class="tag">Design Proposal</span>
+        </div>
+
+        <div class="mock-layout">
+          <div class="mock-pane">
+            <div class="mock-top">Project / Domain / Task</div>
+            <div class="mock-body">
+              <div class="mock-line blue"></div>
+              <div class="mock-line mid"></div>
+              <div class="mock-line short"></div>
+              <div class="mock-line green"></div>
+              <div class="mock-line mid"></div>
+              <div class="mock-line short"></div>
+            </div>
+          </div>
+
+          <div class="mock-pane">
+            <div class="mock-top">Current Work Surface</div>
+            <div class="mock-body">
+              <div class="mock-line blue" style="height:14px;width:48%"></div>
+              <div class="mock-line mid"></div>
+              <div class="mock-card">
+                <div class="mock-line green" style="width:64%"></div>
+                <div class="mock-line mid"></div>
+                <div class="mock-line short"></div>
+              </div>
+              <div class="mock-card">
+                <div class="mock-line amber" style="width:50%"></div>
+                <div class="mock-line mid"></div>
+                <div class="mock-line short"></div>
+              </div>
+              <div class="mock-card">
+                <div class="mock-line blue" style="width:42%"></div>
+                <div class="mock-line mid"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mock-pane">
+            <div class="mock-top">Context Inspector</div>
+            <div class="mock-body">
+              <div class="mock-card">
+                <div class="mock-line blue" style="width:36%"></div>
+                <div class="mock-line mid"></div>
+                <div class="mock-line short"></div>
+              </div>
+              <div class="mock-card">
+                <div class="mock-line green" style="width:42%"></div>
+                <div class="mock-line mid"></div>
+              </div>
+              <div class="mock-card">
+                <div class="mock-line amber" style="width:46%"></div>
+                <div class="mock-line short"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mock-pane dark">
+            <div class="mock-top">Rail</div>
+            <div class="rail-stack">
+              <div class="rail-chip green"></div>
+              <div class="rail-chip"></div>
+              <div class="rail-chip amber"></div>
+              <div class="agent-count">2</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid three" style="margin-top:14px">
+          <article class="recommendation primary">
+            <h3>信息层级</h3>
+            <p>左侧树保留 Project / Domain / Task；中央显示当前对象的主要工作内容；右侧检查器显示当前对象上下文；最右 rail 显示 agent 状态。</p>
+          </article>
+          <article class="recommendation">
+            <h3>默认排序</h3>
+            <p>Session rail 默认按 Recent / Active / Needs input 排序。当前 project/domain/task 作为过滤器和标签存在，而不是默认把用户锁进树里。</p>
+          </article>
+          <article class="recommendation">
+            <h3>四字段卡片</h3>
+            <p>展开 drawer 后，每个 session 只显示 status、objective、target node、next human action。日志和 diff 不在列表卡片里展示。</p>
+          </article>
+          <article class="recommendation">
+            <h3>入口设计</h3>
+            <p>在 rail 提供 quick chat / continue；在任务标题区提供 Delegate / Attach session；在命令面板提供全局 start agent。</p>
+          </article>
+          <article class="recommendation">
+            <h3>右侧栏改名</h3>
+            <p>把右侧栏从“Context”收敛为 “Brief / Evidence / Activity” 三段，Agent 摘要只是 Activity 的一个 filtered view。</p>
+          </article>
+          <article class="recommendation">
+            <h3>通知策略</h3>
+            <p>只有 blocked、needs review、failed 三类状态允许提升视觉权重。running 状态保持安静，避免不断抢注意力。</p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <div>
+            <h2>可以直接改到现有原型里的版本</h2>
+            <p class="section-note">如果只做一轮设计实验，我建议先做这些改动，能最快验证“常驻但不 overload”。</p>
+          </div>
+        </div>
+
+        <div class="card panel">
+          <ul class="bullets">
+            <li>把右侧栏顶部 tabs 从 Agents / Files / Plan / Log 改成 Brief / Evidence / Activity，减少不同类型信息抢同一层级。</li>
+            <li>把 Agents 内容移到 Activity 下的 scoped section，只保留当前 task 相关 agent 摘要。</li>
+            <li>把最右 session rail 默认压缩到 52px，展示最近/活跃/等待响应的 agent 头像或状态点，不展示完整 session title。</li>
+            <li>点击 rail 展开 300-340px drawer，drawer 默认按 Recent / Active / Needs input 排序，并提供 Project / Domain / Task 分组切换。</li>
+            <li>每张 session 卡只留一行动作：Open、Review、Resume 之一，其他操作进详情页。</li>
+            <li>增加 scope switch：Recent / This task / This domain / This project / All。默认是 Recent，而不是永远跟随当前选择。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="sources">
+        <div class="section-head">
+          <div>
+            <h2>参考来源</h2>
+            <p class="section-note">以下为调研时参考的公开资料。文档中的设计判断是基于这些产品模式的归纳，而不是照搬某一个界面。</p>
+          </div>
+        </div>
+
+        <div class="source-list">
+          <a href="https://linear.app/docs/projects" target="_blank" rel="noreferrer">Linear Docs: Projects, project overview, project details sidebar, project-specific issue views</a>
+          <a href="https://linear.app/docs/initiatives" target="_blank" rel="noreferrer">Linear Docs: Initiatives group projects under larger company objectives and roll up health</a>
+          <a href="https://support.atlassian.com/jira-software-cloud/docs/create-and-plan-work-with-scrum-and-kanban/" target="_blank" rel="noreferrer">Atlassian Support: Jira Software planning views, work item detail side panel, timeline and reports</a>
+          <a href="https://help.clickup.com/hc/en-us/articles/13856392825367-Intro-to-the-Hierarchy" target="_blank" rel="noreferrer">ClickUp Help: Workspace hierarchy, spaces, folders, lists, tasks and subtasks</a>
+          <a href="https://docs.github.com/en/copilot/concepts/agents/cloud-agent/about-cloud-agent" target="_blank" rel="noreferrer">GitHub Docs: Copilot cloud agent background work, delegation, transparency and review loop</a>
+          <a href="https://docs.github.com/en/copilot/how-tos/copilot-on-github/use-copilot-agents/manage-and-track-agents" target="_blank" rel="noreferrer">GitHub Docs: Managing and tracking Copilot agent sessions</a>
+        </div>
+      </section>
+
+      <footer>
+        设计判断摘要：Project management 的主 IA 负责稳定和可预测；Agent management 的主入口负责即时对话、异步状态和注意力调度。把两者合并到同一个右侧栏会造成 overload；把 session rail 做成系统外缘的 Agent Dock，可以让用户快速回到 chat/agent，同时仍然把会话归档到 project/domain/task。
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

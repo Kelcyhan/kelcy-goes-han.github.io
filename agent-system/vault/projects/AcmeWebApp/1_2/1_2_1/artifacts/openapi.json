@@ -1,0 +1,80 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Acme v2 API",
+    "version": "2.0.0-alpha.7",
+    "description": "Customer-facing v2 dashboard API. Alpha = breaking changes allowed."
+  },
+  "servers": [
+    { "url": "https://api.acme.example/v2", "description": "Production" },
+    { "url": "https://api.staging.acme.example/v2", "description": "Staging" }
+  ],
+  "paths": {
+    "/workspaces": {
+      "get": {
+        "summary": "List workspaces visible to the caller",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WorkspaceList" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces/{id}": {
+      "get": {
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Workspace" }
+              }
+            }
+          },
+          "404": { "description": "Not found" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Workspace": {
+        "type": "object",
+        "required": ["id", "name", "createdAt"],
+        "properties": {
+          "id":        { "type": "string" },
+          "name":      { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "members":   {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Member" }
+          }
+        }
+      },
+      "WorkspaceList": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/Workspace" } },
+          "nextCursor": { "type": ["string", "null"] }
+        }
+      },
+      "Member": {
+        "type": "object",
+        "required": ["userId", "role"],
+        "properties": {
+          "userId": { "type": "string" },
+          "role": { "type": "string", "enum": ["owner", "admin", "member", "viewer"] }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "acme-marketing",
+  "schemas": [
+    {
+      "name": "page",
+      "title": "Landing Page",
+      "type": "document",
+      "fields": [
+        { "name": "title", "type": "string", "validation": "required" },
+        { "name": "slug", "type": "slug", "options": { "source": "title" } },
+        { "name": "hero", "type": "object", "fields": [
+          { "name": "headline", "type": "string" },
+          { "name": "subhead", "type": "text" },
+          { "name": "ctaLabel", "type": "string" },
+          { "name": "ctaHref", "type": "url" }
+        ]},
+        { "name": "sections", "type": "array", "of": [
+          { "type": "feature_grid" },
+          { "type": "testimonial_block" },
+          { "type": "code_sample" }
+        ]}
+      ]
+    },
+    {
+      "name": "post",
+      "title": "Blog Post",
+      "type": "document",
+      "fields": [
+        { "name": "title", "type": "string", "validation": "required" },
+        { "name": "publishedAt", "type": "datetime" },
+        { "name": "author", "type": "reference", "to": "author" },
+        { "name": "body", "type": "portableText" }
+      ]
+    }
+  ]
+}

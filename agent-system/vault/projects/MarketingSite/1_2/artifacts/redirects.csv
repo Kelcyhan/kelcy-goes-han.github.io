@@ -1,0 +1,11 @@
+old_path,new_path,status
+/blog/2021/welcome,/posts/welcome,301
+/blog/2022/our-series-a,/posts/series-a,301
+/blog/2023/hiring,/careers,301
+/blog/2024/v1-launch,/posts/v1-launch,301
+/about-us,/about,301
+/team,/about/team,301
+/pricing-old,/pricing,301
+/contact-sales,/contact,301
+/integrations/zapier,/integrations,302
+/integrations/slack,/integrations,302

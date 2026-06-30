@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PM Panel Design Experiment</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #12131a;
+      --surface: #191b24;
+      --surface-2: #20232e;
+      --surface-3: #262a36;
+      --line: #333848;
+      --line-soft: #272c39;
+      --text: #eef0f5;
+      --muted: #a3a9b8;
+      --faint: #747b8d;
+      --blue: #6e95f6;
+      --blue-bg: rgba(110, 149, 246, .14);
+      --green: #56c27d;
+      --green-bg: rgba(86, 194, 125, .13);
+      --amber: #e8a34f;
+      --amber-bg: rgba(232, 163, 79, .14);
+      --rose: #e16868;
+      --rose-bg: rgba(225, 104, 104, .14);
+      --teal: #42c3b3;
+      --teal-bg: rgba(66, 195, 179, .13);
+      --violet: #b59cff;
+      --shadow: 0 18px 60px rgba(0, 0, 0, .28);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(66, 195, 179, .10), transparent 28rem),
+        radial-gradient(circle at 90% 20%, rgba(181, 156, 255, .10), transparent 24rem),
+        var(--bg);
+      overflow: hidden;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 250px minmax(420px, 1fr) 340px 72px;
+      grid-template-rows: 44px minmax(0, 1fr);
+      height: 100vh;
+      gap: 1px;
+      background: var(--line-soft);
+    }
+
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 14px;
+      background: rgba(18, 19, 26, .88);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .brand-mark {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background:
+        linear-gradient(135deg, var(--teal), transparent 55%),
+        linear-gradient(315deg, var(--blue), var(--violet));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.16);
+    }
+
+    .crumb {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .crumb strong {
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn, .primary-btn, .quiet-btn {
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      border-radius: 7px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 10px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .icon-btn {
+      width: 30px;
+      padding: 0;
+      color: var(--muted);
+    }
+
+    .primary-btn {
+      border-color: rgba(110, 149, 246, .55);
+      background: var(--blue-bg);
+      color: #dce6ff;
+      font-weight: 650;
+    }
+
+    .quiet-btn {
+      color: var(--muted);
+      background: transparent;
+    }
+
+    .sidebar, .main, .inspector, .rail {
+      min-height: 0;
+      background: var(--surface);
+    }
+
+    .sidebar {
+      padding: 12px 10px;
+      overflow: auto;
+    }
+
+    .side-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 0 4px;
+    }
+
+    .side-title {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .tree {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .tree-row {
+      display: grid;
+      grid-template-columns: 16px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 7px;
+      height: 30px;
+      padding: 0 8px;
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .tree-row:hover { background: rgba(255,255,255,.04); color: var(--text); }
+    .tree-row.active {
+      background: var(--blue-bg);
+      color: var(--text);
+      box-shadow: inset 2px 0 0 var(--blue);
+    }
+
+    .indent-1 { padding-left: 22px; }
+    .indent-2 { padding-left: 38px; }
+    .indent-3 { padding-left: 54px; }
+
+    .node-icon {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid currentColor;
+      opacity: .9;
+    }
+
+    .project { color: var(--blue); }
+    .domain { color: var(--teal); }
+    .task { color: var(--muted); }
+    .scratch { color: var(--amber); }
+
+    .tree-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .mini-count {
+      min-width: 18px;
+      padding: 1px 5px;
+      border-radius: 999px;
+      background: var(--surface-3);
+      color: var(--faint);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .main {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .object-head {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--line-soft);
+      background: linear-gradient(180deg, rgba(255,255,255,.025), transparent);
+    }
+
+    .object-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 16px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 7px;
+    }
+
+    .object-title {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.18;
+      letter-spacing: 0;
+      font-weight: 760;
+    }
+
+    .object-desc {
+      margin: 8px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .status-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 720;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .pill.blue { background: var(--blue-bg); color: #bcd0ff; }
+    .pill.green { background: var(--green-bg); color: #a9e8bf; }
+    .pill.amber { background: var(--amber-bg); color: #f4d19f; }
+    .pill.gray { background: rgba(160,166,184,.12); color: #bec4d1; }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .metric {
+      min-width: 0;
+      border: 1px solid var(--line-soft);
+      background: rgba(255,255,255,.025);
+      border-radius: var(--radius);
+      padding: 10px;
+    }
+
+    .metric-label {
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 680;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      font-size: 20px;
+      font-weight: 760;
+    }
+
+    .metric-value span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .work-area {
+      overflow: auto;
+      padding: 16px 20px 24px;
+    }
+
+    .section-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 760;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .task-row {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) 120px 72px 72px 32px;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      border: 1px solid var(--line-soft);
+      background: rgba(255,255,255,.025);
+      border-radius: var(--radius);
+      padding: 0 8px;
+    }
+
+    .task-row:hover { background: rgba(255,255,255,.045); border-color: var(--line); }
+
+    .check {
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      display: grid;
+      place-items: center;
+      color: var(--green);
+      font-size: 11px;
+    }
+
+    .task-main {
+      min-width: 0;
+    }
+
+    .task-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 650;
+    }
+
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+      color: var(--faint);
+      font-size: 11px;
+    }
+
+    .agent-stack {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      justify-content: flex-end;
+    }
+
+    .agent-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.12);
+      font-size: 10px;
+      font-weight: 750;
+      background: var(--surface-3);
+      color: var(--muted);
+    }
+
+    .agent-dot.live { color: #dce6ff; background: var(--blue-bg); border-color: rgba(110,149,246,.38); }
+
+    .progress {
+      height: 7px;
+      border-radius: 999px;
+      background: var(--surface-3);
+      overflow: hidden;
+    }
+
+    .progress > i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), var(--blue));
+      border-radius: inherit;
+    }
+
+    .inspector {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      padding: 10px 10px 0;
+      background: var(--surface);
+    }
+
+    .tab {
+      height: 30px;
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 7px 7px 0 0;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .tab.active {
+      color: var(--text);
+      background: var(--surface-2);
+      border-color: var(--line-soft);
+      border-bottom-color: var(--surface-2);
+    }
+
+    .panel {
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+      background: var(--surface-2);
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .panel-page { display: none; }
+    .panel-page.active { display: block; }
+
+    .info-group {
+      margin-bottom: 14px;
+    }
+
+    .info-title {
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 730;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      margin-bottom: 7px;
+    }
+
+    .file-row, .note-row, .session-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      border-radius: 7px;
+      padding: 6px 7px;
+      color: var(--muted);
+      background: rgba(255,255,255,.025);
+      border: 1px solid transparent;
+      margin-bottom: 5px;
+    }
+
+    .file-row:hover, .note-row:hover, .session-row:hover {
+      border-color: var(--line);
+      color: var(--text);
+    }
+
+    .file-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,.06);
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 760;
+      flex: 0 0 auto;
+    }
+
+    .grow {
+      min-width: 0;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11px;
+    }
+
+    .rail {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      overflow: hidden;
+      background: #151720;
+    }
+
+    .rail-top, .rail-bottom {
+      display: flex;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .rail-list {
+      min-height: 0;
+      overflow: auto;
+      padding: 0 8px 8px;
+    }
+
+    .rail-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .rail-label {
+      width: 100%;
+      display: none;
+      color: var(--faint);
+      font-size: 10px;
+      font-weight: 760;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 6px 2px 0;
+    }
+
+    .rail.expanded {
+      width: 280px;
+    }
+
+    .rail-card {
+      width: 40px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line-soft);
+      background: rgba(255,255,255,.025);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .rail-card.active {
+      border-color: rgba(110,149,246,.65);
+      background: var(--blue-bg);
+    }
+
+    .rail-card-text {
+      display: none;
+      min-width: 0;
+    }
+
+    .rail-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 650;
+      font-size: 12px;
+    }
+
+    .rail-sub {
+      color: var(--faint);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .rail.expanded .rail-list { padding: 0 10px 10px; }
+    .rail.expanded .rail-group { align-items: stretch; }
+    .rail.expanded .rail-label { display: block; }
+    .rail.expanded .rail-card {
+      width: 100%;
+      height: 42px;
+      justify-content: flex-start;
+      gap: 8px;
+      padding: 0 9px;
+    }
+    .rail.expanded .rail-card-text { display: block; flex: 1; }
+
+    .pulse {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 0 4px rgba(110,149,246,.12);
+      flex: 0 0 auto;
+    }
+
+    .pulse.idle { background: transparent; border: 1.5px solid var(--green); box-shadow: none; }
+    .pulse.wait { background: var(--amber); border-radius: 3px; transform: rotate(45deg); box-shadow: none; }
+
+    .mobile-note {
+      display: none;
+      padding: 10px;
+      background: var(--amber-bg);
+      color: #f4d19f;
+      border-bottom: 1px solid rgba(232,163,79,.22);
+      font-size: 12px;
+    }
+
+    @media (max-width: 980px) {
+      body { overflow: auto; }
+      .mobile-note { display: block; }
+      .app {
+        height: auto;
+        min-height: 100vh;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto auto;
+      }
+      .topbar { grid-column: 1; position: sticky; top: 0; z-index: 2; }
+      .sidebar, .main, .inspector, .rail { min-height: 320px; }
+      .rail { grid-template-rows: auto auto auto; }
+      .rail-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; overflow: visible; }
+      .rail-group { align-items: stretch; margin: 0; }
+      .rail-label { display: block; }
+      .rail-card { width: 100%; justify-content: flex-start; gap: 8px; padding: 0 9px; }
+      .rail-card-text { display: block; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .task-row { grid-template-columns: 28px minmax(0, 1fr) 92px; }
+      .task-row .hide-sm { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-note">Responsive preview: the production PM panel should still use the desktop layout when space allows.</div>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>PM Workspace</span>
+        <span class="crumb"><span>/</span><span>AcmeWebApp</span><span>/</span><strong>1.2.1 Auth contract</strong></span>
+      </div>
+      <div class="top-actions">
+        <button class="quiet-btn">Search</button>
+        <button class="primary-btn">New Agent</button>
+        <button class="icon-btn" aria-label="More">···</button>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <div class="side-head">
+        <div class="side-title">Project Tree</div>
+        <button class="icon-btn" aria-label="Collapse tree">⌘</button>
+      </div>
+      <nav class="tree" aria-label="Project hierarchy">
+        <div class="tree-row"><span class="node-icon project"></span><span class="tree-label">AcmeWebApp</span><span class="mini-count">8</span></div>
+        <div class="tree-row indent-1"><span class="node-icon domain"></span><span class="tree-label">1.1 Frontend App Shell</span><span class="mini-count">3</span></div>
+        <div class="tree-row indent-2"><span class="node-icon task"></span><span class="tree-label">1.1.1 Design tokens</span><span class="mini-count">1</span></div>
+        <div class="tree-row indent-2"><span class="node-icon task"></span><span class="tree-label">1.1.2 Component polish</span><span class="mini-count">2</span></div>
+        <div class="tree-row indent-1 active"><span class="node-icon domain"></span><span class="tree-label">1.2 Backend API Gateway</span><span class="mini-count">4</span></div>
+        <div class="tree-row indent-2 active"><span class="node-icon task"></span><span class="tree-label">1.2.1 Auth contract</span><span class="mini-count">2</span></div>
+        <div class="tree-row indent-2"><span class="node-icon task"></span><span class="tree-label">1.2.2 Session lifecycle</span><span class="mini-count">1</span></div>
+        <div class="tree-row indent-1"><span class="node-icon scratch"></span><span class="tree-label">Scratch</span><span class="mini-count">2</span></div>
+        <div class="tree-row"><span class="node-icon project"></span><span class="tree-label">ResearchPaper</span><span class="mini-count">5</span></div>
+        <div class="tree-row"><span class="node-icon project"></span><span class="tree-label">MarketingSite</span><span class="mini-count">0</span></div>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <section class="object-head">
+        <div class="object-top">
+          <div>
+            <div class="eyebrow"><span class="node-icon task"></span><span>Task · 1.2.1</span></div>
+            <h1 class="object-title">Auth contract and provider handoff</h1>
+            <p class="object-desc">Define the API boundary for provider sessions, status refresh, and task navigation so PM and chat can share a single source of truth.</p>
+          </div>
+          <div class="status-strip">
+            <span class="pill blue"><span class="dot"></span>Active</span>
+            <span class="pill amber">2 blockers</span>
+            <button class="primary-btn">Resume Agent</button>
+          </div>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label">Done when</div>
+            <div class="metric-value">3<span>/5</span></div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Agents</div>
+            <div class="metric-value">2<span>live</span></div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Open files</div>
+            <div class="metric-value">6<span>refs</span></div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Risk</div>
+            <div class="metric-value" style="color: var(--amber)">Med<span>API drift</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="work-area">
+        <div class="section-bar">
+          <div class="section-title">Focused Work Queue</div>
+          <div class="toolbar">
+            <button class="quiet-btn">Group: Status</button>
+            <button class="quiet-btn">Sort: Priority</button>
+            <button class="icon-btn" aria-label="Add task">+</button>
+          </div>
+        </div>
+        <div class="task-list">
+          <article class="task-row">
+            <span class="check">✓</span>
+            <div class="task-main">
+              <div class="task-name">Normalize provider status payloads</div>
+              <div class="task-meta"><span class="mono">api.ts</span><span>updated 12m ago</span></div>
+            </div>
+            <span class="pill green hide-sm">Done</span>
+            <div class="agent-stack hide-sm"><span class="agent-dot live">C</span></div>
+            <div class="progress hide-sm"><i style="width: 100%"></i></div>
+            <button class="icon-btn hide-sm" aria-label="More">···</button>
+          </article>
+
+          <article class="task-row">
+            <span class="check"></span>
+            <div class="task-main">
+              <div class="task-name">Wire task target navigation from live session metadata</div>
+              <div class="task-meta"><span class="mono">TurnGroup.tsx</span><span>needs review</span></div>
+            </div>
+            <span class="pill blue hide-sm">Active</span>
+            <div class="agent-stack hide-sm"><span class="agent-dot live">G</span><span class="agent-dot">V</span></div>
+            <div class="progress hide-sm"><i style="width: 68%"></i></div>
+            <button class="icon-btn hide-sm" aria-label="More">···</button>
+          </article>
+
+          <article class="task-row">
+            <span class="check"></span>
+            <div class="task-main">
+              <div class="task-name">Decide fallback behavior for provider logout edge cases</div>
+              <div class="task-meta"><span class="mono">ClaudeAuthDock.tsx</span><span>blocked on UX choice</span></div>
+            </div>
+            <span class="pill amber hide-sm">Needs attention</span>
+            <div class="agent-stack hide-sm"><span class="agent-dot">U</span></div>
+            <div class="progress hide-sm"><i style="width: 25%"></i></div>
+            <button class="icon-btn hide-sm" aria-label="More">···</button>
+          </article>
+
+          <article class="task-row">
+            <span class="check"></span>
+            <div class="task-main">
+              <div class="task-name">Add regression coverage for session-to-task linking</div>
+              <div class="task-meta"><span class="mono">session-store.test.ts</span><span>queued</span></div>
+            </div>
+            <span class="pill gray hide-sm">Not started</span>
+            <div class="agent-stack hide-sm"></div>
+            <div class="progress hide-sm"><i style="width: 0%"></i></div>
+            <button class="icon-btn hide-sm" aria-label="More">···</button>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <aside class="inspector">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="agents">Agents</button>
+        <button class="tab" data-tab="files">Files</button>
+        <button class="tab" data-tab="plan">Plan</button>
+        <button class="tab" data-tab="log">Log</button>
+      </div>
+      <div class="panel">
+        <div class="panel-page active" id="agents">
+          <div class="info-group">
+            <div class="info-title">Live on this task</div>
+            <div class="session-row"><span class="pulse"></span><span class="grow">Gateway contract patch</span><span class="pill blue">Working</span></div>
+            <div class="session-row"><span class="pulse wait"></span><span class="grow">Verifier review</span><span class="pill amber">Waiting</span></div>
+          </div>
+          <div class="info-group">
+            <div class="info-title">Nearby sessions</div>
+            <div class="session-row"><span class="pulse idle"></span><span class="grow">Session lifecycle cleanup</span><span class="pill green">Idle</span></div>
+            <div class="session-row"><span class="pulse idle"></span><span class="grow">Backend docs sync</span><span class="pill gray">Idle</span></div>
+          </div>
+        </div>
+
+        <div class="panel-page" id="files">
+          <div class="info-group">
+            <div class="info-title">Primary files</div>
+            <div class="file-row"><span class="file-icon">T</span><span class="grow">frontend/src/lib/api.ts</span></div>
+            <div class="file-row"><span class="file-icon">S</span><span class="grow">frontend/src/stores/session-store.ts</span></div>
+            <div class="file-row"><span class="file-icon">P</span><span class="grow">frontend/src/stores/pm-store.ts</span></div>
+          </div>
+          <div class="info-group">
+            <div class="info-title">Artifacts</div>
+            <div class="file-row"><span class="file-icon">M</span><span class="grow">worklog.md</span></div>
+            <div class="file-row"><span class="file-icon">J</span><span class="grow">openapi.json</span></div>
+          </div>
+        </div>
+
+        <div class="panel-page" id="plan">
+          <div class="info-group">
+            <div class="info-title">Current plan</div>
+            <div class="note-row"><span class="check">✓</span><span class="grow">Map session metadata shape</span></div>
+            <div class="note-row"><span class="check">✓</span><span class="grow">Patch provider status endpoint</span></div>
+            <div class="note-row"><span class="check"></span><span class="grow">Add task navigation fallback</span></div>
+            <div class="note-row"><span class="check"></span><span class="grow">Verify rail + inspector behavior</span></div>
+          </div>
+        </div>
+
+        <div class="panel-page" id="log">
+          <div class="info-group">
+            <div class="info-title">Recent activity</div>
+            <div class="note-row"><span class="mono">12:14</span><span class="grow">Agent updated provider status handling.</span></div>
+            <div class="note-row"><span class="mono">12:02</span><span class="grow">Verifier flagged missing null fallback.</span></div>
+            <div class="note-row"><span class="mono">11:48</span><span class="grow">User asked to simplify PM panel hierarchy.</span></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <aside class="rail" id="rail">
+      <div class="rail-top">
+        <button class="icon-btn" id="railToggle" aria-label="Toggle rail">⇤</button>
+      </div>
+      <div class="rail-list">
+        <div class="rail-group">
+          <div class="rail-label">AcmeWebApp / 1.2 Backend / 1.2.1 Auth contract</div>
+          <div class="rail-card active"><span class="pulse"></span><span class="rail-card-text"><div class="rail-name">Gateway contract patch</div><div class="rail-sub">working · Codex</div></span></div>
+          <div class="rail-card"><span class="pulse wait"></span><span class="rail-card-text"><div class="rail-name">Verifier review</div><div class="rail-sub">waiting · verifier</div></span></div>
+        </div>
+        <div class="rail-group">
+          <div class="rail-label">AcmeWebApp / 1.2 Backend / 1.2.2 Session lifecycle</div>
+          <div class="rail-card"><span class="pulse idle"></span><span class="rail-card-text"><div class="rail-name">Lifecycle cleanup</div><div class="rail-sub">idle · Codex</div></span></div>
+        </div>
+        <div class="rail-group">
+          <div class="rail-label">ResearchPaper / 1.1 Literature / 1.1.2 Coding pass</div>
+          <div class="rail-card"><span class="pulse"></span><span class="rail-card-text"><div class="rail-name">Source coding</div><div class="rail-sub">working · Claude</div></span></div>
+        </div>
+      </div>
+      <div class="rail-bottom">
+        <button class="icon-btn" aria-label="New agent">+</button>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    const pages = document.querySelectorAll('.panel-page');
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((t) => t.classList.remove('active'));
+        pages.forEach((p) => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    const rail = document.getElementById('rail');
+    const railToggle = document.getElementById('railToggle');
+    railToggle.addEventListener('click', () => {
+      rail.classList.toggle('expanded');
+      railToggle.textContent = rail.classList.contains('expanded') ? '⇥' : '⇤';
+    });
+
+    document.querySelectorAll('.tree-row').forEach((row) => {
+      row.addEventListener('click', () => {
+        document.querySelectorAll('.tree-row').forEach((item) => item.classList.remove('active'));
+        row.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

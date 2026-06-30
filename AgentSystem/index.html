@@ -1,0 +1,1308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent System - Kelcy Han</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Averia+Sans+Libre:ital,wght@1,300;1,400;1,700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,500;1,6..72,700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #f4efe5;
+    --paper-2: #ebe1d1;
+    --ink: #10141f;
+    --ink-soft: #2a3141;
+    --muted: #697184;
+    --line: rgba(24, 31, 46, 0.14);
+    --night: #10121d;
+    --panel: #202235;
+    --panel-2: #292c43;
+    --blue: #6e95f6;
+    --blue-2: #a8c4ff;
+    --gold: #d99a2b;
+    --green: #2f9f7f;
+    --coral: #db6d58;
+    --violet: #9275e8;
+    --title-font: "Newsreader", serif;
+    --ui-font: "DM Sans", system-ui, sans-serif;
+    --mono-font: "JetBrains Mono", monospace;
+    --hand-font: "Averia Sans Libre", cursive;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html {
+    background: var(--paper);
+    scroll-behavior: smooth;
+  }
+  body {
+    min-height: 100%;
+    overflow-x: hidden;
+    color: var(--ink);
+    font-family: var(--ui-font);
+    line-height: 1.55;
+    letter-spacing: 0;
+    background:
+      linear-gradient(rgba(24,31,46,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(24,31,46,0.035) 1px, transparent 1px),
+      radial-gradient(circle at 12% 5%, rgba(110,149,246,0.18), transparent 34rem),
+      radial-gradient(circle at 88% 12%, rgba(217,154,43,0.18), transparent 28rem),
+      var(--paper);
+    background-size: 42px 42px, 42px 42px, auto, auto, auto;
+  }
+  a { color: inherit; }
+
+  .top-bar {
+    position: fixed;
+    z-index: 80;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 16px clamp(16px, 4vw, 36px);
+    pointer-events: none;
+  }
+  .back,
+  .proj-id,
+  .top-links {
+    pointer-events: auto;
+    color: var(--ink);
+    text-decoration: none;
+    background: rgba(244, 239, 229, 0.74);
+    border: 1px solid rgba(24, 31, 46, 0.13);
+    border-radius: 999px;
+    box-shadow: 0 16px 48px rgba(40, 33, 22, 0.12);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+  .back,
+  .proj-id {
+    padding: 10px 15px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .back {
+    font-family: var(--hand-font);
+    font-style: italic;
+    transition: transform 0.22s, background 0.22s;
+  }
+  .back:hover { transform: translateX(-3px); background: rgba(255,255,255,0.86); }
+  .proj-id {
+    font-family: var(--title-font);
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0.03em;
+  }
+  .top-links {
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+  }
+  .top-links a {
+    text-decoration: none;
+    border-radius: 999px;
+    padding: 8px 11px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(16,20,31,0.72);
+  }
+  .top-links a:hover { background: rgba(16,20,31,0.08); color: var(--ink); }
+
+  main { position: relative; z-index: 1; }
+  .hero {
+    min-height: 100vh;
+    padding: 132px clamp(18px, 5vw, 88px) 72px;
+    display: grid;
+    align-items: center;
+    gap: clamp(28px, 5vw, 72px);
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(300px, 0.72fr) minmax(420px, 1fr);
+    gap: clamp(28px, 5vw, 78px);
+    align-items: center;
+  }
+  .eyebrow {
+    font-family: var(--mono-font);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-size: clamp(56px, 8.4vw, 118px);
+    font-weight: 700;
+    line-height: 0.88;
+    letter-spacing: 0;
+    max-width: 780px;
+  }
+  .lede {
+    max-width: 680px;
+    margin-top: 28px;
+    font-size: clamp(18px, 1.75vw, 24px);
+    color: var(--ink-soft);
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 28px;
+  }
+  .pill-link,
+  .metric-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    padding: 0 14px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.42);
+  }
+  .pill-link.primary {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 28px;
+  }
+  .metric-pill {
+    font-family: var(--mono-font);
+    color: rgba(16,20,31,0.74);
+  }
+
+  .hero-evidence {
+    position: relative;
+    min-height: clamp(520px, 58vw, 720px);
+  }
+  .concept-map {
+    position: relative;
+    min-height: inherit;
+    border-radius: 14px;
+    border: 1px solid rgba(16,20,31,0.13);
+    background:
+      linear-gradient(rgba(16,20,31,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(16,20,31,0.035) 1px, transparent 1px),
+      rgba(255,255,255,0.34);
+    background-size: 34px 34px;
+    box-shadow: 0 30px 90px rgba(37, 30, 20, 0.16);
+    overflow: hidden;
+  }
+  .concept-map::before,
+  .concept-map::after {
+    content: "";
+    position: absolute;
+    inset: 17% 14%;
+    border: 1px solid rgba(16,20,31,0.12);
+    border-radius: 999px;
+    transform: rotate(-18deg);
+  }
+  .concept-map::after {
+    inset: 28% 21%;
+    transform: rotate(23deg);
+  }
+  .concept-node {
+    position: absolute;
+    z-index: 2;
+    width: min(220px, 34%);
+    border: 1px solid rgba(16,20,31,0.14);
+    border-radius: 10px;
+    background: rgba(244,239,229,0.9);
+    padding: 16px;
+    box-shadow: 0 18px 55px rgba(37, 30, 20, 0.12);
+  }
+  .concept-node b {
+    display: block;
+    font-size: 15px;
+    line-height: 1.18;
+    margin-bottom: 7px;
+  }
+  .concept-node span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .concept-node.human { left: 7%; top: 18%; }
+  .concept-node.agents { right: 7%; top: 16%; }
+  .concept-node.artifacts { left: 11%; bottom: 17%; }
+  .concept-node.continuity { right: 10%; bottom: 18%; }
+  .concept-core {
+    position: absolute;
+    z-index: 3;
+    left: 50%;
+    top: 50%;
+    width: min(260px, 40%);
+    min-height: 160px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 24px;
+    color: var(--paper);
+    background: var(--ink);
+    box-shadow: 0 22px 70px rgba(16,20,31,0.28);
+  }
+  .concept-core b {
+    display: block;
+    font-family: var(--title-font);
+    font-style: italic;
+    font-size: clamp(25px, 3vw, 42px);
+    line-height: 0.96;
+    margin-bottom: 9px;
+  }
+  .concept-core span {
+    color: rgba(244,239,229,0.66);
+    font-family: var(--mono-font);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .evidence-note {
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    top: 12%;
+    width: min(330px, 44%);
+    border-left: 3px solid var(--gold);
+    padding: 16px 18px;
+    background: rgba(244, 239, 229, 0.88);
+    box-shadow: 0 18px 55px rgba(37, 30, 20, 0.14);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+  }
+  .evidence-note b {
+    display: block;
+    font-family: var(--title-font);
+    font-style: italic;
+    font-size: clamp(22px, 2.2vw, 34px);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .evidence-note p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .demo-peek {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 4;
+    width: min(360px, 48%);
+    border-radius: 10px;
+    border: 1px solid rgba(16,20,31,0.14);
+    background: var(--night);
+    color: #eef0f5;
+    box-shadow: 0 26px 80px rgba(16,20,31,0.25);
+    overflow: hidden;
+  }
+  .demo-peek-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 42px;
+    padding: 0 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-family: var(--mono-font);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #a0a0b2;
+  }
+  .demo-peek-body {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+  }
+  .peek-row {
+    display: grid;
+    grid-template-columns: 8px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    min-height: 38px;
+    border-radius: 7px;
+    padding: 0 10px;
+    background: rgba(255,255,255,0.055);
+    font-size: 12px;
+  }
+  .peek-row i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--blue);
+  }
+  .peek-row:nth-child(2) i { background: var(--gold); }
+  .peek-row:nth-child(3) i { background: var(--green); }
+  .peek-row span:last-child {
+    color: #a0a0b2;
+    font-family: var(--mono-font);
+    font-size: 10px;
+  }
+  .idea-strip {
+    position: absolute;
+    z-index: 4;
+    left: 5%;
+    right: 5%;
+    bottom: 5%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .idea-strip span {
+    border: 1px solid rgba(16,20,31,0.11);
+    border-radius: 999px;
+    background: rgba(244,239,229,0.72);
+    padding: 9px 10px;
+    text-align: center;
+    font-family: var(--mono-font);
+    font-size: 10px;
+    color: rgba(16,20,31,0.68);
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .section {
+    padding: clamp(70px, 10vw, 130px) clamp(18px, 5vw, 88px);
+  }
+  .section.dark {
+    background:
+      radial-gradient(circle at 20% 5%, rgba(110,149,246,0.16), transparent 30rem),
+      radial-gradient(circle at 92% 24%, rgba(219,109,88,0.13), transparent 24rem),
+      var(--night);
+    color: #eef0f5;
+  }
+  .section.paper {
+    background: linear-gradient(180deg, rgba(235,225,209,0.66), rgba(244,239,229,0.94));
+  }
+  .section-head {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.55fr) minmax(320px, 1fr);
+    gap: clamp(28px, 5vw, 74px);
+    align-items: start;
+    margin-bottom: 38px;
+  }
+  .section h2 {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-size: clamp(38px, 5.6vw, 88px);
+    font-weight: 700;
+    line-height: 0.98;
+    letter-spacing: 0;
+  }
+  .section-copy {
+    max-width: 760px;
+    color: var(--ink-soft);
+    font-size: clamp(16px, 1.25vw, 19px);
+  }
+  .dark .section-copy { color: rgba(238,240,245,0.72); }
+
+  .quote-block {
+    display: grid;
+    grid-template-columns: minmax(270px, 0.58fr) minmax(320px, 1fr);
+    gap: clamp(24px, 4vw, 56px);
+    align-items: center;
+  }
+  .thought-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.5);
+    box-shadow: 0 24px 70px rgba(37, 30, 20, 0.12);
+    padding: clamp(22px, 3vw, 36px);
+  }
+  .thought-card .kicker {
+    font-family: var(--mono-font);
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .thought-list {
+    display: grid;
+    gap: 14px;
+  }
+  .thought-list div {
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+  .thought-list b {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 16px;
+  }
+  .thought-list span {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .pullquote {
+    border-left: 3px solid var(--gold);
+    padding-left: clamp(18px, 3vw, 34px);
+  }
+  .pullquote p {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-size: clamp(28px, 4vw, 58px);
+    line-height: 1.04;
+    letter-spacing: 0;
+  }
+  .pullquote small {
+    display: block;
+    margin-top: 18px;
+    color: var(--muted);
+    font-family: var(--mono-font);
+    font-size: 12px;
+    line-height: 1.6;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .breakdown {
+    display: grid;
+    grid-template-columns: 1fr 0.74fr 1fr;
+    gap: 18px;
+    align-items: stretch;
+  }
+  .break-col,
+  .response-col {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.48);
+    padding: 18px;
+  }
+  .response-col {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .break-col h3,
+  .response-col h3 {
+    font-size: 16px;
+    margin-bottom: 14px;
+  }
+  .app-chip,
+  .artifact-chip {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: center;
+    min-height: 42px;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.54);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .chip-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    color: var(--ink);
+    background: rgba(16,20,31,0.08);
+    border: 1px solid rgba(16,20,31,0.08);
+  }
+  .artifact-chip .chip-icon {
+    color: var(--paper);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.08);
+  }
+  .chip-icon svg {
+    width: 17px;
+    height: 17px;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .app-logo {
+    color: #fff;
+    border: 0;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0;
+  }
+  .app-logo.zotero {
+    background: #c43a35;
+    font-family: Georgia, serif;
+  }
+  .app-logo.obsidian {
+    background: linear-gradient(145deg, #8b5cf6, #3b2f8f);
+  }
+  .app-logo.overleaf {
+    background: #138a55;
+  }
+  .app-logo.vscode {
+    background: #1976d2;
+  }
+  .app-logo.chat {
+    background: #111827;
+  }
+  .app-logo svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 1.9;
+  }
+  .app-logo.zotero svg {
+    display: none;
+  }
+  .chip-name {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .artifact-chip {
+    border-color: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.08);
+  }
+  .chip-type {
+    color: var(--muted);
+    font-family: var(--mono-font);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .artifact-chip .chip-type { color: rgba(244,239,229,0.56); }
+  .transfer {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    font-family: var(--mono-font);
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .transfer::before,
+  .transfer::after {
+    content: "";
+    width: 1px;
+    height: 72px;
+    background: var(--line);
+    display: block;
+    margin: 10px auto;
+  }
+
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .principle {
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.055);
+    padding: 20px;
+    min-height: 255px;
+  }
+  .principle .num {
+    font-family: var(--mono-font);
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-bottom: 34px;
+  }
+  .principle h3 {
+    font-size: clamp(18px, 1.7vw, 25px);
+    line-height: 1.12;
+    margin-bottom: 12px;
+  }
+  .principle p {
+    color: rgba(238,240,245,0.68);
+    font-size: 14px;
+  }
+  .principle:nth-child(2) .num { color: var(--green); }
+  .principle:nth-child(3) .num { color: var(--blue-2); }
+  .principle:nth-child(4) .num { color: var(--coral); }
+
+  .cockpit {
+    display: grid;
+    grid-template-columns: 1fr 1.05fr;
+    gap: clamp(22px, 4vw, 56px);
+    align-items: start;
+  }
+  .question-stack {
+    display: grid;
+    gap: 12px;
+  }
+  .question {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.52);
+    padding: 18px;
+  }
+  .question b {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 18px;
+  }
+  .question p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .ui-slice {
+    border-radius: 10px;
+    background: #181825;
+    color: #f0f0f5;
+    border: 1px solid rgba(16,20,31,0.2);
+    box-shadow: 0 28px 90px rgba(16,20,31,0.18);
+    padding: 12px;
+  }
+  .slice-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 42px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 0 4px 12px;
+    font-family: var(--mono-font);
+    color: #a0a0b2;
+    font-size: 11px;
+  }
+  .slice-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding-top: 12px;
+  }
+  .slice-card {
+    min-height: 134px;
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.045);
+    padding: 14px;
+  }
+  .slice-card h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .slice-card p {
+    color: #a0a0b2;
+    font-size: 12px;
+  }
+
+  .timeline {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--line);
+  }
+  .step {
+    background: rgba(255,255,255,0.58);
+    min-height: 280px;
+    padding: 22px;
+  }
+  .step .time {
+    font-family: var(--mono-font);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 48px;
+  }
+  .step h3 {
+    font-size: 20px;
+    line-height: 1.12;
+    margin-bottom: 10px;
+  }
+  .step p {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .evidence-grid {
+    display: grid;
+    grid-template-columns: 0.75fr 1fr;
+    gap: clamp(22px, 4vw, 56px);
+    align-items: center;
+  }
+  .mechanism-board {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .mechanism-card {
+    min-height: 190px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.055);
+    padding: 18px;
+  }
+  .mechanism-card .label {
+    font-family: var(--mono-font);
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 42px;
+  }
+  .mechanism-card:nth-child(2) .label { color: var(--green); }
+  .mechanism-card:nth-child(3) .label { color: var(--blue-2); }
+  .mechanism-card:nth-child(4) .label { color: var(--coral); }
+  .mechanism-card b {
+    display: block;
+    font-size: 19px;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .mechanism-card p {
+    color: rgba(238,240,245,0.65);
+    font-size: 14px;
+  }
+  .evidence-list {
+    display: grid;
+    gap: 12px;
+  }
+  .evidence-item {
+    border-left: 3px solid var(--blue);
+    padding: 14px 0 14px 18px;
+  }
+  .evidence-item:nth-child(2) { border-left-color: var(--green); }
+  .evidence-item:nth-child(3) { border-left-color: var(--gold); }
+  .evidence-item b {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 17px;
+  }
+  .evidence-item p {
+    color: rgba(238,240,245,0.68);
+    font-size: 14px;
+  }
+
+  .demo-section {
+    padding: clamp(70px, 9vw, 118px) clamp(14px, 3vw, 40px);
+    background: #090b12;
+    color: #eef0f5;
+  }
+  .demo-intro {
+    width: min(1180px, 94vw);
+    margin: 0 auto 24px;
+    display: grid;
+    grid-template-columns: minmax(260px, 0.58fr) minmax(300px, 1fr);
+    gap: clamp(24px, 5vw, 70px);
+    align-items: end;
+  }
+  .demo-intro h2 {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-size: clamp(36px, 5vw, 76px);
+    line-height: 0.98;
+  }
+  .demo-intro p {
+    color: rgba(238,240,245,0.68);
+    font-size: 16px;
+  }
+  .demo-shell {
+    position: relative;
+    width: min(1640px, 96vw);
+    margin: 0 auto;
+    border: 1px solid rgba(242,234,220,0.16);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0d1117;
+    box-shadow: 0 40px 140px rgba(0,0,0,0.55);
+  }
+  .demo-top {
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid rgba(242,234,220,0.12);
+    background: rgba(16, 18, 29, 0.96);
+    color: rgba(242,234,220,0.76);
+    font-family: var(--mono-font);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .demo-shell iframe {
+    width: 100%;
+    height: min(820px, 82vh);
+    min-height: 620px;
+    border: 0;
+    display: block;
+    background: #0d1117;
+  }
+  .demo-fallback {
+    display: none;
+    position: absolute;
+    inset: 50px 0 0;
+    z-index: 2;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+      radial-gradient(ellipse 55% 42% at 50% 42%, rgba(128,184,255,0.18), transparent 62%),
+      rgba(9, 15, 28, 0.92);
+    text-align: center;
+  }
+  .demo-fallback.active { display: flex; }
+  .demo-fallback-card {
+    width: min(520px, 92%);
+    border: 1px solid rgba(242,234,220,0.16);
+    border-radius: 12px;
+    background: rgba(8, 13, 24, 0.78);
+    padding: 24px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.42);
+  }
+  .demo-fallback-card h3 {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-size: clamp(24px, 3vw, 38px);
+    font-weight: 600;
+    line-height: 1.06;
+    margin-bottom: 0.8rem;
+  }
+  .demo-fallback-card p {
+    color: rgba(242,234,220,0.72);
+    font-size: 0.95rem;
+    margin-bottom: 1.1rem;
+  }
+  .demo-fallback-card a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    border-radius: 999px;
+    padding: 0 1rem;
+    background: var(--gold);
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 1120px) {
+    .hero-grid,
+    .section-head,
+    .quote-block,
+    .cockpit,
+    .evidence-grid,
+    .demo-intro {
+      grid-template-columns: 1fr;
+    }
+    .principles,
+    .timeline {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .breakdown {
+      grid-template-columns: 1fr;
+    }
+    .transfer {
+      min-height: 80px;
+    }
+    .transfer::before,
+    .transfer::after {
+      width: 80px;
+      height: 1px;
+    }
+  }
+  @media (max-width: 720px) {
+    .top-bar { padding: 12px; }
+    .proj-id,
+    .top-links { display: none; }
+    .hero { padding-top: 108px; }
+    .hero-grid { grid-template-columns: 1fr; }
+    .hero-evidence { min-height: 0; }
+    .concept-map {
+      min-height: 0;
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+    .concept-map::before,
+    .concept-map::after,
+    .idea-strip {
+      display: none;
+    }
+    .concept-node,
+    .concept-core,
+    .demo-peek {
+      position: relative;
+      width: 100%;
+      transform: none;
+      left: auto;
+      right: auto;
+      top: auto;
+      bottom: auto;
+    }
+    .concept-core {
+      min-height: 128px;
+      order: -1;
+    }
+    .principles,
+    .timeline,
+    .mechanism-board,
+    .slice-grid {
+      grid-template-columns: 1fr;
+    }
+    .principle,
+    .step { min-height: 0; }
+    .demo-shell iframe {
+      min-height: 520px;
+      height: 78vh;
+    }
+  }
+</style>
+</head>
+
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="icon-paper" viewBox="0 0 24 24">
+    <path d="M7 3h7l4 4v14H7z"></path><path d="M14 3v5h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16h5"></path>
+  </symbol>
+  <symbol id="icon-note" viewBox="0 0 24 24">
+    <path d="M5 4h14v16H5z"></path><path d="M8 8h8"></path><path d="M8 12h8"></path><path d="M8 16h5"></path>
+  </symbol>
+  <symbol id="icon-draft" viewBox="0 0 24 24">
+    <path d="M6 20l3.5-1 8.8-8.8a2.1 2.1 0 0 0-3-3L6.5 16z"></path><path d="M13.8 7.7l2.5 2.5"></path>
+  </symbol>
+  <symbol id="icon-code" viewBox="0 0 24 24">
+    <path d="M9 18l-6-6 6-6"></path><path d="M15 6l6 6-6 6"></path><path d="M13 4l-2 16"></path>
+  </symbol>
+  <symbol id="icon-chat" viewBox="0 0 24 24">
+    <path d="M5 6h14v9H9l-4 4z"></path><path d="M8.5 10h7"></path><path d="M8.5 13h4"></path>
+  </symbol>
+  <symbol id="logo-obsidian" viewBox="0 0 24 24">
+    <path d="M12 2l6 5-2 12-4 3-4-3L6 7z"></path><path d="M12 2l-1.5 8L8 19"></path><path d="M12 2l1.5 8L16 19"></path><path d="M10.5 10h3"></path>
+  </symbol>
+  <symbol id="logo-overleaf" viewBox="0 0 24 24">
+    <path d="M5 15c6.5.8 11-2.8 14-9-7-.4-12.6 2.5-14 9z"></path><path d="M5 15c2.5-3.1 5.6-5.1 9.4-6"></path><path d="M7 16c1.2 2.4 3.5 3.7 6.2 3.7"></path>
+  </symbol>
+  <symbol id="logo-vscode" viewBox="0 0 24 24">
+    <path d="M18 4l-8.5 7L5.5 8 3.5 10l3.8 2-3.8 2 2 2 4-3L18 20l3-1.5v-13z"></path>
+  </symbol>
+  <symbol id="icon-bib" viewBox="0 0 24 24">
+    <path d="M6 4h9l3 3v13H6z"></path><path d="M15 4v4h4"></path><path d="M9 11h6"></path><path d="M9 15h3"></path>
+  </symbol>
+  <symbol id="icon-receipt" viewBox="0 0 24 24">
+    <path d="M7 3l2 1.4L11 3l2 1.4L15 3l2 1.4V21l-2-1.4L13 21l-2-1.4L9 21l-2-1.4z"></path><path d="M9.5 9h5"></path><path d="M9.5 13h5"></path><path d="M9.5 17h3"></path>
+  </symbol>
+  <symbol id="icon-data" viewBox="0 0 24 24">
+    <ellipse cx="12" cy="6" rx="6" ry="3"></ellipse><path d="M6 6v6c0 1.7 2.7 3 6 3s6-1.3 6-3V6"></path><path d="M6 12v6c0 1.7 2.7 3 6 3s6-1.3 6-3v-6"></path>
+  </symbol>
+  <symbol id="icon-artifact" viewBox="0 0 24 24">
+    <path d="M4 7l8-4 8 4-8 4z"></path><path d="M4 12l8 4 8-4"></path><path d="M4 17l8 4 8-4"></path>
+  </symbol>
+</svg>
+<nav class="top-bar">
+  <a class="back" href="../?room=2" aria-label="Back to portfolio">Back</a>
+  <div class="proj-id">Agent System</div>
+  <div class="top-links" aria-label="Page sections">
+    <a href="#rationale">Why</a>
+    <a href="#principles">Principles</a>
+    <a href="#live-demo">Demo</a>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">Research prototype · agent workspace · UIST 2026 framing</p>
+        <h1>Agent System</h1>
+        <p class="lede">A cockpit for reducing context transfer: project state, agent sessions, receipts, approvals, and working artifacts stay in one shared workspace instead of scattering across tools and chat histories.</p>
+        <div class="hero-actions">
+          <a class="pill-link primary" href="#live-demo">Open live demo</a>
+          <a class="pill-link" href="#rationale">Read design rationale</a>
+        </div>
+        <div class="meta-strip" aria-label="Deployment metrics">
+          <span class="metric-pill">274 tasks</span>
+          <span class="metric-pill">670 agent sessions</span>
+          <span class="metric-pill">230M tokens</span>
+          <span class="metric-pill">7 artifact types</span>
+        </div>
+      </div>
+
+      <aside class="hero-evidence" aria-label="Concept map of the Agent System design rationale">
+        <div class="concept-map">
+          <div class="concept-node human">
+            <b>Researcher</b>
+            <span>Directs attention, reviews plans, and decides when work should continue or change course.</span>
+          </div>
+          <div class="concept-node agents">
+            <b>Agents</b>
+            <span>Plan, execute, verify, and summarize work through the same files the human can inspect.</span>
+          </div>
+          <div class="concept-node artifacts">
+            <b>Artifacts</b>
+            <span>Papers, notes, drafts, code, data, images, and outputs remain attached to tasks.</span>
+          </div>
+          <div class="concept-node continuity">
+            <b>Continuity</b>
+            <span>Receipts and briefings keep later sessions from starting as blank conversations.</span>
+          </div>
+          <div class="concept-core">
+            <div>
+              <b>Shared workspace</b>
+              <span>the integration layer</span>
+            </div>
+          </div>
+          <div class="demo-peek" aria-label="Live demo preview summary">
+            <div class="demo-peek-head">
+              <span>Live build</span>
+              <span>mock vault</span>
+            </div>
+            <div class="demo-peek-body">
+              <div class="peek-row"><i></i><span>Project cockpit</span><span>state</span></div>
+              <div class="peek-row"><i></i><span>Approval queue</span><span>steer</span></div>
+              <div class="peek-row"><i></i><span>Artifact viewers</span><span>inspect</span></div>
+            </div>
+          </div>
+          <div class="idea-strip" aria-label="Extracted research themes">
+            <span>colocation</span>
+            <span>steering</span>
+            <span>continuity</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section paper" id="rationale">
+    <div class="quote-block">
+      <aside class="thought-card" aria-label="Extracted research thoughts">
+        <div class="kicker">Extracted from the research</div>
+        <div class="thought-list">
+          <div><b>Tool boundaries create extra cognitive work.</b><span>The pain point is not one weak tool; it is repeatedly moving context between tools that cannot see each other.</span></div>
+          <div><b>Artifacts are the durable memory.</b><span>Files, receipts, summaries, and drafts carry state better than a transient chat transcript.</span></div>
+          <div><b>The UI should turn context into steering.</b><span>Once context is already present, the human can spend attention on approval, redirection, and judgment.</span></div>
+        </div>
+      </aside>
+      <div class="pullquote">
+        <p>The researcher should not be the integration layer between applications that cannot see each other.</p>
+        <small>Design premise from "All in One Place": AI capability matters less when every interaction starts by rebuilding context.</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="section paper">
+    <div class="section-head">
+      <h2>From context transfer to artifact colocation.</h2>
+      <p class="section-copy">The page is shaped around the paper's central claim: the workspace is not passive storage. It is the coupling mechanism between researcher, agents, and material representations. Agent System therefore treats files, chats, approvals, and briefings as one activity-centered workspace.</p>
+    </div>
+    <div class="breakdown" aria-label="Fragmented tools transformed into shared workspace">
+      <div class="break-col">
+        <h3>Fragmented workflow</h3>
+        <div class="app-chip"><span class="chip-icon app-logo zotero">Z</span><span class="chip-name">Zotero</span><span class="chip-type">papers</span></div>
+        <div class="app-chip"><span class="chip-icon app-logo obsidian"><svg><use href="#logo-obsidian"></use></svg></span><span class="chip-name">Obsidian</span><span class="chip-type">notes</span></div>
+        <div class="app-chip"><span class="chip-icon app-logo overleaf"><svg><use href="#logo-overleaf"></use></svg></span><span class="chip-name">Overleaf</span><span class="chip-type">draft</span></div>
+        <div class="app-chip"><span class="chip-icon app-logo vscode"><svg><use href="#logo-vscode"></use></svg></span><span class="chip-name">VS Code</span><span class="chip-type">code</span></div>
+        <div class="app-chip"><span class="chip-icon app-logo chat"><svg><use href="#icon-chat"></use></svg></span><span class="chip-name">Chat UI</span><span class="chip-type">prior output</span></div>
+      </div>
+      <div class="transfer">manual copying, restating, uploading, remembering</div>
+      <div class="response-col">
+        <h3>Shared workspace</h3>
+        <div class="artifact-chip"><span class="chip-icon"><svg><use href="#icon-bib"></use></svg></span><span class="chip-name">PDF + Markdown + BibTeX</span><span class="chip-type">research papers</span></div>
+        <div class="artifact-chip"><span class="chip-icon"><svg><use href="#icon-draft"></use></svg></span><span class="chip-name">LaTeX + PDF</span><span class="chip-type">manuscripts</span></div>
+        <div class="artifact-chip"><span class="chip-icon"><svg><use href="#icon-receipt"></use></svg></span><span class="chip-name">Markdown receipts</span><span class="chip-type">session memory</span></div>
+        <div class="artifact-chip"><span class="chip-icon"><svg><use href="#icon-data"></use></svg></span><span class="chip-name">JSON / CSV / YAML</span><span class="chip-type">structured data</span></div>
+        <div class="artifact-chip"><span class="chip-icon"><svg><use href="#icon-artifact"></use></svg></span><span class="chip-name">Code / images / docs</span><span class="chip-type">working artifacts</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section dark" id="principles">
+    <div class="section-head">
+      <h2>Four design principles shaped the interface.</h2>
+      <p class="section-copy">The earlier design notes called for a calm, dense, operational cockpit. The paper explains why: when agents work across many sessions, the interface has to preserve context, expose attention points, and keep artifacts inspectable.</p>
+    </div>
+    <div class="principles">
+      <article class="principle">
+        <div class="num">01 / colocation</div>
+        <h3>Artifacts stay attached to the work.</h3>
+        <p>Documents, notes, code, data, screenshots, papers, and prior outputs remain addressable in the task structure, so an agent can use the same material the human sees.</p>
+      </article>
+      <article class="principle">
+        <div class="num">02 / continuity</div>
+        <h3>Sessions leave receipts, not mystery.</h3>
+        <p>Each agent run produces a receipt: what happened, what changed, and what remains unresolved. Briefings synthesize receipts into the next working state.</p>
+      </article>
+      <article class="principle">
+        <div class="num">03 / oversight</div>
+        <h3>Human attention is calibrated.</h3>
+        <p>Full, light, and auto oversight let routine work move quickly while strategic framing, approvals, and redirects remain visible and interruptible.</p>
+      </article>
+      <article class="principle">
+        <div class="num">04 / density</div>
+        <h3>The UI favors scanning over spectacle.</h3>
+        <p>Status dots, queue items, tabs, file chips, and compact cards answer three questions: what is happening, what needs attention, and where to continue.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section paper">
+    <div class="section-head">
+      <h2>The cockpit grammar is deliberately quiet.</h2>
+      <p class="section-copy">The product should not feel like a marketing dashboard. It should feel like a workbench: stable shell, persistent project context, fast inspection, and no decorative layer that competes with the work.</p>
+    </div>
+    <div class="cockpit">
+      <div class="question-stack">
+        <article class="question">
+          <b>What is happening now?</b>
+          <p>Live agent rows, status dots, progress blocks, and session metadata surface movement without requiring the user to open every thread.</p>
+        </article>
+        <article class="question">
+          <b>What needs my attention?</b>
+          <p>Approval queue items and blocked states are treated as steering points, not notifications to dismiss.</p>
+        </article>
+        <article class="question">
+          <b>Where can I inspect or continue?</b>
+          <p>Project cards, task nodes, file chips, and docked tabs preserve return paths to the exact artifact or session.</p>
+        </article>
+      </div>
+      <div class="ui-slice" aria-label="Design grammar illustration">
+        <div class="slice-top">
+          <span>Operational layout grammar</span>
+          <span>cards / panels / tabs / queue</span>
+        </div>
+        <div class="slice-grid">
+          <div class="slice-card"><h3>Status is semantic</h3><p>Active, attention, complete, and inactive colors are shared across tasks, agents, and sessions.</p></div>
+          <div class="slice-card"><h3>Cards are objects</h3><p>A project card or queue item represents something inspectable, not a decorative container.</p></div>
+          <div class="slice-card"><h3>Panels are structure</h3><p>The app shell stays stable while task, chat, and document surfaces change inside it.</p></div>
+          <div class="slice-card"><h3>Chat is workspace</h3><p>Tool traces and file references remain compact, expandable, and connected to artifacts.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section paper">
+    <div class="section-head">
+      <h2>A morning in the system.</h2>
+      <p class="section-copy">The interaction model comes from the paper scenario: a researcher returns to accumulated project state, asks for one instruction over already-present artifacts, reviews linked outputs, and steers the next move.</p>
+    </div>
+    <div class="timeline">
+      <article class="step">
+        <div class="time">08:40 briefing</div>
+        <h3>Read yesterday's synthesis.</h3>
+        <p>Chainlink has condensed session receipts into open loops, completed work, and suggested next focus.</p>
+      </article>
+      <article class="step">
+        <div class="time">09:05 instruction</div>
+        <h3>Ask once, with context present.</h3>
+        <p>The task agent opens the draft, prior analysis, and newly ingested papers from the shared workspace.</p>
+      </article>
+      <article class="step">
+        <div class="time">09:35 approval</div>
+        <h3>Review the plan at the artifact level.</h3>
+        <p>The researcher approves, redirects, or dismisses based on linked files rather than reconstructed chat history.</p>
+      </article>
+      <article class="step">
+        <div class="time">10:10 continuity</div>
+        <h3>Leave a receipt for later.</h3>
+        <p>The session writes what changed and what remains, turning today's work into tomorrow's starting context.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section dark">
+    <div class="evidence-grid">
+      <div>
+        <p class="eyebrow">Research synthesis</p>
+        <h2>Not more magic. Better working conditions.</h2>
+        <p class="section-copy">The deployment finding was not that agents became inherently smarter. The workspace changed what their capabilities could attach to: persistent artifacts, linked approvals, and cross-session memory.</p>
+        <div class="evidence-list">
+          <div class="evidence-item"><b>Colocation reduced routine context transfer.</b><p>Relevant papers, notes, code, and prior outputs were already present, so work began from shared state instead of prompt reconstruction.</p></div>
+          <div class="evidence-item"><b>The researcher's role shifted to steering.</b><p>Approval interactions became active decision points for directing attention, not clerical steps for moving information between apps.</p></div>
+          <div class="evidence-item"><b>The filesystem became shared state.</b><p>No separate agent memory database was required; ordinary files were the durable coordination mechanism.</p></div>
+        </div>
+      </div>
+      <div class="mechanism-board" aria-label="Mechanisms extracted from the paper">
+        <article class="mechanism-card">
+          <div class="label">mechanism 01</div>
+          <b>Ordinary files become coordination objects.</b>
+          <p>Research artifacts are not exported into the AI layer; agents operate where the work already lives.</p>
+        </article>
+        <article class="mechanism-card">
+          <div class="label">mechanism 02</div>
+          <b>Receipts make sessions inspectable.</b>
+          <p>Each run leaves a structured account of decisions, changes, and unresolved loops.</p>
+        </article>
+        <article class="mechanism-card">
+          <div class="label">mechanism 03</div>
+          <b>Approvals become steering moments.</b>
+          <p>The queue is designed for redirection and judgment, not passive notification.</p>
+        </article>
+        <article class="mechanism-card">
+          <div class="label">mechanism 04</div>
+          <b>Briefings compress time.</b>
+          <p>Later work resumes from accumulated project state instead of from a blank prompt.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="demo-section" id="live-demo">
+    <div class="demo-intro">
+      <h2>Explore the live demo.</h2>
+      <p>The embedded build uses mock data so the project-management cockpit, sessions, artifacts, and settings can be explored without a private backend. Open this page over HTTP for the demo to run; file-mode shows a fallback because browsers block module builds from local files.</p>
+    </div>
+    <div class="demo-shell">
+      <div class="demo-top">
+        <span>Live demo</span>
+        <span>Mock vault · offline safe</span>
+      </div>
+      <iframe title="Agent System live demo" src="../agent-system/frontend/dist/index.html"></iframe>
+      <div class="demo-fallback" id="demo-fallback" aria-live="polite">
+        <div class="demo-fallback-card">
+          <h3>Open this demo over HTTP.</h3>
+          <p>The embedded React app is a module build, so most browsers block it when this page is opened as a local file. It works from the portfolio site or a local preview server.</p>
+          <a href="http://127.0.0.1:4173/AgentSystem/#live-demo">Open working preview</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const inIframe = window.top !== window.self;
+  if (inIframe) document.body.classList.add('in-iframe');
+  document.querySelector('.back')?.addEventListener('click', (event) => {
+    if (!inIframe) return;
+    event.preventDefault();
+    window.parent.postMessage({ type: 'close-route' }, '*');
+  });
+  window.addEventListener('load', () => {
+    try { window.parent.postMessage({ type: 'route-ready', path: 'AgentSystem/' }, '*'); } catch (e) {}
+  });
+  if (location.protocol === 'file:') {
+    document.getElementById('demo-fallback')?.classList.add('active');
+  }
+</script>
+</body>
+</html>

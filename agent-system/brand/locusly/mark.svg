@@ -1,0 +1,64 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Locusly mark</title>
+  <desc id="desc">A distinctive L-shaped locus mark: the L forms a shared coordinate path while artifacts orbit the context point.</desc>
+  <defs>
+    <radialGradient id="bgGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(382 76) rotate(136) scale(372)">
+      <stop stop-color="#6E95F6" stop-opacity="0.36"/>
+      <stop offset="0.46" stop-color="#2CC8B9" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#181825" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="locusStroke" x1="158" y1="126" x2="358" y2="344" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#82A6FF"/>
+      <stop offset="0.52" stop-color="#2CC8B9"/>
+      <stop offset="1" stop-color="#E8952D"/>
+    </linearGradient>
+    <linearGradient id="glassPanel" x1="86" y1="72" x2="426" y2="440" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#323252" stop-opacity="0.96"/>
+      <stop offset="1" stop-color="#202034" stop-opacity="0.98"/>
+    </linearGradient>
+    <filter id="tileShadow" x="48" y="48" width="416" height="416" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000000" flood-opacity="0.36"/>
+    </filter>
+    <filter id="lGlow" x="92" y="76" width="328" height="320" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#2CC8B9" flood-opacity="0.22"/>
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#000000" flood-opacity="0.26"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="104" fill="#181825"/>
+  <rect width="512" height="512" rx="104" fill="url(#bgGlow)"/>
+  <path d="M64 128H448M64 192H448M64 256H448M64 320H448M64 384H448M128 64V448M192 64V448M256 64V448M320 64V448M384 64V448" stroke="white" stroke-opacity="0.045"/>
+
+  <g filter="url(#tileShadow)">
+    <rect x="78" y="76" width="356" height="360" rx="56" fill="url(#glassPanel)"/>
+    <rect x="78.5" y="76.5" width="355" height="359" rx="55.5" stroke="#9AE9EE" stroke-opacity="0.20"/>
+    <path d="M122 116H390" stroke="white" stroke-opacity="0.08"/>
+  </g>
+
+  <ellipse cx="258" cy="256" rx="155" ry="92" transform="rotate(-28 258 256)" stroke="#9AE9EE" stroke-opacity="0.22" stroke-width="8"/>
+  <ellipse cx="258" cy="256" rx="126" ry="74" transform="rotate(24 258 256)" stroke="#6E95F6" stroke-opacity="0.16" stroke-width="6"/>
+
+  <g filter="url(#lGlow)">
+    <path d="M176 138V318H344" stroke="#111118" stroke-opacity="0.5" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M176 138V318H344" stroke="url(#locusStroke)" stroke-width="52" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M176 138V318H344" stroke="white" stroke-opacity="0.22" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <circle cx="176" cy="318" r="46" fill="#181825"/>
+  <circle cx="176" cy="318" r="41" stroke="url(#locusStroke)" stroke-width="10"/>
+  <circle cx="176" cy="318" r="16" fill="#F0F0F5"/>
+  <circle cx="176" cy="318" r="7" fill="#2CC8B9"/>
+
+  <rect x="120" y="124" width="62" height="62" rx="18" fill="#232338"/>
+  <rect x="120.5" y="124.5" width="61" height="61" rx="17.5" stroke="white" stroke-opacity="0.16"/>
+  <path d="M140 149H162M140 162H155" stroke="#A0A0B2" stroke-width="7" stroke-linecap="round"/>
+
+  <rect x="318" y="278" width="62" height="62" rx="18" fill="#232338"/>
+  <rect x="318.5" y="278.5" width="61" height="61" rx="17.5" stroke="white" stroke-opacity="0.16"/>
+  <path d="M339 300L350 311L362 295" stroke="#E8952D" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <circle cx="340" cy="166" r="10" fill="#82A6FF"/>
+  <circle cx="340" cy="166" r="22" stroke="#82A6FF" stroke-opacity="0.22" stroke-width="7"/>
+  <circle cx="286" cy="370" r="9" fill="#2CC8B9"/>
+  <circle cx="286" cy="370" r="20" stroke="#2CC8B9" stroke-opacity="0.20" stroke-width="6"/>
+</svg>

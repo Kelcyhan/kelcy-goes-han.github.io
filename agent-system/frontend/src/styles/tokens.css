@@ -1,0 +1,582 @@
+@import "tailwindcss";
+/* DM Sans + JetBrains Mono loaded via <link> in index.html (CSS @import gets stripped by Tailwind 4 Vite plugin) */
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
+
+/* Streamdown renders markdown with Tailwind utility classes inside its bundled JS.
+   Tailwind 4's auto-detection doesn't scan node_modules by default, so we
+   explicitly tell it to scan the streamdown dist files for class names. */
+@source "../../node_modules/streamdown/dist";
+
+/* Widget components live outside frontend/src/ (under vault/widgets/) and are
+   imported via the @widgets Vite alias. Tailwind 4's auto-detection doesn't
+   walk into aliased paths automatically, so arbitrary-value classes used only
+   in widget code (e.g. min-h-[70px], max-h-[176px]) don't reach the compiled
+   CSS. Tell Tailwind to scan them explicitly. */
+@source "../../../../vault/widgets";
+
+/* ============================================================
+   LOCUSLY — Design tokens v3 (System Redesign: DM Sans + Clean Blue)
+   5-group status system, confirmed accent, glass + elevation
+   ============================================================ */
+
+@theme {
+  /* --- Fonts (confirmed: DM Sans) --- */
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+
+  /* --- Named colors (opaque — become Tailwind utility classes) --- */
+
+  /* Accent — V3 glass blue */
+  --color-accent:        #6E95F6;
+  --color-accent-bright: #82A6FF;
+
+  /* Status — 4-color system (see status-utils.ts for canonical mapping)
+     Grey (inactive):  todo, shelved, paused, dropped
+     Blue (active):    propose, executing, active, conversation
+     Orange (attention): blocked, waiting, stalled
+     Green (complete): done, complete */
+  --color-status-inactive:  #8B8B9A;
+  --color-status-active:    #6E95F6;
+  --color-status-attention: #E8952D;
+  --color-status-complete:  #34A853;
+  --color-status-dead:      #555566;   /* legacy — unused by 4-color system */
+
+  /* Legacy status aliases */
+  --color-status-todo:     #8B8B9A;
+  --color-status-proposed: #6E95F6;
+  --color-status-done:     #34A853;
+  --color-status-blocked:  #E8952D;
+  --color-status-dropped:  #555566;
+
+  /* Semantic */
+  --color-green:      #34A853;
+  --color-green-deep: #059669;
+  --color-orange:     #E8952D;
+  --color-red:        #E05A4B;
+  --color-yellow:     #D4A72C;
+
+  /* --- Spacing scale (4px base) --- */
+  --spacing-px: 1px;
+  --spacing-0:  0px;
+  --spacing-1:  4px;
+  --spacing-2:  8px;
+  --spacing-3:  12px;
+  --spacing-4:  16px;
+  --spacing-5:  20px;
+  --spacing-6:  24px;
+  --spacing-8:  32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+
+  /* --- Border radius (confirmed) --- */
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  20px;
+  --radius-full: 9999px;
+}
+
+/* ============================================================
+   Typography tokens
+   Use these through the Text primitive or .type-* utilities.
+   ============================================================ */
+:root {
+  --type-caption-size: 10px;
+  --type-caption-line: 1.35;
+  --type-micro-size: 11px;
+  --type-micro-line: 1.4;
+  --type-label-size: 12px;
+  --type-label-line: 1.4;
+  --type-body-sm-size: 13px;
+  --type-body-sm-line: 1.55;
+  --type-body-md-size: 14px;
+  --type-body-md-line: 1.55;
+  --type-title-sm-size: 15px;
+  --type-title-sm-line: 1.35;
+  --type-title-md-size: 16px;
+  --type-title-md-line: 1.3;
+  --type-title-lg-size: 20px;
+  --type-title-lg-line: 1.25;
+
+  --type-weight-regular: 400;
+  --type-weight-medium: 500;
+  --type-weight-semibold: 600;
+  --type-weight-bold: 700;
+}
+
+/* Semantic color tokens for Tailwind utility generation (bg-muted, text-foreground, etc.)
+   These reference :root CSS variables so they adapt to light/dark mode.
+   Required by Streamdown and shadcn/ui components that use Tailwind classes. */
+@theme inline {
+  --color-background:             var(--background);
+  --color-foreground:             var(--foreground);
+  --color-card:                   var(--card);
+  --color-card-foreground:        var(--card-foreground);
+  --color-popover:                var(--popover);
+  --color-popover-foreground:     var(--popover-foreground);
+  --color-primary:                var(--primary);
+  --color-primary-foreground:     var(--primary-foreground);
+  --color-secondary:              var(--secondary);
+  --color-secondary-foreground:   var(--secondary-foreground);
+  --color-muted:                  var(--muted);
+  --color-muted-foreground:       var(--muted-foreground);
+  --color-destructive:            var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border:                 var(--border);
+  --color-input:                  var(--input);
+  --color-ring:                   var(--ring);
+  --color-sidebar:                var(--secondary);
+}
+
+/* ============================================================
+   CSS variables — dark mode (v3 — reverted from v4 attempt 2026-04-22)
+   ============================================================ */
+:root {
+  color-scheme: dark;
+
+  /* ─── Backgrounds (dark) ─── */
+  --bg-base:          #181825;
+  --bg-backdrop:      #111118;
+  --bg-surface:       #232338;
+  --bg-panel:         #272742;
+  --bg-card:          rgba(255, 255, 255, 0.05);
+  --bg-card-hover:    rgba(255, 255, 255, 0.08);
+  --bg-raised:        rgba(255, 255, 255, 0.10);
+  --bg-overlay:       rgba(35, 35, 56, 0.96);
+
+  /* ─── Ingrained (recessed into panel surface) ─── */
+  --bg-ingrained:        rgba(0, 0, 0, 0.12);
+  --bg-ingrained-hover:  rgba(0, 0, 0, 0.20);
+  --bg-ingrained-active: rgba(0, 0, 0, 0.30);
+
+  /* ─── Text (dark) ─── */
+  --color-text:        #F0F0F5;
+  --color-text-muted:  #A0A0B2;
+  --color-text-subtle: #6A6A80;
+  --color-text-ghost:  #454558;
+
+  /* ─── Borders (dark) ─── */
+  --color-border:        rgba(255, 255, 255, 0.10);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-border-accent: rgba(59, 130, 246, 0.40);
+  --color-border-glass:  rgba(255, 255, 255, 0.12);
+
+  /* ─── Accent dims ─── */
+  --color-accent-dim:  rgba(59, 130, 246, 0.15);
+  --color-accent-glow: rgba(59, 130, 246, 0.25);
+
+  /* ─── Status backgrounds (dark) ─── */
+  --status-inactive-bg:  rgba(139, 139, 154, 0.12);
+  --status-active-bg:    rgba(59, 130, 246, 0.15);
+  --status-attention-bg: rgba(232, 149, 45, 0.12);
+  --status-complete-bg:  rgba(52, 168, 83, 0.12);
+  --status-dead-bg:      rgba(85, 85, 102, 0.12);
+
+  /* ─── Shadows (dark) ─── */
+  --shadow-card:       0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08);
+  --shadow-panel:      0 4px 24px rgba(0,0,0,0.5);
+  --shadow-panel-drop: drop-shadow(0 4px 24px rgba(0,0,0,0.5));
+  --shadow-float:      0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+  --shadow-modal:      0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08);
+  --shadow-glow:       0 0 0 1px rgba(59,130,246,0.40), 0 0 16px rgba(59,130,246,0.15);
+
+  /* ─── Glass inner highlight ─── */
+  --glass-highlight:        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-highlight-strong: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --glass-bg-base:          var(--bg-base);
+  --glass-bg-grid:          rgba(255, 255, 255, 0.035);
+  --glass-bg-radial:        rgba(96, 165, 250, 0.10);
+  --glass-shell-bg:         rgba(35, 35, 56, 0.78);
+  --glass-panel-bg:         rgba(39, 39, 66, 0.82);
+  --glass-card-bg:          rgba(255, 255, 255, 0.06);
+  --glass-card-hover-bg:    rgba(255, 255, 255, 0.10);
+  --glass-border:           rgba(154, 233, 238, 0.22);
+  --glass-border-hover:     rgba(154, 233, 238, 0.46);
+  --glass-focus-ring:       #6E95F6;
+  --glass-active-cyan:      #2CC8B9;
+  --glass-shadow-soft:      0 8px 22px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.04);
+  --glass-shadow-hover:     0 10px 26px rgba(0,0,0,0.34), 0 0 18px rgba(96,165,250,0.10);
+  --glass-shadow-focus:     0 0 0 1px rgba(110,149,246,0.70), 0 10px 28px rgba(59,130,246,0.18);
+  --glass-blur:             blur(14px);
+  --glass-radius-panel:     var(--radius-lg);
+  --glass-radius-card:      var(--radius-md);
+  --glass-radius-control:   var(--radius-full);
+
+  /* ─── V0 progressive material foundations ─── */
+  --system-radius-shell:     var(--radius-lg);
+  --system-radius-panel:     var(--radius-lg);
+  --system-radius-card:      var(--radius-md);
+  --system-radius-control:   var(--radius-full);
+  --system-surface-soft:     color-mix(in srgb, var(--bg-card) 82%, transparent);
+  --system-surface-raised:   color-mix(in srgb, var(--bg-panel) 90%, transparent);
+  --system-surface-hover:    color-mix(in srgb, var(--bg-card-hover) 86%, transparent);
+  --system-border-soft:      color-mix(in srgb, var(--color-border) 76%, transparent);
+  --system-border-strong:    color-mix(in srgb, var(--color-border-strong) 82%, transparent);
+  --system-focus-ring:       0 0 0 3px color-mix(in srgb, var(--glass-focus-ring) 18%, transparent);
+  --system-shadow-card:      var(--shadow-card);
+  --system-shadow-float:     var(--shadow-float);
+  --entity-project:          #5B6CFF;
+  --entity-project-bg:       color-mix(in srgb, var(--entity-project) 14%, transparent);
+  --entity-domain:           #0EA5AE;
+  --entity-domain-bg:        color-mix(in srgb, var(--entity-domain) 15%, transparent);
+  --entity-task:             #4F6F8F;
+  --entity-task-bg:          color-mix(in srgb, var(--entity-task) 15%, transparent);
+  --entity-agent:            #D98613;
+  --entity-agent-bg:         color-mix(in srgb, var(--entity-agent) 15%, transparent);
+
+  /* ─── Motion ─── */
+  --dur-fast:     80ms;
+  --dur-normal:   150ms;
+  --dur-enter:    200ms;
+  --dur-expand:   250ms;
+  --dur-complex:  350ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter:    cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring:   cubic-bezier(0.35, 0, 0.15, 1.2);
+
+  /* ─── shadcn/ui bridge (dark) ─── */
+  --background:             var(--bg-base);
+  --foreground:             var(--color-text);
+  --card:                   var(--bg-card);
+  --card-foreground:        var(--color-text);
+  --popover:                var(--bg-overlay);
+  --popover-foreground:     var(--color-text);
+  --primary:                #3B82F6;
+  --primary-foreground:     #ffffff;
+  --secondary:              var(--bg-surface);
+  --secondary-foreground:   var(--color-text-muted);
+  --muted:                  var(--bg-card);
+  --muted-foreground:       var(--color-text-muted);
+  --accent:                 var(--color-accent-dim);
+  --accent-foreground:      #3B82F6;
+  --destructive:            #E05A4B;
+  --destructive-foreground: #ffffff;
+  --border:                 var(--color-border);
+  --backdrop:               var(--bg-backdrop);
+  --input:                  var(--color-border);
+  --ring:                   #3B82F6;
+  --radius:                 8px;
+
+  /* ─── Legacy bridge ─── */
+  --bg:           var(--bg-base);
+  --bg-secondary: var(--bg-surface);
+  --bg-tertiary:  var(--bg-card-hover);
+  --text:         var(--color-text);
+  --text-muted:   var(--color-text-muted);
+  --yellow:       var(--color-yellow);
+  --green:        var(--color-green);
+  --green-deep:   var(--color-green-deep);
+  --orange:       var(--color-orange);
+  --red:          var(--color-red);
+}
+
+/* ============================================================
+   Light mode (v4 — warm pass 2026-04-22)
+   Cards stay pure white; off-white surfaces tilt warm (R+, B−) so the UI
+   reads as "paper" instead of the cooler/purple-tinged white v3 used.
+   ============================================================ */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+
+    /* ─── Backgrounds (light) ─── */
+    --bg-base:          #FDFCFA;
+    --bg-backdrop:      #F6F4F0;
+    --bg-surface:       #FEFDFB;
+    --bg-panel:         #FEFDFB;
+    --bg-card:          #FFFFFF;
+    --bg-card-hover:    #F6F4EF;
+    --bg-raised:        rgba(60, 45, 20, 0.04);
+    --bg-overlay:       rgba(255, 255, 253, 0.98);
+
+    /* ─── Ingrained (light) ─── */
+    --bg-ingrained:        #F0EDE6;
+    --bg-ingrained-hover:  #E7E3DA;
+    --bg-ingrained-active: #D4D0C3;
+
+    /* ─── Text (light) ─── */
+    --color-text:        #111118;
+    --color-text-muted:  #5A5A6E;
+    --color-text-subtle: #9898A8;
+    --color-text-ghost:  #C0C0CC;
+
+    /* ─── Borders (light) ─── */
+    --color-border:        rgba(0, 0, 0, 0.10);
+    --color-border-subtle: rgba(0, 0, 0, 0.06);
+    --color-border-strong: rgba(0, 0, 0, 0.18);
+    --color-border-accent: rgba(59, 130, 246, 0.50);
+    --color-border-glass:  rgba(0, 0, 0, 0.08);
+
+    /* ─── Accent dims (light) ─── */
+    --color-accent-dim:  rgba(59, 130, 246, 0.11);
+    --color-accent-glow: rgba(59, 130, 246, 0.22);
+
+    /* ─── Status backgrounds (light) ─── */
+    --status-inactive-bg:  rgba(139, 139, 154, 0.12);
+    --status-active-bg:    rgba(59, 130, 246, 0.12);
+    --status-attention-bg: rgba(232, 149, 45, 0.12);
+    --status-complete-bg:  rgba(52, 168, 83, 0.12);
+    --status-dead-bg:      rgba(85, 85, 102, 0.12);
+
+    /* ─── Shadows (light) ─── */
+    --shadow-card:       0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.05);
+    --shadow-card-hover: 0 4px 14px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.07);
+    --shadow-panel:      0 6px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-panel-drop: drop-shadow(0 6px 24px rgba(0,0,0,0.08)) drop-shadow(0 1px 3px rgba(0,0,0,0.05));
+    --shadow-float:      0 10px 32px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06);
+    --shadow-modal:      0 20px 60px rgba(0,0,0,0.30), 0 0 0 1px rgba(0,0,0,0.08);
+    --shadow-glow:       0 0 0 2px rgba(59,130,246,0.30), 0 0 20px rgba(59,130,246,0.15);
+
+    /* ─── Glass inner highlight (light) ─── */
+    --glass-highlight:        inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+    --glass-highlight-strong: inset 0 -1px 0 rgba(0, 0, 0, 0.10);
+    --glass-bg-base:          #F5F9FC;
+    --glass-bg-grid:          rgba(176, 197, 209, 0.34);
+    --glass-bg-radial:        rgba(124, 234, 240, 0.16);
+    --glass-shell-bg:         rgba(255, 255, 255, 0.56);
+    --glass-panel-bg:         rgba(255, 255, 255, 0.74);
+    --glass-card-bg:          rgba(255, 255, 255, 0.82);
+    --glass-card-hover-bg:    rgba(255, 255, 255, 0.92);
+    --glass-border:           rgba(154, 233, 238, 0.34);
+    --glass-border-hover:     rgba(154, 233, 238, 0.72);
+    --glass-focus-ring:       #6E95F6;
+    --glass-active-cyan:      #2CC8B9;
+    --glass-shadow-soft:      0 6px 18px rgba(51,96,122,0.12), 0 1px 3px rgba(31,41,55,0.05);
+    --glass-shadow-hover:     0 10px 24px rgba(51,96,122,0.16), 0 0 16px rgba(124,234,240,0.18);
+    --glass-shadow-focus:     0 0 0 1px rgba(110,149,246,0.78), 0 10px 26px rgba(110,149,246,0.20);
+    --glass-blur:             blur(14px);
+    --glass-radius-panel:     var(--radius-lg);
+    --glass-radius-card:      var(--radius-md);
+    --glass-radius-control:   var(--radius-full);
+
+    /* ─── shadcn/ui bridge (light) ─── */
+    --background:           var(--bg-base);
+    --foreground:           var(--color-text);
+    --card:                 var(--bg-card);
+    --card-foreground:      var(--color-text);
+    --popover:              var(--bg-overlay);
+    --popover-foreground:   var(--color-text);
+    --secondary:            var(--bg-surface);
+    --secondary-foreground: var(--color-text-muted);
+    --muted:                var(--bg-card);
+    --muted-foreground:     var(--color-text-muted);
+    --border:               var(--color-border);
+    --input:                var(--color-border);
+    --accent:               rgba(0, 0, 0, 0.04);
+    --accent-foreground:    var(--color-text);
+    --ring:                 rgba(59, 130, 246, 0.4);
+
+    /* ─── Legacy bridge (light) ─── */
+    --bg:           var(--bg-base);
+    --bg-secondary: var(--bg-surface);
+    --bg-tertiary:  var(--bg-card-hover);
+    --text:         var(--color-text);
+    --text-muted:   var(--color-text-muted);
+  }
+}
+
+/* Manual theme override via data-theme attribute (toggle button) */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg-base:          #FDFCFA;
+  --bg-backdrop:      #F6F4F0;
+  --bg-surface:       #FEFDFB;
+  --bg-panel:         #FEFDFB;
+  --bg-card:          #FFFFFF;
+  --bg-card-hover:    #F6F4EF;
+  --bg-raised:        rgba(60, 45, 20, 0.04);
+  --bg-overlay:       rgba(255, 255, 253, 0.98);
+  --bg-ingrained:        #F0EDE6;
+  --bg-ingrained-hover:  #E7E3DA;
+  --bg-ingrained-active: #D4D0C3;
+  --color-text:        #111118;
+  --color-text-muted:  #5A5A6E;
+  --color-text-subtle: #9898A8;
+  --color-text-ghost:  #C0C0CC;
+  --color-border:        rgba(0, 0, 0, 0.10);
+  --color-border-subtle: rgba(0, 0, 0, 0.06);
+  --color-border-strong: rgba(0, 0, 0, 0.18);
+  --color-border-accent: rgba(59, 130, 246, 0.50);
+  --color-border-glass:  rgba(0, 0, 0, 0.08);
+  --color-accent-dim:  rgba(59, 130, 246, 0.11);
+  --color-accent-glow: rgba(59, 130, 246, 0.22);
+  --status-inactive-bg:  rgba(139, 139, 154, 0.12);
+  --status-active-bg:    rgba(59, 130, 246, 0.12);
+  --status-attention-bg: rgba(232, 149, 45, 0.12);
+  --status-complete-bg:  rgba(52, 168, 83, 0.12);
+  --status-dead-bg:      rgba(85, 85, 102, 0.12);
+  --shadow-card:       0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.05);
+  --shadow-card-hover: 0 4px 14px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.07);
+  --shadow-panel:      0 6px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-panel-drop: drop-shadow(0 6px 24px rgba(0,0,0,0.08)) drop-shadow(0 1px 3px rgba(0,0,0,0.05));
+  --shadow-float:      0 10px 32px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06);
+  --shadow-modal:      0 20px 60px rgba(0,0,0,0.30), 0 0 0 1px rgba(0,0,0,0.08);
+  --shadow-glow:       0 0 0 2px rgba(59,130,246,0.30), 0 0 20px rgba(59,130,246,0.15);
+  --glass-highlight:        inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+  --glass-highlight-strong: inset 0 -1px 0 rgba(0, 0, 0, 0.10);
+  --glass-bg-base:          #F5F9FC;
+  --glass-bg-grid:          rgba(176, 197, 209, 0.34);
+  --glass-bg-radial:        rgba(124, 234, 240, 0.16);
+  --glass-shell-bg:         rgba(255, 255, 255, 0.56);
+  --glass-panel-bg:         rgba(255, 255, 255, 0.74);
+  --glass-card-bg:          rgba(255, 255, 255, 0.82);
+  --glass-card-hover-bg:    rgba(255, 255, 255, 0.92);
+  --glass-border:           rgba(154, 233, 238, 0.34);
+  --glass-border-hover:     rgba(154, 233, 238, 0.72);
+  --glass-focus-ring:       #6E95F6;
+  --glass-active-cyan:      #2CC8B9;
+  --glass-shadow-soft:      0 6px 18px rgba(51,96,122,0.12), 0 1px 3px rgba(31,41,55,0.05);
+  --glass-shadow-hover:     0 10px 24px rgba(51,96,122,0.16), 0 0 16px rgba(124,234,240,0.18);
+  --glass-shadow-focus:     0 0 0 1px rgba(110,149,246,0.78), 0 10px 26px rgba(110,149,246,0.20);
+  --glass-blur:             blur(14px);
+  --glass-radius-panel:     var(--radius-lg);
+  --glass-radius-card:      var(--radius-md);
+  --glass-radius-control:   var(--radius-full);
+  --system-radius-shell:     var(--radius-lg);
+  --system-radius-panel:     var(--radius-lg);
+  --system-radius-card:      var(--radius-md);
+  --system-radius-control:   var(--radius-full);
+  --system-surface-soft:     color-mix(in srgb, var(--bg-card) 82%, transparent);
+  --system-surface-raised:   color-mix(in srgb, var(--bg-panel) 90%, transparent);
+  --system-surface-hover:    color-mix(in srgb, var(--bg-card-hover) 86%, transparent);
+  --system-border-soft:      color-mix(in srgb, var(--color-border) 76%, transparent);
+  --system-border-strong:    color-mix(in srgb, var(--color-border-strong) 82%, transparent);
+  --system-focus-ring:       0 0 0 3px color-mix(in srgb, var(--glass-focus-ring) 18%, transparent);
+  --system-shadow-card:      var(--shadow-card);
+  --system-shadow-float:     var(--shadow-float);
+  --entity-project:          #5B6CFF;
+  --entity-project-bg:       color-mix(in srgb, var(--entity-project) 12%, transparent);
+  --entity-domain:           #0EA5AE;
+  --entity-domain-bg:        color-mix(in srgb, var(--entity-domain) 12%, transparent);
+  --entity-task:             #4F6F8F;
+  --entity-task-bg:          color-mix(in srgb, var(--entity-task) 12%, transparent);
+  --entity-agent:            #D98613;
+  --entity-agent-bg:         color-mix(in srgb, var(--entity-agent) 12%, transparent);
+  --background:           var(--bg-base);
+  --foreground:           var(--color-text);
+  --card:                 var(--bg-card);
+  --card-foreground:      var(--color-text);
+  --popover:              var(--bg-overlay);
+  --popover-foreground:   var(--color-text);
+  --secondary:            var(--bg-surface);
+  --secondary-foreground: var(--color-text-muted);
+  --muted:                var(--bg-card);
+  --muted-foreground:     var(--color-text-muted);
+  --border:               var(--color-border);
+  --input:                var(--color-border);
+  --accent:               rgba(0, 0, 0, 0.04);
+  --accent-foreground:    var(--color-text);
+  --ring:                 rgba(59, 130, 246, 0.4);
+  --bg:           var(--bg-base);
+  --bg-secondary: var(--bg-surface);
+  --bg-tertiary:  var(--bg-card-hover);
+  --text:         var(--color-text);
+  --text-muted:   var(--color-text-muted);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-base:          #181825;
+  --bg-backdrop:      #111118;
+  --bg-surface:       #232338;
+  --bg-panel:         #272742;
+  --bg-card:          rgba(255, 255, 255, 0.05);
+  --bg-card-hover:    rgba(255, 255, 255, 0.08);
+  --bg-raised:        rgba(255, 255, 255, 0.10);
+  --bg-overlay:       rgba(35, 35, 56, 0.96);
+  --bg-ingrained:        rgba(0, 0, 0, 0.12);
+  --bg-ingrained-hover:  rgba(0, 0, 0, 0.20);
+  --bg-ingrained-active: rgba(0, 0, 0, 0.30);
+  --color-text:        #F0F0F5;
+  --color-text-muted:  #A0A0B2;
+  --color-text-subtle: #6A6A80;
+  --color-text-ghost:  #454558;
+  --color-border:        rgba(255, 255, 255, 0.10);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-border-accent: rgba(59, 130, 246, 0.40);
+  --color-border-glass:  rgba(255, 255, 255, 0.12);
+  --color-accent-dim:  rgba(59, 130, 246, 0.15);
+  --color-accent-glow: rgba(59, 130, 246, 0.25);
+  --status-inactive-bg:  rgba(139, 139, 154, 0.12);
+  --status-active-bg:    rgba(59, 130, 246, 0.15);
+  --status-attention-bg: rgba(232, 149, 45, 0.12);
+  --status-complete-bg:  rgba(52, 168, 83, 0.12);
+  --status-dead-bg:      rgba(85, 85, 102, 0.12);
+  --shadow-card:       0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+  --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08);
+  --shadow-panel:      0 4px 24px rgba(0,0,0,0.5);
+  --shadow-panel-drop: drop-shadow(0 4px 24px rgba(0,0,0,0.5));
+  --shadow-float:      0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+  --shadow-modal:      0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.08);
+  --shadow-glow:       0 0 0 1px rgba(59,130,246,0.40), 0 0 16px rgba(59,130,246,0.15);
+  --glass-highlight:        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-highlight-strong: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --glass-bg-base:          var(--bg-base);
+  --glass-bg-grid:          rgba(255, 255, 255, 0.035);
+  --glass-bg-radial:        rgba(96, 165, 250, 0.10);
+  --glass-shell-bg:         rgba(35, 35, 56, 0.78);
+  --glass-panel-bg:         rgba(39, 39, 66, 0.82);
+  --glass-card-bg:          rgba(255, 255, 255, 0.06);
+  --glass-card-hover-bg:    rgba(255, 255, 255, 0.10);
+  --glass-border:           rgba(154, 233, 238, 0.22);
+  --glass-border-hover:     rgba(154, 233, 238, 0.46);
+  --glass-focus-ring:       #6E95F6;
+  --glass-active-cyan:      #2CC8B9;
+  --glass-shadow-soft:      0 8px 22px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.04);
+  --glass-shadow-hover:     0 10px 26px rgba(0,0,0,0.34), 0 0 18px rgba(96,165,250,0.10);
+  --glass-shadow-focus:     0 0 0 1px rgba(110,149,246,0.70), 0 10px 28px rgba(59,130,246,0.18);
+  --glass-blur:             blur(14px);
+  --glass-radius-panel:     var(--radius-lg);
+  --glass-radius-card:      var(--radius-md);
+  --glass-radius-control:   var(--radius-full);
+  --system-radius-shell:     var(--radius-lg);
+  --system-radius-panel:     var(--radius-lg);
+  --system-radius-card:      var(--radius-md);
+  --system-radius-control:   var(--radius-full);
+  --system-surface-soft:     color-mix(in srgb, var(--bg-card) 82%, transparent);
+  --system-surface-raised:   color-mix(in srgb, var(--bg-panel) 90%, transparent);
+  --system-surface-hover:    color-mix(in srgb, var(--bg-card-hover) 86%, transparent);
+  --system-border-soft:      color-mix(in srgb, var(--color-border) 76%, transparent);
+  --system-border-strong:    color-mix(in srgb, var(--color-border-strong) 82%, transparent);
+  --system-focus-ring:       0 0 0 3px color-mix(in srgb, var(--glass-focus-ring) 18%, transparent);
+  --system-shadow-card:      var(--shadow-card);
+  --system-shadow-float:     var(--shadow-float);
+  --entity-project:          #5B6CFF;
+  --entity-project-bg:       color-mix(in srgb, var(--entity-project) 14%, transparent);
+  --entity-domain:           #0EA5AE;
+  --entity-domain-bg:        color-mix(in srgb, var(--entity-domain) 15%, transparent);
+  --entity-task:             #4F6F8F;
+  --entity-task-bg:          color-mix(in srgb, var(--entity-task) 15%, transparent);
+  --entity-agent:            #D98613;
+  --entity-agent-bg:         color-mix(in srgb, var(--entity-agent) 15%, transparent);
+  --background:             var(--bg-base);
+  --foreground:             var(--color-text);
+  --card:                   var(--bg-card);
+  --card-foreground:        var(--color-text);
+  --popover:                var(--bg-overlay);
+  --popover-foreground:     var(--color-text);
+  --primary:                #3B82F6;
+  --primary-foreground:     #ffffff;
+  --secondary:              var(--bg-surface);
+  --secondary-foreground:   var(--color-text-muted);
+  --muted:                  var(--bg-card);
+  --muted-foreground:       var(--color-text-muted);
+  --accent:                 var(--color-accent-dim);
+  --accent-foreground:      #3B82F6;
+  --destructive:            #E05A4B;
+  --destructive-foreground: #ffffff;
+  --border:                 var(--color-border);
+  --backdrop:               var(--bg-backdrop);
+  --input:                  var(--color-border);
+  --ring:                   #3B82F6;
+  --bg:           var(--bg-base);
+  --bg-secondary: var(--bg-surface);
+  --bg-tertiary:  var(--bg-card-hover);
+  --text:         var(--color-text);
+  --text-muted:   var(--color-text-muted);
+}

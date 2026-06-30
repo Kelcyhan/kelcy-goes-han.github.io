@@ -1,0 +1,572 @@
+.bridge-shell {
+  min-height: 100vh;
+  padding: 20px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--color-accent-glow) 55%, transparent) 0%, transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-surface) 80%, var(--bg-base)) 0%, var(--bg-base) 100%);
+  color: var(--text, #e6edf3);
+}
+
+body.auth-route .bridge-shell {
+  min-height: 100dvh;
+}
+
+.bridge-frame {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--bg-panel) 92%, transparent);
+  box-shadow: var(--shadow-panel);
+  overflow: hidden;
+}
+
+.bridge-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
+}
+
+.bridge-topbar-brand,
+.bridge-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bridge-topbar-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-accent-dim) 70%, transparent);
+}
+
+.bridge-topbar-name {
+  font-size: var(--type-body-md-size);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.01em;
+}
+
+.bridge-topbar-badge {
+  font-size: var(--type-micro-size);
+}
+
+.bridge-topbar-link,
+.bridge-link {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.bridge-topbar-link:hover,
+.bridge-link:hover {
+  color: var(--color-text);
+}
+
+.bridge-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 0;
+}
+
+.bridge-panel {
+  min-width: 0;
+}
+
+.bridge-panel-primary {
+  border-right: 1px solid var(--color-border-subtle);
+}
+
+.bridge-panel-inner,
+.bridge-panel-secondary {
+  padding: 28px;
+}
+
+.bridge-copy-block h1,
+.bridge-side-intro h2 {
+  margin: 0;
+}
+
+.bridge-copy-block {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.bridge-copy-badge {
+  width: fit-content;
+}
+
+.bridge-copy-block h1 {
+  max-width: 11.5ch;
+  font-size: clamp(2.15rem, 4vw, 3.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.bridge-lead,
+.bridge-side-intro p,
+.bridge-access-note,
+.bridge-status-message,
+.bridge-account-label,
+.bridge-account-value,
+.bridge-feature-item span,
+.bridge-side-note,
+.bridge-trust-row {
+  color: var(--color-text-muted);
+}
+
+.bridge-lead {
+  margin: 0;
+  max-width: 48ch;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.bridge-switcher {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  margin-bottom: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
+}
+
+.bridge-switcher-tab {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.bridge-switcher-tab.is-active {
+  background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+  color: var(--color-text);
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
+}
+
+.bridge-auth-card,
+.bridge-status-card,
+.bridge-preview-card,
+.bridge-request-card {
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+  box-shadow: var(--shadow-card);
+}
+
+.bridge-auth-card,
+.bridge-request-card {
+  padding: 18px;
+}
+
+.bridge-auth-card-setup {
+  display: grid;
+  gap: 16px;
+}
+
+.bridge-card-heading,
+.bridge-setup-copy {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.bridge-card-heading strong,
+.bridge-setup-copy strong {
+  color: var(--color-text);
+  font-size: 1.02rem;
+}
+
+.bridge-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.bridge-access-note {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: var(--type-label-line)5;
+}
+
+.bridge-link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-card) 90%, transparent);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.bridge-request-card {
+  display: grid;
+  gap: 6px;
+}
+
+.bridge-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.bridge-field {
+  display: grid;
+  gap: 8px;
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.bridge-field-full {
+  grid-column: 1 / -1;
+}
+
+.bridge-field input,
+.bridge-field textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-card) 94%, transparent);
+  color: var(--color-text);
+  padding: 12px 13px;
+  font: inherit;
+  resize: vertical;
+  outline: none;
+}
+
+.bridge-field input:focus,
+.bridge-field textarea:focus {
+  border-color: var(--color-border-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent-dim) 40%, transparent);
+}
+
+.bridge-form-error {
+  margin: 6px 0 0;
+  color: var(--destructive);
+  font-size: 0.9rem;
+}
+
+.bridge-status-card {
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.bridge-status-card-error {
+  border-color: color-mix(in srgb, var(--destructive) 40%, var(--color-border));
+  background: color-mix(in srgb, var(--destructive) 8%, var(--bg-surface));
+}
+
+.bridge-status-header,
+.bridge-account,
+.bridge-error-actions,
+.bridge-feature-item,
+.bridge-side-note {
+  display: flex;
+  align-items: center;
+}
+
+.bridge-status-header,
+.bridge-account {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.bridge-status-label,
+.bridge-account-label {
+  display: block;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.bridge-status-header strong,
+.bridge-account-value,
+.bridge-feature-item strong {
+  color: var(--color-text);
+}
+
+.bridge-status-message {
+  margin: 0;
+  line-height: var(--type-label-line)5;
+}
+
+.bridge-account {
+  padding-top: 4px;
+}
+
+.bridge-error-actions {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.bridge-trust-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 12px;
+  background: var(--bg-ingrained);
+  font-size: 0.92rem;
+}
+
+.bridge-side-intro {
+  display: grid;
+  gap: 10px;
+}
+
+.bridge-side-intro h2 {
+  font-size: 1.1rem;
+}
+
+.bridge-side-intro p {
+  margin: 0;
+  line-height: var(--type-label-line)5;
+}
+
+.bridge-feature-list {
+  display: grid;
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.bridge-feature-item {
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.bridge-feature-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.bridge-feature-item svg,
+.bridge-trust-row svg,
+.bridge-side-note svg {
+  flex: 0 0 auto;
+  color: var(--primary);
+}
+
+.bridge-feature-item div {
+  display: grid;
+  gap: 5px;
+}
+
+.bridge-preview-card {
+  padding: 14px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-panel) 92%, transparent), color-mix(in srgb, var(--bg-surface) 92%, transparent));
+}
+
+.bridge-preview-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.bridge-preview-pill,
+.bridge-preview-meta {
+  font-size: var(--type-micro-size);
+  color: var(--color-text-muted);
+}
+
+.bridge-preview-pill {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--bg-ingrained);
+}
+
+.bridge-preview-body {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 224px;
+}
+
+.bridge-preview-rail {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 8px 6px;
+  border-radius: 12px;
+  background: var(--bg-ingrained);
+}
+
+.bridge-preview-rail span,
+.bridge-preview-row,
+.bridge-preview-cardlet {
+  border: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--bg-card) 96%, transparent);
+  border-radius: 10px;
+}
+
+.bridge-preview-rail span {
+  width: 100%;
+  height: 26px;
+}
+
+.bridge-preview-main {
+  display: grid;
+  gap: 12px;
+}
+
+.bridge-preview-row {
+  height: 34px;
+}
+
+.bridge-preview-row-wide {
+  height: 40px;
+}
+
+.bridge-preview-row-muted {
+  height: 76px;
+}
+
+.bridge-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.bridge-preview-cardlet {
+  min-height: 88px;
+}
+
+.bridge-preview-cardlet-active {
+  border-color: var(--color-border-accent);
+  box-shadow: var(--shadow-glow);
+}
+
+.bridge-side-note {
+  gap: 10px;
+  margin-top: 18px;
+  font-size: 0.92rem;
+}
+
+.clerk-auth-screen .cl-card {
+  width: 100%;
+  background: transparent !important;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+}
+
+.clerk-auth-screen .cl-navbar,
+.clerk-auth-screen .cl-footer {
+  display: none;
+}
+
+.clerk-auth-screen .cl-socialButtonsBlockButton,
+.clerk-auth-screen .cl-socialButtons,
+.clerk-auth-screen .cl-dividerRow,
+.clerk-auth-screen .cl-dividerText,
+.clerk-auth-screen [data-localization-key*="socialButtons"],
+.clerk-auth-screen [data-localization-key*="dividerText"],
+.clerk-auth-screen [data-localization-key*="alternativeMethods"] {
+  display: none !important;
+}
+
+.clerk-auth-screen .cl-cardBox,
+.clerk-auth-screen .cl-main {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .bridge-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .bridge-panel-primary {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-subtle);
+  }
+}
+
+@media (max-width: 640px) {
+  .bridge-shell {
+    padding: 0;
+  }
+
+  .bridge-topbar,
+  .bridge-panel-inner,
+  .bridge-panel-secondary {
+    padding: 18px;
+  }
+
+  .bridge-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .bridge-frame {
+    min-height: 100dvh;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+  }
+
+  .bridge-copy-block h1 {
+    max-width: none;
+    font-size: 2rem;
+  }
+
+  .bridge-switcher,
+  .bridge-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bridge-switcher-tab {
+    width: 100%;
+  }
+
+  .bridge-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bridge-preview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bridge-status-header,
+  .bridge-account {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .bridge-preview-body {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .bridge-preview-rail {
+    grid-auto-flow: column;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

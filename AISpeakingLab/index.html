@@ -219,8 +219,15 @@
     display: grid;
     grid-template-columns: minmax(260px, 420px) 1fr;
     gap: clamp(24px,5vw,80px);
-    align-items: end;
+    align-items: start;
     margin-bottom: 34px;
+  }
+
+  .section-head > .body-copy {
+    position: relative;
+    z-index: 3;
+    max-width: 860px;
+    padding-top: 6px;
   }
 
   .section h2,
@@ -380,6 +387,176 @@
     padding: 7px 9px;
     color: rgba(246,242,232,.72);
     font: 800 10px/1 var(--body);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .print-kit {
+    display: grid;
+    grid-template-columns: minmax(260px, .58fr) minmax(0, 1.42fr);
+    gap: clamp(22px,4vw,52px);
+    align-items: center;
+  }
+
+  .print-copy {
+    display: grid;
+    gap: 18px;
+  }
+
+  .print-copy .body-copy {
+    max-width: 520px;
+  }
+
+  .print-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .print-stats span {
+    border: 1px solid rgba(246,242,232,.12);
+    border-radius: 10px;
+    background: rgba(5,8,5,.52);
+    padding: 13px 12px;
+    color: rgba(246,242,232,.76);
+    font: 900 10px/1.25 var(--body);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .print-board {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(280px, .9fr) minmax(250px, .8fr);
+    gap: 18px;
+    align-items: center;
+  }
+
+  .print-feature {
+    position: relative;
+    border: 1px solid rgba(246,242,232,.14);
+    border-radius: 18px;
+    background: rgba(5,8,5,.66);
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,.42);
+    transform: perspective(1200px) rotateX(4deg) rotateY(-7deg);
+  }
+
+  .print-feature img,
+  .print-card-side img {
+    width: 100%;
+    height: auto;
+  }
+
+  .print-feature::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.08), transparent 28%, rgba(217,255,57,.08));
+    mix-blend-mode: screen;
+  }
+
+  .print-control-panel {
+    display: grid;
+    gap: 14px;
+  }
+
+  .card-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .card-tab {
+    position: relative;
+    min-height: 88px;
+    border: 1px solid rgba(246,242,232,.14);
+    border-radius: 12px;
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--tab-color) 34%, transparent), rgba(5,8,5,.72));
+    color: rgba(246,242,232,.82);
+    cursor: pointer;
+    overflow: hidden;
+    padding: 12px;
+    text-align: left;
+  }
+
+  .card-tab::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 5px;
+    background: var(--tab-color);
+    box-shadow: 0 0 18px var(--tab-color);
+  }
+
+  .card-tab strong,
+  .card-tab span {
+    position: relative;
+    display: block;
+  }
+
+  .card-tab strong {
+    color: var(--ink);
+    font: italic 900 24px/.9 var(--title);
+    letter-spacing: 0;
+  }
+
+  .card-tab span {
+    margin-top: 8px;
+    color: rgba(246,242,232,.68);
+    font: 900 9px/1.15 var(--body);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  .card-tab.is-active {
+    border-color: color-mix(in srgb, var(--tab-color) 60%, rgba(246,242,232,.2));
+    box-shadow: 0 0 24px color-mix(in srgb, var(--tab-color) 28%, transparent);
+  }
+
+  .print-detail {
+    min-height: 118px;
+    border: 1px solid rgba(246,242,232,.12);
+    border-radius: 14px;
+    background: rgba(5,8,5,.52);
+    padding: 16px;
+  }
+
+  .print-detail strong {
+    display: block;
+    color: var(--ink);
+    font: italic 900 30px/.9 var(--title);
+  }
+
+  .print-detail p {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .print-card-side {
+    position: relative;
+    border: 1px solid rgba(246,242,232,.12);
+    border-radius: 12px;
+    background: rgba(5,8,5,.56);
+    overflow: hidden;
+    max-width: 210px;
+    justify-self: center;
+    box-shadow: 0 22px 60px rgba(0,0,0,.32);
+  }
+
+  .print-card-side span {
+    position: absolute;
+    left: 9px;
+    bottom: 9px;
+    border-radius: 999px;
+    background: rgba(5,8,5,.8);
+    padding: 7px 9px;
+    color: rgba(246,242,232,.82);
+    font: 900 10px/1 var(--body);
     letter-spacing: .1em;
     text-transform: uppercase;
   }
@@ -745,6 +922,7 @@
     .feature-grid,
     .closing-list { grid-template-columns: repeat(2, minmax(0,1fr)); }
     .section-head,
+    .print-kit,
     .demo-stage,
     .feedback-showcase,
     .split { grid-template-columns: 1fr; }
@@ -762,8 +940,12 @@
     .closing { padding-left: 20px; padding-right: 20px; }
     .hero h1 { font-size: clamp(58px,18vw,92px); }
     .meta,
+    .print-stats,
     .feature-grid,
     .closing-list { grid-template-columns: 1fr; }
+    .print-board { grid-template-columns: 1fr; }
+    .print-feature { transform: none; }
+    .card-tabs { grid-template-columns: 1fr; }
     .feature-specs { grid-template-columns: 1fr; }
     .flow-carousel { grid-template-columns: 1fr; }
     .carousel-btn { display: none; }
@@ -788,6 +970,7 @@
   <a href="#demo" aria-label="Demo"></a>
   <a href="#features" aria-label="Features"></a>
   <a href="#flow" aria-label="Flow"></a>
+  <a href="#print" aria-label="Print materials"></a>
   <a href="#ui" aria-label="UI"></a>
   <a href="#setup" aria-label="Setup"></a>
   <a href="#feedback-mobile" aria-label="Mobile feedback"></a>
@@ -802,7 +985,7 @@
       <h1>AI Speaking<br><span>Lab</span></h1>
       <p class="lead">A classroom speaking-assessment system that connects a shared desktop flow, physical topic/tag cards, camera guidance, and personal feedback.</p>
       <div class="meta">
-        <div><strong>Role</strong><p>UX flow, product UI, prototype showcase</p></div>
+        <div><strong>Role</strong><p>UX/UI, prototype showcase, printed assessment kit</p></div>
         <div><strong>Context</strong><p>DSE-style speaking practice in group settings</p></div>
         <div><strong>Interface</strong><p>Desktop station + mobile feedback</p></div>
         <div><strong>Goal</strong><p>Make AI assessment visible, guided, and recoverable</p></div>
@@ -911,7 +1094,7 @@
         </article>
         <article class="flow-card">
           <div class="flow-thumb"><img src="assets/figma-ui/figma-screen-16.jpg" alt=""></div>
-          <div class="flow-copy"><div class="index">04</div><strong>Confirm topic</strong><p>Bridge paper topic cards with a screen-confirmed prompt.</p><div class="step-tags"><span>Card scan</span><span>Fallback</span></div></div>
+          <div class="flow-copy"><div class="index">04</div><strong>Confirm topic</strong><p>Bridge edited paper topic cards with a screen-confirmed prompt.</p><div class="step-tags"><span>Card scan</span><span>Booklet layout</span></div></div>
         </article>
         <article class="flow-card">
           <div class="flow-thumb"><img src="assets/figma-ui/figma-screen-21.jpg" alt=""></div>
@@ -925,6 +1108,50 @@
       <button class="carousel-btn" type="button" data-flow-dir="1" aria-label="Next flow step">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
       </button>
+    </div>
+  </section>
+
+  <section class="section tight" id="print">
+    <div class="print-kit">
+      <div class="print-copy">
+        <div class="eyebrow">Printed assessment kit</div>
+        <h2>Paper prompts for the <span>screen flow.</span></h2>
+        <p class="body-copy">I edited and laid out the question booklet and task cards, turning richer prompt pages into print-ready classroom materials with matching scan cards.</p>
+        <div class="print-stats">
+          <span>Question booklet</span>
+          <span>Task-card system</span>
+          <span>Print-ready layout</span>
+        </div>
+      </div>
+      <div class="print-board" aria-label="Interactive printed question booklet and task card examples">
+        <figure class="print-feature">
+          <img id="print-book-preview" src="assets/figma-ui/print-book-solo-page.png" alt="Solo talk question booklet page">
+        </figure>
+        <div class="print-control-panel">
+          <div class="card-tabs" aria-label="Choose a printed task card type">
+            <button class="card-tab is-active" type="button" style="--tab-color: #b86cff" data-card="solo" aria-pressed="true">
+              <strong>S001</strong>
+              <span>Solo talk</span>
+            </button>
+            <button class="card-tab" type="button" style="--tab-color: #79dec3" data-card="presentation" aria-pressed="false">
+              <strong>P001</strong>
+              <span>Presentation</span>
+            </button>
+            <button class="card-tab" type="button" style="--tab-color: #f57a37" data-card="group" aria-pressed="false">
+              <strong>G001</strong>
+              <span>Group task</span>
+            </button>
+          </div>
+          <div class="print-detail" aria-live="polite">
+            <strong id="print-card-title">Solo Talk Booklet Page</strong>
+            <p id="print-card-copy">A full booklet page carries the topic brief, speaking cues, and assessment context, while the matching purple card keeps classroom handoff scannable.</p>
+          </div>
+          <figure class="print-card-side">
+            <img id="print-card-preview" src="assets/figma-ui/print-card-solo.png" alt="Solo talk printed task card">
+            <span>Matching task card</span>
+          </figure>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1035,6 +1262,54 @@
       if (!flowTrack) return;
       const direction = Number(button.dataset.flowDir || 1);
       flowTrack.scrollBy({ left: direction * flowTrack.clientWidth * .72, behavior: "smooth" });
+    });
+  });
+
+  const printCards = {
+    solo: {
+      bookSrc: "assets/figma-ui/print-book-solo-page.png",
+      bookAlt: "Solo talk question booklet page",
+      cardSrc: "assets/figma-ui/print-card-solo.png",
+      cardAlt: "Solo talk printed task card",
+      title: "Solo Talk Booklet Page",
+      copy: "A full booklet page carries the topic brief, speaking cues, and assessment context, while the matching purple card keeps classroom handoff scannable."
+    },
+    presentation: {
+      bookSrc: "assets/figma-ui/print-book-presentation-page.png",
+      bookAlt: "Presentation question booklet page",
+      cardSrc: "assets/figma-ui/print-card-presentation.png",
+      cardAlt: "Presentation printed task card",
+      title: "Presentation Booklet Page",
+      copy: "The booklet page holds the richer task content and preparation structure, with a matching card used as the compact physical trigger."
+    },
+    group: {
+      bookSrc: "assets/figma-ui/print-book-group-page.png",
+      bookAlt: "Group discussion question booklet page",
+      cardSrc: "assets/figma-ui/print-card-group.png",
+      cardAlt: "Group discussion printed task card",
+      title: "Group Discussion Booklet Page",
+      copy: "Group tasks use the booklet to present the shared situation and discussion context, then rely on the card for quick topic identification."
+    }
+  };
+  const printBookPreview = document.getElementById("print-book-preview");
+  const printPreview = document.getElementById("print-card-preview");
+  const printTitle = document.getElementById("print-card-title");
+  const printCopy = document.getElementById("print-card-copy");
+  document.querySelectorAll("[data-card]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const card = printCards[button.dataset.card];
+      if (!card || !printBookPreview || !printPreview || !printTitle || !printCopy) return;
+      printBookPreview.src = card.bookSrc;
+      printBookPreview.alt = card.bookAlt;
+      printPreview.src = card.cardSrc;
+      printPreview.alt = card.cardAlt;
+      printTitle.textContent = card.title;
+      printCopy.textContent = card.copy;
+      document.querySelectorAll("[data-card]").forEach((tab) => {
+        const active = tab === button;
+        tab.classList.toggle("is-active", active);
+        tab.setAttribute("aria-pressed", String(active));
+      });
     });
   });
 

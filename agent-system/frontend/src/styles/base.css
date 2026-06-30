@@ -1,0 +1,170 @@
+/* ============================================================
+   Base reset & layout
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  /* Native-feel: remove tap flash on mobile */
+  -webkit-tap-highlight-color: transparent;
+}
+/* Tailwind Preflight handles margin/padding resets — no blanket * reset needed */
+
+/* Fast tap response on all interactive elements */
+button, a, [role="button"], input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Prevent iOS input zoom — font-size must be ≥16px on mobile */
+@media (max-width: 768px) {
+  input, textarea, select { font-size: 16px !important; }
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--glass-bg-base, var(--bg-base));
+  background-image:
+    radial-gradient(circle at 84% 0%, var(--glass-bg-radial, transparent), transparent 28%),
+    linear-gradient(var(--glass-bg-grid, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, var(--glass-bg-grid, transparent) 1px, transparent 1px);
+  background-size: auto, 40px 40px, 40px 40px;
+  color: var(--color-text);
+  height: 100dvh;
+  overflow: hidden;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body.auth-route {
+  height: auto;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* App typography — scoped to #root so Radix portals (dialogs, popovers)
+   don't inherit 13px and can use shadcn's default rem-based sizing */
+#root {
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-line);
+  font-feature-settings: "kern" 1, "liga" 1, "tnum" 1;
+}
+
+/* ============================================================
+   Semantic typography utilities
+   ============================================================ */
+.type-caption {
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-line);
+}
+.type-micro {
+  font-size: var(--type-micro-size);
+  line-height: var(--type-micro-line);
+}
+.type-label {
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-line);
+}
+.type-body-sm {
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-line);
+}
+.type-body-md {
+  font-size: var(--type-body-md-size);
+  line-height: var(--type-body-md-line);
+}
+.type-title-sm {
+  font-size: var(--type-title-sm-size);
+  line-height: var(--type-title-sm-line);
+}
+.type-title-md {
+  font-size: var(--type-title-md-size);
+  line-height: var(--type-title-md-line);
+}
+.type-title-lg {
+  font-size: var(--type-title-lg-size);
+  line-height: var(--type-title-lg-line);
+}
+.type-regular { font-weight: var(--type-weight-regular); }
+.type-medium { font-weight: var(--type-weight-medium); }
+.type-semibold { font-weight: var(--type-weight-semibold); }
+.type-bold { font-weight: var(--type-weight-bold); }
+.type-mono { font-family: var(--font-mono); }
+
+@media (max-width: 768px) {
+  body { padding: 0; }
+}
+
+/* Paper grain — barely perceptible texture across the UI */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 40;  /* below Radix portals (z-50) so dialogs/popovers render above */
+  pointer-events: none;
+  opacity: 0.025;
+  mix-blend-mode: multiply;
+  background: url('/noise.png') repeat;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  gap: 8px;             /* space between sidebar and workspace panels */
+}
+
+body.auth-route #root {
+  min-height: 100dvh;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  #root { gap: 0; }
+}
+
+/* ============================================================
+   Glass utility classes
+   ============================================================ */
+
+/* Structural panel — mostly opaque, glass edge */
+.glass-panel {
+  background: var(--glass-panel-bg, var(--bg-surface));
+  border: 1px solid var(--glass-border, var(--color-border-glass));
+  border-radius: var(--glass-radius-panel, var(--radius-lg));
+  box-shadow: var(--glass-highlight), var(--glass-shadow-soft, var(--shadow-panel));
+  backdrop-filter: var(--glass-blur, blur(12px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(12px));
+}
+
+/* Elevated card */
+.glass-card {
+  background: var(--glass-card-bg, var(--bg-card));
+  border: 1px solid var(--color-border);
+  border-radius: var(--glass-radius-card, var(--radius-md));
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--dur-normal) var(--ease-standard),
+              border-color var(--dur-normal) var(--ease-standard),
+              background var(--dur-normal) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard);
+}
+.glass-card:hover {
+  background: var(--glass-card-hover-bg, var(--bg-card-hover));
+  border-color: var(--glass-border-hover, var(--color-border-strong));
+  box-shadow: var(--glass-shadow-hover, var(--shadow-card-hover));
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   Scrollbars
+   ============================================================ */
+::-webkit-scrollbar             { width: 6px; height: 6px; }
+::-webkit-scrollbar-track       { background: transparent; }
+::-webkit-scrollbar-thumb       { background: var(--color-border-strong); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-subtle); }
+
+/* xterm overrides */
+.xterm { padding: 4px; }
+.xterm-viewport::-webkit-scrollbar       { width: 8px; }
+.xterm-viewport::-webkit-scrollbar-thumb { background: #4A4A50; border-radius: 4px; }

@@ -1,0 +1,14 @@
+paper_id,title_short,coder_a,coder_b,reconciled,kappa
+p001,Engagement Patterns,done,done,yes,0.81
+p002,Reflection in HCI 20Yrs,done,done,yes,0.74
+p003,Beyond Replika,done,done,yes,0.79
+p004,Diary Probes Mental,done,done,yes,0.68
+p005,LLM Therapy Bots,done,in_progress,no,
+p006,Companion Loneliness,done,in_progress,no,
+p007,Self-Compassion Apps,done,not_started,no,
+p008,Wearables + Reflection,not_started,not_started,no,
+p009,Probing the Future Self,not_started,not_started,no,
+p010,Co-design with Adolescents,not_started,not_started,no,
+p011,Expressive Writing Apps,not_started,not_started,no,
+p012,Critical AI Wellbeing,not_started,not_started,no,
+p013,RtD Reflection Tools,not_started,not_started,no,

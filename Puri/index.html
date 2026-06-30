@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Puri! — Kelcy Han</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Averia+Sans+Libre:ital,wght@1,300;1,400;1,700&family=Edu+QLD+Beginner:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&family=Sansita:ital,wght@0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --linen: #F1ECE3;
+    --cream: #F4E8D0;
+    --leaf: #A7C957;
+    --mint: #DDEBC8;
+    --moss: #40583C;
+    --amber: #C79B45;
+    --rust: #9F6A42;
+    --night: #111510;
+    --ink: #1F261E;
+    --title-font: 'Sansita', serif;
+    --subtitle-font: 'Averia Sans Libre', cursive;
+    --body-font: 'Edu QLD Beginner', cursive;
+    --ui-font: 'Nunito', system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    min-height: 100%;
+    background: var(--night);
+    color: var(--linen);
+    overflow-x: hidden;
+  }
+  body {
+    font-family: var(--body-font);
+    line-height: 1.55;
+    background:
+      radial-gradient(ellipse 70% 42% at 22% 0%, rgba(167,201,87,0.16), transparent 62%),
+      radial-gradient(ellipse 60% 44% at 85% 42%, rgba(199,155,69,0.10), transparent 60%),
+      linear-gradient(180deg, #111510 0%, #1a2118 45%, #0e1210 100%);
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(rgba(241,236,227,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(241,236,227,0.025) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.72), rgba(0,0,0,0.12));
+  }
+  .top-bar {
+    position: fixed;
+    z-index: 50;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 2rem;
+    pointer-events: none;
+  }
+  .top-bar a,
+  .proj-id {
+    pointer-events: auto;
+    color: var(--linen);
+    text-decoration: none;
+    background: rgba(8,14,12,0.58);
+    border: 1px solid rgba(241,236,227,0.14);
+    border-radius: 999px;
+    padding: 0.55rem 1rem;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.28);
+  }
+  .top-bar a {
+    font-family: var(--subtitle-font);
+    font-size: 0.78rem;
+    font-style: italic;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.86;
+    transition: transform 0.3s, opacity 0.3s;
+  }
+  .top-bar a:hover { opacity: 1; transform: translateX(-3px); }
+  .proj-id {
+    font-family: var(--title-font);
+    font-style: italic;
+    letter-spacing: 0.05em;
+  }
+  main {
+    position: relative;
+    z-index: 1;
+  }
+  .stop {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 12vh clamp(18px, 5vw, 78px);
+    position: relative;
+  }
+  .page-frame {
+    width: min(1520px, 94vw);
+    aspect-ratio: 1600 / 450;
+    border-radius: 24px;
+    overflow: hidden;
+    background: rgba(241,236,227,0.08);
+    border: 1px solid rgba(241,236,227,0.14);
+    box-shadow: 0 34px 110px rgba(0,0,0,0.48);
+    cursor: grab;
+    touch-action: pan-y;
+    user-select: none;
+    transform: translateY(24px) scale(0.985);
+    opacity: 0;
+    transition: opacity 0.75s ease, transform 0.75s ease;
+  }
+  .page-frame.dragging {
+    cursor: grabbing;
+    transition: opacity 0.75s ease;
+  }
+  .page-frame.in {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .page-frame.cover {
+    width: min(1600px, 96vw);
+    transform: translateY(24px) scale(0.985) rotate(-0.8deg);
+  }
+  .page-frame.cover.in {
+    transform: translateY(0) scale(1) rotate(-0.8deg);
+  }
+  .page-frame img {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    transform: translateX(var(--drag-x, 0px));
+    transition: transform 0.16s ease-out;
+    pointer-events: none;
+  }
+  .page-frame.dragging img {
+    transition: none;
+  }
+  .anchor-side {
+    position: absolute;
+    bottom: 8vh;
+    left: 5vw;
+    z-index: 4;
+    width: clamp(270px, 28vw, 390px);
+    max-width: 390px;
+    padding: 1.35rem 1.45rem;
+    border-left: 2px solid rgba(167,201,87,0.46);
+    border-radius: 0 8px 8px 0;
+    background: linear-gradient(135deg, rgba(12,18,14,0.82) 0%, rgba(12,18,14,0.58) 70%, rgba(12,18,14,0.30) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.65s ease, transform 0.65s ease;
+  }
+  .anchor-side.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .stop.right .anchor-side {
+    left: auto;
+    right: 5vw;
+    text-align: right;
+    border-left: 0;
+    border-right: 2px solid rgba(167,201,87,0.46);
+    border-radius: 8px 0 0 8px;
+    background: linear-gradient(-135deg, rgba(12,18,14,0.82) 0%, rgba(12,18,14,0.58) 70%, rgba(12,18,14,0.30) 100%);
+  }
+  .stop-num {
+    font-family: var(--subtitle-font);
+    font-style: italic;
+    font-size: 0.68rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--leaf);
+    opacity: 0.96;
+    margin-bottom: 0.85rem;
+  }
+  h2 {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-weight: 900;
+    font-size: clamp(23px, 2.3vw, 36px);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    color: var(--cream);
+    margin-bottom: 0.65rem;
+  }
+  h2 .accent { color: var(--leaf); }
+  .lead {
+    font-family: var(--subtitle-font);
+    font-style: italic;
+    font-size: clamp(13px, 1vw, 15px);
+    line-height: 1.52;
+    color: rgba(241,236,227,0.83);
+    margin-bottom: 0.75rem;
+  }
+  .body {
+    color: rgba(241,236,227,0.66);
+    font-size: clamp(12px, 0.85vw, 14px);
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-top: 1rem;
+    font-family: var(--subtitle-font);
+    font-style: italic;
+    font-size: 0.64rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(241,236,227,0.58);
+  }
+  .stop.right .meta-row { justify-content: flex-end; }
+  .rail {
+    position: fixed;
+    right: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+  }
+
+  .ui-showcase {
+    --ui-bg: #dee2a7;
+    --ui-surface: #e8f5ee;
+    --ui-ink: #1a1a1a;
+    --ui-green: #3d5a45;
+    --ui-soft-green: #7ac898;
+    --ui-muted: #5c665c;
+    width: min(1520px, 94vw);
+    margin: 0 auto;
+    border: 3px solid var(--ui-ink);
+    border-radius: 22px;
+    background: var(--ui-bg);
+    box-shadow: 8px 8px 0 var(--ui-ink);
+    color: var(--ui-ink);
+    font-family: var(--ui-font);
+    padding: clamp(18px, 3vw, 42px);
+    display: grid;
+    grid-template-columns: minmax(280px, 0.78fr) minmax(320px, 1fr) minmax(240px, 0.6fr);
+    gap: clamp(18px, 3vw, 38px);
+    align-items: center;
+  }
+
+  .ui-annotation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ui-ink);
+  }
+  .ui-annotation span {
+    border: 2px solid var(--ui-ink);
+    border-radius: 999px;
+    background: var(--ui-bg);
+    box-shadow: 2px 2px 0 var(--ui-ink);
+    padding: 0.42rem 0.72rem;
+    font-size: 0.78rem;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+  .ui-annotation i {
+    width: 46px;
+    height: 16px;
+    display: block;
+    background:
+      linear-gradient(var(--ui-ink), var(--ui-ink)) left 7px / 38px 2px no-repeat,
+      linear-gradient(45deg, transparent 48%, var(--ui-ink) 49% 57%, transparent 58%) right center / 12px 12px no-repeat;
+  }
+
+  .ui-dots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .ui-dot {
+    width: 9px;
+    height: 9px;
+    border: 1.5px solid var(--ui-green);
+    border-radius: 999px;
+    background: rgba(61,90,69,0.28);
+    cursor: pointer;
+    padding: 0;
+    transition: width 0.2s ease, background 0.2s ease;
+  }
+
+  .code-app {
+    display: block;
+    padding: clamp(22px, 3.2vw, 48px);
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 10% 18%, rgba(122,200,152,0.22) 0 12px, transparent 13px),
+      radial-gradient(circle at 86% 15%, rgba(245,216,122,0.24) 0 18px, transparent 19px),
+      radial-gradient(circle at 84% 82%, rgba(184,224,192,0.25) 0 16px, transparent 17px),
+      var(--ui-bg);
+  }
+  .code-app::before,
+  .code-app::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    inset: 18px;
+    opacity: 0.22;
+    background:
+      radial-gradient(ellipse 18px 9px at 8% 22%, transparent 48%, var(--ui-ink) 50% 54%, transparent 56%),
+      radial-gradient(ellipse 22px 10px at 92% 28%, transparent 48%, var(--ui-ink) 50% 54%, transparent 56%),
+      radial-gradient(ellipse 24px 11px at 12% 78%, transparent 48%, var(--ui-ink) 50% 54%, transparent 56%),
+      radial-gradient(ellipse 18px 9px at 88% 78%, transparent 48%, var(--ui-ink) 50% 54%, transparent 56%);
+  }
+  .code-app::after {
+    opacity: 0.12;
+    background:
+      linear-gradient(35deg, transparent 0 48%, var(--ui-ink) 49% 51%, transparent 52%) 6% 42% / 62px 18px no-repeat,
+      linear-gradient(-32deg, transparent 0 48%, var(--ui-ink) 49% 51%, transparent 52%) 94% 54% / 62px 18px no-repeat;
+  }
+  .code-app > * {
+    position: relative;
+    z-index: 1;
+  }
+  .app-head {
+    text-align: center;
+    margin-bottom: clamp(18px, 2.4vw, 30px);
+  }
+  .app-title-badge {
+    display: inline-block;
+    border: 2px solid var(--ui-ink);
+    border-radius: 999px;
+    background: #e8f0a8;
+    box-shadow: 3px 3px 0 var(--ui-ink);
+    padding: 0.55rem 1.25rem;
+    font-size: clamp(16px, 1.25vw, 19px);
+    font-weight: 900;
+  }
+  .app-subtitle {
+    margin-top: 0.55rem;
+    color: rgba(26,26,26,0.62);
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+  .module-assets {
+    width: min(760px, 100%);
+    margin: 0 auto clamp(16px, 2vw, 24px);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .module-card {
+    border: 2px solid var(--ui-ink);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.62);
+    box-shadow: 3px 3px 0 var(--ui-ink);
+    padding: 8px;
+  }
+  .module-card img {
+    width: 100%;
+    aspect-ratio: 1.42;
+    object-fit: cover;
+    display: block;
+    border: 2px solid var(--ui-ink);
+    border-radius: 8px;
+    background: #fff;
+  }
+  .module-card span {
+    display: block;
+    margin-top: 6px;
+    color: rgba(26,26,26,0.68);
+    font-size: 0.64rem;
+    font-weight: 900;
+    text-align: center;
+  }
+  .app-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(14px, 2vw, 28px);
+    flex-wrap: wrap;
+  }
+  .thumb-col {
+    display: grid;
+    gap: 12px;
+  }
+  .screen-thumb {
+    appearance: none;
+    width: 76px;
+    border: 0;
+    background: transparent;
+    color: #536158;
+    font-family: var(--ui-font);
+    font-size: 0.62rem;
+    font-weight: 900;
+    line-height: 1.18;
+    cursor: pointer;
+    display: grid;
+    gap: 6px;
+    justify-items: center;
+  }
+  .thumb-phone {
+    width: 64px;
+    height: 116px;
+    border: 2px solid var(--ui-ink);
+    border-radius: 14px;
+    background: var(--ui-surface);
+    box-shadow: 2px 2px 0 var(--ui-ink);
+    padding: 8px 6px;
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .thumb-phone::before {
+    content: "";
+    width: 24px;
+    height: 5px;
+    border-radius: 0 0 5px 5px;
+    background: var(--ui-ink);
+    justify-self: center;
+    margin-top: -8px;
+  }
+  .thumb-title {
+    display: block;
+    color: var(--ui-ink);
+    font-size: 0.43rem;
+    font-weight: 900;
+    line-height: 1.05;
+    text-align: center;
+    min-height: 9px;
+  }
+  .thumb-chip,
+  .thumb-line,
+  .thumb-button,
+  .thumb-locker,
+  .thumb-record,
+  .thumb-check {
+    display: block;
+    border: 1.5px solid var(--ui-ink);
+    background: var(--thumb-color, #3d5a45);
+  }
+  .thumb-chip {
+    height: 14px;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.34rem;
+    font-weight: 900;
+    line-height: 12px;
+    overflow: hidden;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .thumb-line {
+    height: 9px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.78);
+  }
+  .thumb-locker {
+    height: 28px;
+    border-radius: 2px;
+    background:
+      repeating-linear-gradient(90deg, #fff 0 9px, var(--ui-ink) 9px 10.5px),
+      #fff;
+  }
+  .thumb-button {
+    height: 11px;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 0.32rem;
+    font-weight: 900;
+    line-height: 9px;
+    overflow: hidden;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .thumb-record {
+    height: 10px;
+    border-radius: 3px;
+    background: #fff;
+  }
+  .thumb-check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    justify-self: center;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 900;
+  }
+  .thumb-terrain {
+    margin-top: auto;
+    height: 16px;
+    background:
+      radial-gradient(18px 13px at 18% 95%, #f5d87a 0 70%, transparent 72%),
+      radial-gradient(24px 13px at 55% 96%, #a8d8b0 0 70%, transparent 72%),
+      radial-gradient(18px 12px at 88% 92%, #b8e0c0 0 70%, transparent 72%);
+  }
+  .screen-thumb.active {
+    color: var(--ui-green);
+  }
+  .screen-thumb.active .thumb-phone {
+    border-color: var(--ui-green);
+    box-shadow: 3px 3px 0 var(--ui-green);
+    transform: translateY(-2px);
+  }
+  .phone-stage {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+  }
+  .phone-frame {
+    position: relative;
+    width: clamp(280px, 28vw, 375px);
+    aspect-ratio: 375 / 812;
+    border: 3px solid var(--ui-ink);
+    border-radius: clamp(34px, 3.4vw, 45px);
+    background: var(--ui-surface);
+    box-shadow: 6px 6px 0 var(--ui-ink);
+    overflow: hidden;
+  }
+  .phone-frame::before {
+    content: "";
+    position: absolute;
+    z-index: 5;
+    top: 0;
+    left: 50%;
+    width: 33%;
+    height: 7%;
+    transform: translateX(-50%);
+    border-radius: 0 0 18px 18px;
+    background: var(--ui-ink);
+  }
+  .phone-frame::after {
+    content: "";
+    position: absolute;
+    z-index: 5;
+    bottom: 8px;
+    left: 50%;
+    width: 28%;
+    height: 4px;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: var(--ui-ink);
+  }
+  .phone-screen {
+    height: 100%;
+    padding-top: 6.5%;
+    overflow: hidden;
+    background: var(--ui-surface);
+    font-family: var(--ui-font);
+    color: var(--ui-ink);
+  }
+  .statusbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px 4px;
+    font-size: 0.76rem;
+    font-weight: 900;
+  }
+  .status-icons {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .status-icons i {
+    display: block;
+    width: 15px;
+    height: 9px;
+    border-radius: 2px;
+    background: var(--ui-ink);
+    opacity: 0.9;
+  }
+  .app-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 20px;
+  }
+  .avatar-mini {
+    width: 42px;
+    height: 42px;
+    border: 1.5px solid var(--ui-ink);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 38%, #f5d8b0 0 17%, transparent 18%),
+      radial-gradient(circle at 50% 96%, #6a9c78 0 38%, transparent 39%),
+      #c8e8d0;
+    box-shadow: 1.5px 1.5px 0 var(--ui-ink);
+    flex: 0 0 auto;
+  }
+  .user-meta b,
+  .phone-brand,
+  .screen-title {
+    font-weight: 900;
+  }
+  .user-meta small {
+    display: block;
+    color: #7d8581;
+    font-size: 0.62rem;
+    font-weight: 800;
+  }
+  .wechat-more {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #6f7773;
+    font-weight: 900;
+  }
+  .circle-icon {
+    width: 24px;
+    height: 24px;
+    border: 1px solid #7e8783;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+  }
+  .circle-icon::after {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border: 1px solid #7e8783;
+    border-radius: 50%;
+  }
+  .welcome {
+    text-align: center;
+    padding: 6px 20px 14px;
+  }
+  .welcome b {
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 900;
+  }
+  .welcome small {
+    color: #74807b;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+  .resource-list {
+    display: grid;
+    gap: 10px;
+    padding: 0 18px;
+  }
+  .resource-btn {
+    border: 2px solid var(--ui-ink);
+    border-radius: 10px;
+    color: #fff;
+    min-height: 56px;
+    padding: 0.8rem;
+    font-family: var(--ui-font);
+    font-size: 0.84rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    box-shadow: 3px 3px 0 var(--resource-shadow);
+    background: var(--resource-color);
+    cursor: pointer;
+  }
+  .terrain-art {
+    position: absolute;
+    left: -8%;
+    right: -8%;
+    bottom: 0;
+    height: 20%;
+    background:
+      radial-gradient(82px 62px at 18% 88%, #f5d87a 0 70%, transparent 72%),
+      radial-gradient(110px 62px at 53% 94%, #a8d8b0 0 70%, transparent 72%),
+      radial-gradient(88px 58px at 88% 90%, #b8e0c0 0 70%, transparent 72%);
+    border-top: 0;
+    opacity: 0.95;
+  }
+  .detail-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px 8px;
+  }
+  .back-square {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--ui-ink);
+    border-radius: 8px;
+    background: var(--resource-color);
+    color: #fff;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .detail-title {
+    flex: 1;
+    border: 2px solid var(--ui-ink);
+    border-radius: 8px;
+    background: var(--resource-color);
+    box-shadow: 2px 2px 0 var(--ui-ink);
+    color: #fff;
+    padding: 0.48rem 0.6rem;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 900;
+  }
+  .locker {
+    margin: 12px 18px 0;
+    height: 158px;
+    border: 2px solid var(--ui-ink);
+    background: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .locker img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+  }
+  .info-panel {
+    margin: 12px 18px 0;
+    border: 2px solid var(--ui-ink);
+    border-radius: 3px;
+    background: #fff;
+    padding: 0.75rem;
+  }
+  .info-panel b {
+    display: block;
+    font-size: 0.86rem;
+    font-weight: 900;
+    margin-bottom: 0.22rem;
+  }
+  .info-panel p {
+    color: #5e6662;
+    font-size: 0.7rem;
+    font-weight: 800;
+    line-height: 1.38;
+  }
+  .video-btn,
+  .take-btn,
+  .continue-btn {
+    font-family: var(--ui-font);
+    border: 2px solid var(--ui-ink);
+    box-shadow: 2px 2px 0 var(--ui-ink);
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .video-btn {
+    margin: 12px 18px 0;
+    width: calc(100% - 36px);
+    border-radius: 9px;
+    background: #7ac898;
+    padding: 0.72rem 0.85rem;
+    display: flex;
+    justify-content: space-between;
+  }
+  .take-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  .take-btn {
+    border-radius: 9px;
+    background: var(--button-color);
+    color: var(--button-text, #fff);
+    box-shadow: 3px 3px 0 var(--button-shadow);
+    padding: 0.72rem 1.7rem;
+  }
+  .records-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 18px;
+  }
+  .records-head button {
+    border: 0;
+    background: transparent;
+    font-size: 1.35rem;
+    cursor: pointer;
+  }
+  .profile {
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    margin: 16px 0 18px;
+  }
+  .profile-name {
+    border: 2px solid var(--ui-ink);
+    border-radius: 999px;
+    padding: 0.18rem 1.4rem;
+    font-size: 0.82rem;
+    font-weight: 900;
+  }
+  .record-list {
+    display: grid;
+    gap: 10px;
+    padding: 0 18px;
+  }
+  .record-card {
+    border: 2px solid var(--record-color);
+    border-radius: 9px;
+    background: #fff;
+    padding: 0.45rem 0.65rem;
+  }
+  .record-card b {
+    color: var(--record-color);
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 900;
+  }
+  .record-card small {
+    color: #8a918d;
+    font-size: 0.62rem;
+    font-weight: 800;
+  }
+  .success-screen {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 64px 30px 110px;
+    text-align: center;
+  }
+  .success-check {
+    width: 78px;
+    height: 78px;
+    border: 3px solid var(--ui-ink);
+    border-radius: 50%;
+    background: #7ac898;
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 2.1rem;
+    font-weight: 900;
+    margin: 0 auto 20px;
+  }
+  .success-screen h4 {
+    font-size: 1.24rem;
+    font-weight: 900;
+    margin-bottom: 16px;
+  }
+  .continue-btn {
+    border-radius: 999px;
+    background: var(--ui-surface);
+    padding: 0.58rem 1rem;
+  }
+
+  .actions,
+  .close-row {
+    width: min(1520px, 94vw);
+    margin: 1rem auto 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .close-row {
+    justify-content: center;
+    padding-bottom: 10vh;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    border-radius: 999px;
+    padding: 0.65rem 1rem;
+    background: rgba(241,236,227,0.10);
+    border: 1px solid rgba(241,236,227,0.16);
+    color: var(--linen);
+    text-decoration: none;
+    font-family: var(--subtitle-font);
+    font-style: italic;
+    font-size: 0.76rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transition: background 0.25s, color 0.25s, transform 0.25s;
+  }
+  .btn:hover { transform: translateY(-2px); background: rgba(241,236,227,0.16); }
+  @media (max-width: 900px) {
+    .top-bar { padding: 1rem; }
+    .proj-id { display: none; }
+    .rail { right: 12px; }
+    .stop {
+      min-height: 88vh;
+      padding: 10vh 14px;
+      align-items: start;
+    }
+    .page-frame {
+      width: 94vw;
+      border-radius: 14px;
+      margin-top: 7vh;
+    }
+    .page-frame img { width: 100%; }
+    .anchor-side,
+    .stop.right .anchor-side {
+      position: relative;
+      inset: auto;
+      width: 94vw;
+      max-width: none;
+      margin-top: 1rem;
+      text-align: left;
+      border-left: 2px solid rgba(167,201,87,0.46);
+      border-right: 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .stop.right .meta-row { justify-content: flex-start; }
+    .ui-head {
+      width: 94vw;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .ui-showcase {
+      display: grid;
+      grid-template-columns: 1fr;
+      padding: 18px;
+      gap: 24px;
+    }
+    .code-app {
+      display: block;
+    }
+    .app-layout {
+      gap: 20px;
+    }
+    .thumb-col {
+      grid-template-columns: repeat(2, 84px);
+      order: 2;
+    }
+    .phone-stage {
+      order: 1;
+      width: 100%;
+    }
+    .module-assets {
+      grid-template-columns: 1fr;
+    }
+
+  }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <a id="back-link" href="../">Back to pond</a>
+  <div class="proj-id">Puri!</div>
+</div>
+
+<div class="rail" id="rail" aria-hidden="true"></div>
+
+<main>
+  <section class="stop" data-stop="0">
+    <figure class="page-frame cover"><img src="assets/pages/page_1.webp" alt="Puri portfolio page 1"></figure>
+    <div class="anchor-side">
+      <p class="stop-num">Case Study</p>
+      <h2>Turning night-market grease into a <span class="accent">shared resource</span>.</h2>
+      <p class="lead">Puri! combines service design, product design, and a WeChat Mini Program for street-scale pollution treatment.</p>
+      <div class="meta-row"><span>Individual Project</span><span>2023/7-2024/1</span><span>Service · Product · Interaction</span></div>
+    </div>
+  </section>
+
+  <section class="stop right" data-stop="1">
+    <figure class="page-frame"><img src="assets/pages/page_2.webp" alt="Puri portfolio page 2"></figure>
+    <div class="anchor-side">
+      <p class="stop-num">Research Context</p>
+      <h2>The street economy has a <span class="accent">hidden residue</span>.</h2>
+      <p class="lead">Urban night markets generate cooking fumes, oily wastewater, and grease runoff with little infrastructure for shared treatment.</p>
+      <p class="body">The research reframes pollution as a local material stream instead of an invisible disposal problem.</p>
+    </div>
+  </section>
+
+  <section class="stop" data-stop="2">
+    <figure class="page-frame"><img src="assets/pages/page_3.webp" alt="Puri portfolio page 3"></figure>
+    <div class="anchor-side">
+      <p class="stop-num">User Journey</p>
+      <h2>A service loop across <span class="accent">vendors, residents, and devices</span>.</h2>
+      <p class="lead">The system maps how pollution is generated, collected, treated, borrowed from, and returned to the community.</p>
+      <p class="body">This step turns scattered actors into a coordinated circular flow.</p>
+    </div>
+  </section>
+
+  <section class="stop right" data-stop="3">
+    <figure class="page-frame"><img src="assets/pages/page_4.webp" alt="Puri portfolio page 4"></figure>
+    <div class="anchor-side">
+      <p class="stop-num">Service Mechanism</p>
+      <h2>Making chemical treatment <span class="accent">legible</span>.</h2>
+      <p class="lead">Saponification becomes a public-facing interaction: users can understand what is happening, not only see a machine.</p>
+      <p class="body">The product language balances street infrastructure with a softer domestic cleaning ritual.</p>
+    </div>
+  </section>
+
+  <section class="stop" data-stop="4">
+    <figure class="page-frame"><img src="assets/pages/page_5.webp" alt="Puri portfolio page 5"></figure>
+    <div class="anchor-side">
+      <p class="stop-num">Product System</p>
+      <h2>Pollutant in, <span class="accent">clean outputs</span> out.</h2>
+      <p class="lead">Experiments, material tests, and product flows define how grease waste becomes soap and other usable by-products.</p>
+      <p class="body">The device is not a black box; it is a visible node in a neighborhood service.</p>
+    </div>
+  </section>
+
+  <section class="stop right" data-stop="5">
+    <figure class="page-frame"><img src="assets/pages/page_6.webp" alt="Puri portfolio page 6"></figure>
+    <div class="anchor-side">
+      <p class="stop-num">Design Demonstration</p>
+      <h2>A modular device for <span class="accent">street-side circularity</span>.</h2>
+      <p class="lead">The final product demonstration shows the shared station, resource modules, and service evidence before the Mini Program takes over.</p>
+      <p class="body">The next section extracts that service logic into the UI design presentation.</p>
+    </div>
+  </section>
+
+  <section class="ui-design" data-stop="6">
+    <div class="ui-head">
+      <div>
+        <p class="stop-num">UI Demo</p>
+        <h1>UI Demo.</h1>
+      </div>
+      <p>The Mini Program connects the street-side purifier to everyday action: users choose an eco-resource, open the matching station module, and leave a return record for the community loop.</p>
+    </div>
+    <div class="ui-showcase code-app">
+      <div class="app-head">
+        <div class="app-title-badge">Mini-Program UI Design</div>
+        <p class="app-subtitle">Resource inventory · Locker pickup · Return records</p>
+      </div>
+      <div class="module-assets" aria-label="Original UI module assets">
+        <div class="module-card"><img src="assets/ui-modules/module-oil.webp" alt="Original oil fume purifier locker asset"><span>Oil fume module asset</span></div>
+        <div class="module-card"><img src="assets/ui-modules/module-water.webp" alt="Original greywater filter locker asset"><span>Greywater module asset</span></div>
+        <div class="module-card"><img src="assets/ui-modules/module-soap.webp" alt="Original hand soap station locker asset"><span>Hand soap module asset</span></div>
+      </div>
+      <div class="app-layout">
+        <div class="thumb-col" aria-label="Primary screens">
+          <button class="screen-thumb active" type="button" data-ui-screen="home"><span class="thumb-phone"><b class="thumb-title">Puri!</b><i class="thumb-chip" style="--thumb-color:#3d5a45">Oil</i><i class="thumb-chip" style="--thumb-color:#5a8a6a">Water</i><i class="thumb-chip" style="--thumb-color:#d4a017;color:#1a1a1a">Soap</i><i class="thumb-chip" style="--thumb-color:#c45050">Soil</i><i class="thumb-terrain"></i></span><span>Home</span></button>
+          <button class="screen-thumb" type="button" data-ui-screen="detail-green" style="--thumb-color:#3d5a45"><span class="thumb-phone"><b class="thumb-title">Oil Fume</b><i class="thumb-locker"></i><i class="thumb-line"></i><i class="thumb-button">Borrow</i></span><span>Oil Fume<br>Purifier</span></button>
+          <button class="screen-thumb" type="button" data-ui-screen="detail-water" style="--thumb-color:#5a8a6a"><span class="thumb-phone"><b class="thumb-title">Greywater</b><i class="thumb-locker"></i><i class="thumb-line"></i><i class="thumb-button" style="--thumb-color:#e87a30">Stock</i></span><span>Greywater<br>Filter</span></button>
+        </div>
+        <div class="phone-stage">
+          <div class="ui-annotation"><span id="ui-annotation">Mini-Program Home</span><i aria-hidden="true"></i></div>
+          <div class="phone-frame">
+            <div id="ui-phone-screen" class="phone-screen"></div>
+          </div>
+          <div class="ui-dots" aria-label="Switch UI screen">
+            <button class="ui-dot active" type="button" data-ui-screen="home" aria-label="Show Home screen"></button>
+            <button class="ui-dot" type="button" data-ui-screen="detail-green" aria-label="Show Oil Fume Purifier screen"></button>
+            <button class="ui-dot" type="button" data-ui-screen="detail-water" aria-label="Show Greywater Filter screen"></button>
+            <button class="ui-dot" type="button" data-ui-screen="detail-yellow" aria-label="Show Hand Soap Station screen"></button>
+            <button class="ui-dot" type="button" data-ui-screen="detail-red" aria-label="Show Compost Soil screen"></button>
+            <button class="ui-dot" type="button" data-ui-screen="records" aria-label="Show My Records screen"></button>
+            <button class="ui-dot" type="button" data-ui-screen="success" aria-label="Show Item Returned screen"></button>
+          </div>
+        </div>
+        <div class="thumb-col" aria-label="Secondary screens">
+          <button class="screen-thumb" type="button" data-ui-screen="detail-yellow" style="--thumb-color:#d4a017"><span class="thumb-phone"><b class="thumb-title">Hand Soap</b><i class="thumb-locker"></i><i class="thumb-line"></i><i class="thumb-button" style="color:#1a1a1a">Open</i></span><span>Hand Soap<br>Station</span></button>
+          <button class="screen-thumb" type="button" data-ui-screen="detail-red" style="--thumb-color:#c45050"><span class="thumb-phone"><b class="thumb-title">Compost</b><i class="thumb-locker"></i><i class="thumb-line"></i><i class="thumb-button">Open</i></span><span>Compost<br>Soil</span></button>
+          <button class="screen-thumb" type="button" data-ui-screen="records"><span class="thumb-phone"><b class="thumb-title">Records</b><i class="thumb-record" style="--thumb-color:#3d5a45"></i><i class="thumb-record" style="--thumb-color:#5a8a6a"></i><i class="thumb-record" style="--thumb-color:#d4a017"></i><i class="thumb-record" style="--thumb-color:#c45050"></i><i class="thumb-terrain"></i></span><span>My Records</span></button>
+          <button class="screen-thumb" type="button" data-ui-screen="success"><span class="thumb-phone"><b class="thumb-title">Returned</b><i class="thumb-check" style="--thumb-color:#7ac898">✓</i><i class="thumb-button" style="--thumb-color:#e8f5ee;color:#1a1a1a">Continue</i><i class="thumb-terrain"></i></span><span>Item<br>Returned</span></button>
+        </div>
+      </div>
+      <p class="app-subtitle">A compact flow from borrowing to accountability</p>
+    </div>
+    <div class="actions">
+      <a class="btn" href="assets/Puri.pdf" target="_blank" rel="noopener">Open Original PDF</a>
+    </div>
+  </section>
+
+  <div class="close-row">
+    <a id="bottom-back" class="btn" href="../">Back to pond</a>
+  </div>
+</main>
+
+<script>
+const inIframe = window.top !== window.self;
+function goBack(event) {
+  if (!inIframe) return;
+  event.preventDefault();
+  window.parent.postMessage({ type: "kelcy-project-close" }, "*");
+}
+document.getElementById("back-link").addEventListener("click", goBack);
+document.getElementById("bottom-back").addEventListener("click", goBack);
+
+const revealTargets = [...document.querySelectorAll(".page-frame, .anchor-side")];
+const reveal = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (entry.isIntersecting) entry.target.classList.add("in");
+  }
+}, { threshold: 0.22 });
+revealTargets.forEach((target) => reveal.observe(target));
+
+const dragFrames = [...document.querySelectorAll(".page-frame")];
+function clampDrag(frame, value) {
+  const img = frame.querySelector("img");
+  if (!img) return 0;
+  const overflow = Math.max(0, img.getBoundingClientRect().width - frame.clientWidth);
+  return Math.max(-overflow, Math.min(0, value));
+}
+function centerDrag(frame) {
+  const img = frame.querySelector("img");
+  if (!img) return;
+  const overflow = Math.max(0, img.getBoundingClientRect().width - frame.clientWidth);
+  const centered = -overflow / 2;
+  frame.dataset.dragX = String(centered);
+  frame.style.setProperty("--drag-x", `${centered}px`);
+}
+dragFrames.forEach((frame) => {
+  let startX = 0;
+  let startDrag = 0;
+  let currentDrag = 0;
+  let activePointer = null;
+
+  const img = frame.querySelector("img");
+  if (img?.complete) {
+    centerDrag(frame);
+  } else {
+    img?.addEventListener("load", () => centerDrag(frame), { once: true });
+  }
+
+  frame.addEventListener("pointerdown", (event) => {
+    activePointer = event.pointerId;
+    startX = event.clientX;
+    currentDrag = parseFloat(frame.dataset.dragX || "0") || 0;
+    startDrag = currentDrag;
+    frame.classList.add("dragging");
+    frame.setPointerCapture(event.pointerId);
+  });
+
+  frame.addEventListener("pointermove", (event) => {
+    if (activePointer !== event.pointerId) return;
+    currentDrag = clampDrag(frame, startDrag + event.clientX - startX);
+    frame.dataset.dragX = String(currentDrag);
+    frame.style.setProperty("--drag-x", `${currentDrag}px`);
+  });
+
+  function endDrag(event) {
+    if (activePointer !== event.pointerId) return;
+    activePointer = null;
+    currentDrag = clampDrag(frame, currentDrag);
+    frame.dataset.dragX = String(currentDrag);
+    frame.style.setProperty("--drag-x", `${currentDrag}px`);
+    frame.classList.remove("dragging");
+  }
+
+  frame.addEventListener("pointerup", endDrag);
+  frame.addEventListener("pointercancel", endDrag);
+});
+
+window.addEventListener("resize", () => {
+  dragFrames.forEach((frame) => {
+    const current = parseFloat(frame.dataset.dragX || "0") || 0;
+    const clamped = clampDrag(frame, current);
+    frame.dataset.dragX = String(clamped);
+    frame.style.setProperty("--drag-x", `${clamped}px`);
+  });
+});
+
+const resources = {
+  "detail-green": {
+    label: "Oil Fume Purifier",
+    color: "#3d5a45",
+    shadow: "#2a3d30",
+    button: "#7ac898",
+    buttonText: "#fff",
+    asset: "assets/ui-modules/module-oil.webp",
+    status: "available",
+    action: "Borrow Now",
+    intro: "Microbial cultures break down cooking fumes, reducing kitchen pollution while generating nutrient-rich organic compost as a by-product."
+  },
+  "detail-water": {
+    label: "Greywater Filter",
+    color: "#5a8a6a",
+    shadow: "#3a5a48",
+    button: "#e87a30",
+    buttonText: "#fff",
+    asset: "assets/ui-modules/module-water.webp",
+    status: "unavailable",
+    action: "Stock Depleted",
+    intro: "Plant root systems and microbes work together to naturally purify household wastewater. Filtered water is recycled for landscape irrigation."
+  },
+  "detail-yellow": {
+    label: "Hand Soap Station",
+    color: "#d4a017",
+    shadow: "#a07010",
+    button: "#f5c51a",
+    buttonText: "#1a1a1a",
+    asset: "assets/ui-modules/module-soap.webp",
+    status: "available",
+    action: "Open & Take",
+    intro: "Plant-based, biodegradable hand soap formula. Low irritation, suitable for daily use. Each borrowing is limited to 50 ml per session."
+  },
+  "detail-red": {
+    label: "Compost Soil",
+    color: "#c45050",
+    shadow: "#8a2020",
+    button: "#e87070",
+    buttonText: "#fff",
+    asset: "assets/ui-modules/module-soap.webp",
+    status: "available",
+    action: "Open & Take",
+    intro: "Organic-rich compost soil fermented from community kitchen waste. Ideal for home potted plants and small kitchen garden beds."
+  }
+};
+const screenOrder = ["home", "detail-green", "detail-water", "detail-yellow", "detail-red", "records", "success"];
+const annotationLabels = {
+  home: "Mini-Program Home",
+  "detail-green": "Oil Fume Purifier",
+  "detail-water": "Greywater Filter",
+  "detail-yellow": "Hand Soap Station",
+  "detail-red": "Compost Soil",
+  records: "Borrowing Records",
+  success: "Return Confirmed"
+};
+const uiPhone = document.getElementById("ui-phone-screen");
+const uiAnnotation = document.getElementById("ui-annotation");
+const uiThumbs = [...document.querySelectorAll(".screen-thumb")];
+const uiDots = [...document.querySelectorAll(".ui-dot")];
+
+function statusBar() {
+  return `<div class="statusbar"><span>9:41</span><div class="status-icons"><i></i><i></i><i></i></div></div>`;
+}
+function avatarBlock() {
+  return `<div style="display:flex;align-items:center;gap:10px"><span class="avatar-mini"></span><span class="user-meta"><b>Yan Zhang</b><small>verified member</small></span></div>`;
+}
+function terrain() {
+  return `<div class="terrain-art"></div>`;
+}
+function renderHome() {
+  const buttons = Object.entries(resources).map(([id, r]) => `
+    <button class="resource-btn" data-goto="${id}" style="--resource-color:${r.color};--resource-shadow:${r.shadow}">${r.label}</button>
+  `).join("");
+  return `
+    ${statusBar()}
+    <div class="app-top">${avatarBlock()}<div class="wechat-more"><span class="phone-brand">Puri!</span><span>···</span><span class="circle-icon"></span></div></div>
+    <div class="welcome"><b>Welcome to Puri!</b><small>Here you can borrow eco-resources.</small></div>
+    <div class="resource-list">${buttons}</div>
+    ${terrain()}
+  `;
+}
+function renderDetail(id) {
+  const r = resources[id];
+  return `
+    ${statusBar()}
+    <div class="detail-bar">
+      <button class="back-square" data-goto="home" style="--resource-color:${r.color}">‹</button>
+      <div class="detail-title" style="--resource-color:${r.color}">${r.label}</div>
+      <div class="wechat-more"><span>···</span><span class="circle-icon"></span></div>
+    </div>
+    <div class="locker"><img src="${r.asset}" alt="${r.label} locker module"></div>
+    <div class="info-panel"><b>Species Info</b><p>${r.intro}</p></div>
+    <button class="video-btn" type="button"><span>Watch Breakdown Video</span><span>→</span></button>
+    <div class="take-wrap"><button class="take-btn" type="button" data-goto="${r.status === "available" ? "success" : id}" style="--button-color:${r.button};--button-text:${r.buttonText};--button-shadow:${r.shadow}">${r.action}</button></div>
+  `;
+}
+function renderRecords() {
+  const items = [
+    ["Oil Fume Purifier", "#3d5a45", "2023-09-13"],
+    ["Greywater Filter", "#3d5a45", "2023-09-20"],
+    ["Hand Soap Station", "#d4a017", "2023-10-04"],
+    ["Compost Soil", "#c45050", "2023-10-04"]
+  ].map(([label, color, date]) => `<div class="record-card" style="--record-color:${color}"><b>${label}</b><small>${date}</small></div>`).join("");
+  return `
+    ${statusBar()}
+    <div class="records-head"><button data-goto="home">‹</button><b>My Records</b><div class="wechat-more"><span>···</span><span class="circle-icon"></span></div></div>
+    <div class="profile"><span class="avatar-mini" style="width:64px;height:64px"></span><span class="profile-name">Yan Zhang</span><span class="user-meta"><small>verified member</small></span></div>
+    <div class="record-list">${items}</div>
+    ${terrain()}
+  `;
+}
+function renderSuccess() {
+  return `
+    ${statusBar()}
+    <div class="success-screen"><div><div class="success-check">✓</div><h4>Item Returned!</h4><button class="continue-btn" type="button" data-goto="home">Continue Borrowing ▦</button></div></div>
+    ${terrain()}
+  `;
+}
+function setUiScreen(id) {
+  if (!uiPhone) return;
+  const screenId = screenOrder.includes(id) ? id : "home";
+  if (screenId === "home") uiPhone.innerHTML = renderHome();
+  else if (screenId === "records") uiPhone.innerHTML = renderRecords();
+  else if (screenId === "success") uiPhone.innerHTML = renderSuccess();
+  else uiPhone.innerHTML = renderDetail(screenId);
+  if (uiAnnotation) uiAnnotation.textContent = annotationLabels[screenId];
+  [...uiThumbs, ...uiDots].forEach((el) => {
+    el.classList.toggle("active", el.dataset.uiScreen === screenId);
+  });
+}
+uiThumbs.forEach((button) => button.addEventListener("click", () => setUiScreen(button.dataset.uiScreen)));
+uiDots.forEach((button) => button.addEventListener("click", () => setUiScreen(button.dataset.uiScreen)));
+uiPhone?.addEventListener("click", (event) => {
+  const target = event.target.closest("[data-goto]");
+  if (target) setUiScreen(target.dataset.goto);
+});
+setUiScreen("home");
+
+const stops = [...document.querySelectorAll("[data-stop]")];
+const rail = document.getElementById("rail");
+stops.forEach(() => rail.appendChild(document.createElement("span")));
+const dots = [...rail.children];
+
+function updateRail() {
+  const center = window.scrollY + window.innerHeight / 2;
+  let active = 0;
+  let best = Infinity;
+  stops.forEach((section, index) => {
+    const middle = section.offsetTop + section.offsetHeight / 2;
+    const distance = Math.abs(middle - center);
+    if (distance < best) {
+      best = distance;
+      active = index;
+    }
+  });
+  dots.forEach((dot, index) => dot.classList.toggle("active", index === active));
+}
+window.addEventListener("scroll", updateRail, { passive: true });
+window.addEventListener("resize", updateRail);
+updateRail();
+</script>
+</body>
+</html>

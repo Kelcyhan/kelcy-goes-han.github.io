@@ -1,0 +1,45 @@
+[
+  {
+    "id": "q_20260604_1731_a801",
+    "type": "confirm_plan",
+    "title": "Approve plan: extend semantic token palette",
+    "task_id": "AcmeWebApp/1.1.1",
+    "context": "Need to add success/warn/danger semantic tokens before FormField error state can be tokenized. 2h estimated.",
+    "urgency": "blocking",
+    "status": "pending",
+    "session_name": "task_8a21",
+    "files": [
+      "projects/AcmeWebApp/1_1/1_1_2/worklog.md",
+      "projects/AcmeWebApp/1_1/1_1_1/artifacts/design_tokens.json"
+    ],
+    "created": "2026-06-04T17:31:00"
+  },
+  {
+    "id": "q_20260603_1422_b912",
+    "type": "review_artifact",
+    "title": "Review: OpenAPI v2-alpha.7 spec",
+    "task_id": "AcmeWebApp/1.2.1",
+    "context": "Sign off before 7-day stability window starts.",
+    "urgency": "non-blocking",
+    "status": "pending",
+    "session_name": "task_4b09",
+    "files": [
+      "projects/AcmeWebApp/1_2/1_2_1/artifacts/openapi.json"
+    ],
+    "created": "2026-06-03T14:22:00"
+  },
+  {
+    "id": "q_20260601_0930_c123",
+    "type": "decision",
+    "title": "Routing library — TanStack Router vs React Router 7?",
+    "task_id": "AcmeWebApp/1.1.3",
+    "context": "Spike comparing both wrapped. Decision unblocks 1.1.3 (app shell).",
+    "urgency": "blocking",
+    "status": "resolved",
+    "session_name": "task_d445",
+    "files": [],
+    "created": "2026-06-01T09:30:00",
+    "resolved": "2026-06-02T11:08:00",
+    "resolution": "Chose TanStack Router — file-based + type-safe"
+  }
+]

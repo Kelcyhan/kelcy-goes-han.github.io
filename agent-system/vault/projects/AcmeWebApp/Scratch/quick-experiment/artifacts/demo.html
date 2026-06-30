@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>View Transitions Spike</title>
+<style>
+  html { view-transition-name: root; }
+  body { font-family: system-ui; margin: 0; }
+  nav { display: flex; gap: 12px; padding: 16px; background: #0f172a; color: white; }
+  nav a { color: #cbd5e1; text-decoration: none; padding: 6px 10px; border-radius: 6px; }
+  nav a.active { background: #1e293b; color: white; }
+  main { padding: 24px; min-height: 70vh; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 240ms; }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="#home" class="active">Home</a>
+    <a href="#projects">Projects</a>
+    <a href="#settings">Settings</a>
+  </nav>
+  <main id="view">
+    <h1>Home</h1>
+    <p>Click the nav above. With CSS view transitions, the page swaps with a crossfade.</p>
+  </main>
+  <script>
+    const screens = {
+      '#home':     { title: 'Home',     body: 'The default landing view.' },
+      '#projects': { title: 'Projects', body: 'A grid of project cards would go here.' },
+      '#settings': { title: 'Settings', body: 'Theme, notifications, integrations.' },
+    };
+    const view = document.getElementById('view');
+    function swap(hash) {
+      const s = screens[hash] || screens['#home'];
+      view.innerHTML = '<h1>' + s.title + '</h1><p>' + s.body + '</p>';
+      document.querySelectorAll('nav a').forEach(a => a.classList.toggle('active', a.hash === hash));
+    }
+    addEventListener('hashchange', () => {
+      if (!document.startViewTransition) return swap(location.hash);
+      document.startViewTransition(() => swap(location.hash));
+    });
+  </script>
+</body>
+</html>

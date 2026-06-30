@@ -1,0 +1,33 @@
+{
+  "generated": "2026-05-26T14:00:00Z",
+  "total": 13,
+  "papers": [
+    {
+      "id": "p001",
+      "title": "Engagement Patterns in Conversational AI: A Year-Long Field Study",
+      "authors": ["Doe, J.", "Smith, J."],
+      "venue": "CHI",
+      "year": 2024,
+      "doi": "10.1145/0000000.0000000",
+      "themes": ["engagement", "field study"]
+    },
+    {
+      "id": "p002",
+      "title": "Reflection in HCI: Twenty Years On",
+      "authors": ["Chen, A.", "Park, M.", "Liu, W."],
+      "venue": "TOCHI",
+      "year": 2023,
+      "doi": "10.1145/3580000.3580001",
+      "themes": ["reflection", "survey"]
+    },
+    {
+      "id": "p003",
+      "title": "Beyond Replika: A Critical Lens on Companion AI",
+      "authors": ["Patel, R.", "Garcia, M."],
+      "venue": "CSCW",
+      "year": 2025,
+      "doi": "10.1145/3678000.3678002",
+      "themes": ["companion ai", "ethics"]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+project_id: ResearchPaper
+title: "CHI 2027 Submission — Reflective AI Companions"
+status: active
+updated: 2026-06-04T18:00:00
+
+vision: "A CHI paper that establishes 'reflective companion' as a research direction with empirical validation."
+horizon: "Through 2026-09-15 submission"
+
+goals:
+  - id: chi-submission
+    title: "Submit CHI 2027 Papers track"
+    target: "2026-09-15T23:59"
+    status: in_progress
+    sub_goals:
+      - id: lit-review-done
+        title: "Literature review + framing solidified"
+        target: "2026-07-01"
+        progress: "1/2"
+      - id: study-data-collected
+        title: "Diary + interviews complete (N=24)"
+        target: "2026-08-15"
+        progress: "0/1"
+      - id: first-full-draft
+        title: "First full draft circulated"
+        target: "2026-09-01"
+        progress: "0/1"
+
+domains:
+  - id: "1.1"
+    title: "Literature Review"
+    status: active
+    progress: "1/2"
+    health: active
+
+backlog_count:
+  by_goal:
+    chi-submission: 2
+  total: 2
+
+alerts:
+  - severity: info
+    text: "lit-review-done milestone target 2026-07-01; coding progress 4/13"

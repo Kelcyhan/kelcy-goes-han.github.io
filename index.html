@@ -277,6 +277,14 @@
       radial-gradient(circle at 32% 28%, rgba(229,244,255,0.35) 0%, rgba(229,244,255,0.05) 28%, transparent 52%),
       radial-gradient(circle at 68% 74%, rgba(157,255,104,0.24) 0%, transparent 55%),
       radial-gradient(circle at 50% 50%, rgba(22,78,96,0.34) 0%, rgba(5,17,24,0.54) 100%); }
+  .card.tint-puri     { background:
+      radial-gradient(circle at 32% 28%, rgba(238,255,230,0.38) 0%, rgba(238,255,230,0.06) 30%, transparent 54%),
+      radial-gradient(circle at 68% 74%, rgba(174,213,99,0.28) 0%, transparent 56%),
+      radial-gradient(circle at 50% 50%, rgba(42,92,63,0.36) 0%, rgba(12,28,24,0.54) 100%); }
+  .card.tint-agent    { background:
+      radial-gradient(circle at 32% 28%, rgba(228,244,255,0.36) 0%, rgba(228,244,255,0.05) 28%, transparent 52%),
+      radial-gradient(circle at 68% 74%, rgba(255,214,120,0.24) 0%, transparent 55%),
+      radial-gradient(circle at 50% 50%, rgba(64,89,130,0.36) 0%, rgba(8,13,24,0.56) 100%); }
 
   .card-arrow {
     position: absolute;
@@ -501,6 +509,8 @@
     .card:nth-child(4) { left: 54% !important; top: 45% !important; }
     .card:nth-child(5) { left: 12% !important; top: 63% !important; }
     .card:nth-child(6) { left: 54% !important; top: 63% !important; }
+    .card:nth-child(7) { left: 12% !important; top: 81% !important; }
+    .card:nth-child(8) { left: 54% !important; top: 81% !important; }
     #bgm-player {
       bottom: 6px;
       left: 6px;
@@ -1509,6 +1519,8 @@ const PROJECTS = [
   { ttl: 'AI Speaking Lab', tag: 'AI Edu · 2026',   x: '34%', y: '37%', tint: 'voice', route: 'AISpeakingLab/' },
   { ttl: 'SupplyNet',    tag: 'Research · 2026',   x: '54%', y: '55%', tint: 'rust',  route: 'SupplyNet/' },
   { ttl: 'Swarm',        tag: 'Art Demo · 2025',   x: '78%', y: '35%', tint: 'swarm', route: 'Swarm/' },
+  { ttl: 'Puri!',        tag: 'Service · 2024',    x: '77%', y: '61%', tint: 'puri',  route: 'Puri/' },
+  { ttl: 'Agent System', tag: 'AI Ops · Live Demo', x: '34%', y: '73%', tint: 'agent', route: 'AgentSystem/' },
 ];
 const cards = document.getElementById('r2-cards');
 for (const p of PROJECTS) {
