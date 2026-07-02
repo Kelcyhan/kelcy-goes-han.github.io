@@ -150,10 +150,17 @@
     max-width: 780px;
   }
   .lede {
-    max-width: 680px;
+    max-width: 640px;
     margin-top: 28px;
-    font-size: clamp(18px, 1.75vw, 24px);
+    font-size: clamp(19px, 1.9vw, 26px);
     color: var(--ink-soft);
+    line-height: 1.38;
+  }
+  .sharp-line {
+    max-width: 560px;
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 15px;
   }
   .hero-actions {
     display: flex;
@@ -855,6 +862,68 @@
     border: 0;
     display: block;
     background: #0d1117;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+  .demo-shell.demo-loaded iframe {
+    opacity: 1;
+  }
+  .demo-launch {
+    position: absolute;
+    inset: 50px 0 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+      radial-gradient(ellipse 62% 46% at 50% 40%, rgba(110,149,246,0.22), transparent 64%),
+      linear-gradient(180deg, rgba(13,17,23,0.78), rgba(9,11,18,0.96));
+    text-align: center;
+  }
+  .demo-shell.demo-loading .demo-launch {
+    pointer-events: none;
+  }
+  .demo-shell.demo-loaded .demo-launch,
+  .demo-shell.demo-failed .demo-launch {
+    display: none;
+  }
+  .demo-launch-card {
+    width: min(600px, 92%);
+    border: 1px solid rgba(242,234,220,0.16);
+    border-radius: 12px;
+    background: rgba(9, 13, 22, 0.76);
+    padding: clamp(22px, 3vw, 34px);
+    box-shadow: 0 24px 90px rgba(0,0,0,0.46);
+  }
+  .demo-launch-card h3 {
+    font-family: var(--title-font);
+    font-style: italic;
+    font-size: clamp(28px, 3.8vw, 48px);
+    line-height: 0.98;
+    margin-bottom: 12px;
+  }
+  .demo-launch-card p {
+    color: rgba(242,234,220,0.72);
+    margin-bottom: 18px;
+  }
+  .demo-launch-card a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border: 0;
+    border-radius: 999px;
+    padding: 0 18px;
+    background: var(--gold);
+    color: var(--ink);
+    cursor: pointer;
+    font-family: var(--ui-font);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-decoration: none;
+    text-transform: uppercase;
   }
   .demo-fallback {
     display: none;
@@ -869,7 +938,8 @@
       rgba(9, 15, 28, 0.92);
     text-align: center;
   }
-  .demo-fallback.active { display: flex; }
+  .demo-fallback.active,
+  .demo-shell.demo-failed .demo-fallback { display: flex; }
   .demo-fallback-card {
     width: min(520px, 92%);
     border: 1px solid rgba(242,234,220,0.16);
@@ -1036,7 +1106,8 @@
       <div>
         <p class="eyebrow">Research prototype · agent workspace · UIST 2026 framing</p>
         <h1>Agent System</h1>
-        <p class="lede">A cockpit for reducing context transfer: project state, agent sessions, receipts, approvals, and working artifacts stay in one shared workspace instead of scattering across tools and chat histories.</p>
+        <p class="lede">One workspace where human intent, agent work, and project artifacts stay synchronized.</p>
+        <p class="sharp-line">Built from a real research workflow: agents can plan, execute, leave receipts, and resume from shared files instead of asking the researcher to rebuild context every time.</p>
         <div class="hero-actions">
           <a class="pill-link primary" href="#live-demo">Open live demo</a>
           <a class="pill-link" href="#rationale">Read design rationale</a>
@@ -1269,20 +1340,27 @@
 
   <section class="demo-section" id="live-demo">
     <div class="demo-intro">
-      <h2>Explore the live demo.</h2>
-      <p>The embedded build uses mock data so the project-management cockpit, sessions, artifacts, and settings can be explored without a private backend. Open this page over HTTP for the demo to run; file-mode shows a fallback because browsers block module builds from local files.</p>
+      <h2>Try the cockpit.</h2>
+      <p>The demo runs on mock data: open projects, inspect agent sessions, browse artifacts, and see how approvals turn scattered AI work into something steerable.</p>
     </div>
     <div class="demo-shell">
       <div class="demo-top">
         <span>Live demo</span>
         <span>Mock vault · offline safe</span>
       </div>
-      <iframe title="Agent System live demo" src="../agent-system/frontend/dist/index.html"></iframe>
+      <iframe title="Agent System live demo" data-src="../agent-system/frontend/dist/index.html" loading="lazy" allow="clipboard-read; clipboard-write"></iframe>
+      <div class="demo-launch" id="demo-launch">
+        <div class="demo-launch-card">
+          <h3>Launch the interactive demo.</h3>
+          <p>It opens the full React prototype with mock data in its own tab, avoiding the iframe rendering bug in local previews.</p>
+          <a id="demo-launch-link" href="../agent-system/frontend/dist/index.html" target="_blank" rel="noopener">Open demo</a>
+        </div>
+      </div>
       <div class="demo-fallback" id="demo-fallback" aria-live="polite">
         <div class="demo-fallback-card">
-          <h3>Open this demo over HTTP.</h3>
-          <p>The embedded React app is a module build, so most browsers block it when this page is opened as a local file. It works from the portfolio site or a local preview server.</p>
-          <a href="http://127.0.0.1:4173/AgentSystem/#live-demo">Open working preview</a>
+          <h3>The embedded demo did not start.</h3>
+          <p>If the frame is blocked by the current preview environment, open the prototype directly in a new tab.</p>
+          <a id="demo-direct-link" href="../agent-system/frontend/dist/index.html" target="_blank" rel="noopener">Open demo directly</a>
         </div>
       </div>
     </div>
@@ -1300,8 +1378,17 @@
   window.addEventListener('load', () => {
     try { window.parent.postMessage({ type: 'route-ready', path: 'AgentSystem/' }, '*'); } catch (e) {}
   });
+  const demoShell = document.querySelector('.demo-shell');
+  const demoFrame = demoShell?.querySelector('iframe');
+  const demoLaunchLink = document.getElementById('demo-launch-link');
+  const demoDirectLink = document.getElementById('demo-direct-link');
+  const demoUrl = demoFrame ? new URL(demoFrame.dataset.src || '', location.href).href : '';
+
+  if (demoLaunchLink && demoUrl) demoLaunchLink.href = demoUrl;
+  if (demoDirectLink && demoUrl) demoDirectLink.href = demoUrl;
+
   if (location.protocol === 'file:') {
-    document.getElementById('demo-fallback')?.classList.add('active');
+    demoShell?.classList.add('demo-failed');
   }
 </script>
 </body>

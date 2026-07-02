@@ -710,12 +710,18 @@ function preloadScene(name) {
   if (preloadStarted.has(name)) return;
   preloadStarted.add(name);
   const cfg = SCENES[name];
-  for (let i = 0; i < cfg.count; i++) {
-    preloadFrame(name, i);
-    // No promise tracking — drawFrame checks img.complete per-frame.
-    // This means navigation works mid-preload: any frame that's loaded draws,
-    // unloaded frames fall back to the prior frame (so canvas never resets to stub).
+  let i = 0;
+  const loadBatch = () => {
+    const end = Math.min(cfg.count, i + 8);
+    for (; i < end; i++) {
+      preloadFrame(name, i);
+      // No promise tracking — drawFrame checks img.complete per-frame.
+      // This means navigation works mid-preload: any frame that's loaded draws,
+      // unloaded frames fall back to the prior frame (so canvas never resets to stub).
+    }
+    if (i < cfg.count) window.setTimeout(loadBatch, 60);
   }
+  loadBatch();
 }
 
 function preloadTransitionEndpoints() {
@@ -1803,7 +1809,7 @@ function tick(now) {
   // Audio.play() may be blocked by browser → fall back to first-interaction.
   let playing = true;
   let audioStarted = false;
-  let renderRaf = 0;
+  let renderTimer = 0;
 
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const clamp01 = v => Math.max(0, Math.min(1, v));
@@ -1860,12 +1866,12 @@ function tick(now) {
   const renderLoop = () => {
     renderDropletFrame();
     if (!video.paused && !video.ended) {
-      renderRaf = requestAnimationFrame(renderLoop);
+      renderTimer = window.setTimeout(renderLoop, 1000 / 15);
     }
   };
 
   const startRenderLoop = () => {
-    cancelAnimationFrame(renderRaf);
+    window.clearTimeout(renderTimer);
     renderLoop();
   };
 
@@ -1907,18 +1913,26 @@ function tick(now) {
     });
   }, { once: true });
 
-  // Video autoplay (muted is always allowed)
-  video.play().catch(() => {});
+  const startVideo = () => video.play().catch(() => {});
+  const warmVideo = () => {
+    if (playing && video.paused) startVideo();
+  };
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(warmVideo, { timeout: 1800 });
+  } else {
+    window.setTimeout(warmVideo, 1400);
+  }
 
   const toggle = () => {
     playing = !playing;
     if (playing) {
       audio.play().then(() => { audioStarted = true; }).catch(() => {});
-      video.play().catch(() => {});
+      startVideo();
       player.classList.remove('paused');
     } else {
       audio.pause();
       video.pause();
+      window.clearTimeout(renderTimer);
       player.classList.add('paused');
     }
   };
