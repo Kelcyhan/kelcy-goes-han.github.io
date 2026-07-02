@@ -468,6 +468,38 @@
     transition: opacity 0.4s ease;
   }
   #route-shell.iframe-ready .route-loading { opacity: 0; }
+  #route-shell .route-back {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 4;
+    min-height: 42px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    padding: 0 16px;
+    background: rgba(10, 14, 18, 0.56);
+    color: #F1ECE3;
+    cursor: pointer;
+    font-family: 'Averia Sans Libre', cursive;
+    font-style: italic;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  #route-shell.active .route-back {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #route-shell .route-back:hover {
+    transform: translateX(-3px);
+  }
   /* When a route is open, hide stage interactions so they don't fight scroll */
   body.route-open #stage,
   body.route-open #main-nav,
@@ -562,6 +594,7 @@
 
   <!-- Route shell — holds the case-study iframe; sits above stage but below BGM player -->
   <div id="route-shell" aria-hidden="true">
+    <button class="route-back" id="route-back" type="button">Back</button>
     <div class="route-loading">Loading</div>
     <iframe id="route-iframe" title="Case study" allow="autoplay"></iframe>
   </div>
@@ -1593,6 +1626,8 @@ window.goRoom = function(roomNum) {
 // ============================================================
 const routeShell  = document.getElementById('route-shell');
 const routeIframe = document.getElementById('route-iframe');
+const routeBackButton = document.getElementById('route-back');
+let routeUnloadTimer = 0;
 
 // Resolve a route path against the SITE ROOT (the directory the parent page lives in)
 // — not against location.href, because openRoute calls pushState first, which would
@@ -1661,6 +1696,7 @@ function attachIframeReady(path) {
   } catch (err) {}
 }
 function openRouteInternal(path) {
+  window.clearTimeout(routeUnloadTimer);
   setRoomInstant(2);
   const absUrl = resolveRoute(path);
   if (routeIframe.dataset.path !== path) {
@@ -1689,7 +1725,16 @@ function closeRouteInternal() {
   routeShell.classList.remove('active');
   routeShell.setAttribute('aria-hidden', 'true');
   document.body.classList.remove('route-open');
-  // Keep iframe loaded so re-opening is instant — don't reset src
+  // Heavy case studies keep running inside hidden iframes. Unload after the
+  // fade so returning to the gallery is responsive again.
+  window.clearTimeout(routeUnloadTimer);
+  routeUnloadTimer = window.setTimeout(() => {
+    if (!routeShell.classList.contains('active')) {
+      routeShell.classList.remove('iframe-ready');
+      routeIframe.dataset.path = '__blank__';
+      routeIframe.removeAttribute('src');
+    }
+  }, 560);
 }
 
 // Preload the iframe with about:blank — warms the element without binding
@@ -1726,6 +1771,11 @@ function closeRoute({ replace = false } = {}) {
 }
 window.openRoute  = openRoute;
 window.closeRoute = closeRoute;
+routeBackButton?.addEventListener('click', (event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  closeRoute({ replace: true });
+});
 
 window.addEventListener('popstate', (e) => {
   if (e.state && e.state.route) openRouteInternal(e.state.route);
@@ -1776,9 +1826,11 @@ window.addEventListener('message', (e) => {
 // MAIN LOOP — eased state interpolation for smooth nav animations
 // ============================================================
 let lastT = performance.now();
+let routeWasOpen = false;
 function tick(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
+  const routeOpen = document.body.classList.contains('route-open');
 
   advanceTransition(now);
   if (state.transitionTo === null && navQueue.length) {
@@ -1786,10 +1838,16 @@ function tick(now) {
     if (next !== state.room && TRANSITIONS[state.room]?.[next]) startTransition(next);
   }
 
-  tickParallax();
-  renderStage();
-  tickFish(dt, now * 0.001);
-  updateOverlays();
+  if (routeOpen) {
+    if (!routeWasOpen) fishRenderer.clear();
+    routeWasOpen = true;
+  } else {
+    routeWasOpen = false;
+    tickParallax();
+    renderStage();
+    tickFish(dt, now * 0.001);
+    updateOverlays();
+  }
 
   requestAnimationFrame(tick);
 }

@@ -862,68 +862,30 @@
     border: 0;
     display: block;
     background: #0d1117;
-    opacity: 0;
-    transition: opacity 0.35s ease;
-  }
-  .demo-shell.demo-loaded iframe {
     opacity: 1;
   }
   .demo-launch {
     position: absolute;
-    inset: 50px 0 0;
+    right: 14px;
+    bottom: 14px;
     z-index: 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background:
-      radial-gradient(ellipse 62% 46% at 50% 40%, rgba(110,149,246,0.22), transparent 64%),
-      linear-gradient(180deg, rgba(13,17,23,0.78), rgba(9,11,18,0.96));
-    text-align: center;
-  }
-  .demo-shell.demo-loading .demo-launch {
-    pointer-events: none;
-  }
-  .demo-shell.demo-loaded .demo-launch,
-  .demo-shell.demo-failed .demo-launch {
-    display: none;
-  }
-  .demo-launch-card {
-    width: min(600px, 92%);
-    border: 1px solid rgba(242,234,220,0.16);
-    border-radius: 12px;
-    background: rgba(9, 13, 22, 0.76);
-    padding: clamp(22px, 3vw, 34px);
-    box-shadow: 0 24px 90px rgba(0,0,0,0.46);
-  }
-  .demo-launch-card h3 {
-    font-family: var(--title-font);
-    font-style: italic;
-    font-size: clamp(28px, 3.8vw, 48px);
-    line-height: 0.98;
-    margin-bottom: 12px;
-  }
-  .demo-launch-card p {
-    color: rgba(242,234,220,0.72);
-    margin-bottom: 18px;
-  }
-  .demo-launch-card a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 44px;
-    border: 0;
+    min-height: 38px;
+    border: 1px solid rgba(242,234,220,0.2);
     border-radius: 999px;
-    padding: 0 18px;
-    background: var(--gold);
-    color: var(--ink);
-    cursor: pointer;
+    padding: 0 13px;
+    background: rgba(9, 13, 22, 0.78);
+    color: rgba(242,234,220,0.86);
     font-family: var(--ui-font);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.11em;
     text-decoration: none;
     text-transform: uppercase;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
   .demo-fallback {
     display: none;
@@ -938,8 +900,7 @@
       rgba(9, 15, 28, 0.92);
     text-align: center;
   }
-  .demo-fallback.active,
-  .demo-shell.demo-failed .demo-fallback { display: flex; }
+  .demo-fallback.active { display: flex; }
   .demo-fallback-card {
     width: min(520px, 92%);
     border: 1px solid rgba(242,234,220,0.16);
@@ -1348,19 +1309,13 @@
         <span>Live demo</span>
         <span>Mock vault · offline safe</span>
       </div>
-      <iframe title="Agent System live demo" data-src="../agent-system/frontend/dist/index.html" loading="lazy" allow="clipboard-read; clipboard-write"></iframe>
-      <div class="demo-launch" id="demo-launch">
-        <div class="demo-launch-card">
-          <h3>Launch the interactive demo.</h3>
-          <p>It opens the full React prototype with mock data in its own tab, avoiding the iframe rendering bug in local previews.</p>
-          <a id="demo-launch-link" href="../agent-system/frontend/dist/index.html" target="_blank" rel="noopener">Open demo</a>
-        </div>
-      </div>
+      <iframe title="Agent System live demo" src="../agent-system/frontend/dist/index.html" loading="lazy" allow="clipboard-read; clipboard-write"></iframe>
+      <a class="demo-launch" href="../agent-system/frontend/dist/index.html">Open full demo</a>
       <div class="demo-fallback" id="demo-fallback" aria-live="polite">
         <div class="demo-fallback-card">
           <h3>The embedded demo did not start.</h3>
           <p>If the frame is blocked by the current preview environment, open the prototype directly in a new tab.</p>
-          <a id="demo-direct-link" href="../agent-system/frontend/dist/index.html" target="_blank" rel="noopener">Open demo directly</a>
+          <a id="demo-direct-link" href="../agent-system/frontend/dist/index.html">Open demo directly</a>
         </div>
       </div>
     </div>
@@ -1378,17 +1333,8 @@
   window.addEventListener('load', () => {
     try { window.parent.postMessage({ type: 'route-ready', path: 'AgentSystem/' }, '*'); } catch (e) {}
   });
-  const demoShell = document.querySelector('.demo-shell');
-  const demoFrame = demoShell?.querySelector('iframe');
-  const demoLaunchLink = document.getElementById('demo-launch-link');
-  const demoDirectLink = document.getElementById('demo-direct-link');
-  const demoUrl = demoFrame ? new URL(demoFrame.dataset.src || '', location.href).href : '';
-
-  if (demoLaunchLink && demoUrl) demoLaunchLink.href = demoUrl;
-  if (demoDirectLink && demoUrl) demoDirectLink.href = demoUrl;
-
   if (location.protocol === 'file:') {
-    demoShell?.classList.add('demo-failed');
+    document.getElementById('demo-fallback')?.classList.add('active');
   }
 </script>
 </body>
