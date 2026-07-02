@@ -470,35 +470,21 @@
   #route-shell.iframe-ready .route-loading { opacity: 0; }
   #route-shell .route-back {
     position: absolute;
-    top: 16px;
-    left: 16px;
+    top: 0;
+    left: 0;
     z-index: 4;
-    min-height: 42px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 999px;
-    padding: 0 16px;
-    background: rgba(10, 14, 18, 0.56);
-    color: #F1ECE3;
+    width: min(230px, 34vw);
+    height: 86px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: transparent;
     cursor: pointer;
-    font-family: 'Averia Sans Libre', cursive;
-    font-style: italic;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.28);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
-    opacity: 0;
+    opacity: 1;
     pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s ease;
   }
   #route-shell.active .route-back {
-    opacity: 1;
     pointer-events: auto;
-  }
-  #route-shell .route-back:hover {
-    transform: translateX(-3px);
   }
   /* When a route is open, hide stage interactions so they don't fight scroll */
   body.route-open #stage,
@@ -694,6 +680,7 @@ const state = {
 };
 
 let lastTransitionEndMs = -Infinity;
+let pendingTransition = null;
 
 // from → to → { scene, reversed }
 const TRANSITIONS = {
@@ -762,6 +749,16 @@ function preloadTransitionEndpoints() {
     preloadFrame(name, 0);
     preloadFrame(name, SCENES[name].count - 1);
   }
+}
+
+function imageReady(img) {
+  return !!img && img.complete && img.naturalWidth > 0;
+}
+
+function transitionFramesReady(sceneName) {
+  const cfg = SCENES[sceneName];
+  const checkpoints = [0, 8, 18, 32, Math.floor(cfg.count * 0.5), cfg.count - 1];
+  return checkpoints.every(idx => imageReady(frames[sceneName][idx]));
 }
 
 // ============================================================
@@ -1507,16 +1504,40 @@ function resolveTarget(fromRoom, direction) {
   return FIXED[fromRoom]?.[direction] || null;
 }
 
-function startTransition(target) {
+function startTransition(target, opts = {}) {
   if (state.transitionTo !== null) return false;
   if (state.room === target)        return false;
   const tx = TRANSITIONS[state.room]?.[target];
   if (!tx) return false;
   preloadScene(tx.scene);
+  if (!opts.force && !transitionFramesReady(tx.scene)) {
+    pendingTransition = {
+      target,
+      requestedAt: performance.now(),
+      forceAfterMs: 1100,
+    };
+    return false;
+  }
+  pendingTransition = null;
   state.transitionTo = target;
   state.progress = 0;
   state.transitionStartMs = performance.now();
   return true;
+}
+
+function flushPendingTransition(now) {
+  if (!pendingTransition || state.transitionTo !== null) return;
+  const target = pendingTransition.target;
+  const tx = TRANSITIONS[state.room]?.[target];
+  if (!tx) {
+    pendingTransition = null;
+    return;
+  }
+  if (transitionFramesReady(tx.scene) || now - pendingTransition.requestedAt > pendingTransition.forceAfterMs) {
+    const pending = pendingTransition;
+    pendingTransition = null;
+    startTransition(pending.target, { force: true });
+  }
 }
 
 // Advance the timed transition. Called from main loop.
@@ -1833,6 +1854,7 @@ function tick(now) {
   const routeOpen = document.body.classList.contains('route-open');
 
   advanceTransition(now);
+  flushPendingTransition(now);
   if (state.transitionTo === null && navQueue.length) {
     const next = navQueue.shift();
     if (next !== state.room && TRANSITIONS[state.room]?.[next]) startTransition(next);
@@ -2012,10 +2034,13 @@ function tick(now) {
 preloadFrame('scene1', 0);
 preloadTransitionEndpoints();
 const warmScene1 = () => preloadScene('scene1');
+const warmGalleryTransition = () => preloadScene('scene2');
 if ('requestIdleCallback' in window) {
   window.requestIdleCallback(warmScene1, { timeout: 1200 });
+  window.requestIdleCallback(warmGalleryTransition, { timeout: 1800 });
 } else {
   window.setTimeout(warmScene1, 600);
+  window.setTimeout(warmGalleryTransition, 900);
 }
 resizeFish();
 requestAnimationFrame(tick);

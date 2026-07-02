@@ -1,0 +1,1 @@
+import{r as s,m as t,j as a}from"./index-1HQcghmU.js";import{J as o}from"./JsonTree-TQ4-4BwB.js";function p({content:r}){const e=s.useMemo(()=>{try{return t.load(r)}catch{return null}},[r]);return e===null||typeof e!="object"?a.jsx("pre",{className:"type-label whitespace-pre-wrap break-words m-0 font-mono p-4",children:r}):a.jsx(o,{data:e})}export{p as default};
