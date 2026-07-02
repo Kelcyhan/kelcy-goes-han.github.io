@@ -7,7 +7,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Averia+Sans+Libre:ital,wght@1,300;1,400;1,700&family=DM+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,500;1,6..72,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
   :root {
@@ -26,13 +26,18 @@
     --green: #2f9f7f;
     --coral: #db6d58;
     --violet: #9275e8;
-    --title-font: "Newsreader", serif;
+    --title-font: "DM Sans", system-ui, sans-serif;
     --ui-font: "DM Sans", system-ui, sans-serif;
-    --mono-font: "JetBrains Mono", monospace;
-    --hand-font: "Averia Sans Libre", cursive;
+    --mono-font: "DM Sans", system-ui, sans-serif;
+    --hand-font: "DM Sans", system-ui, sans-serif;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  *,
+  *::before,
+  *::after {
+    font-family: var(--ui-font) !important;
+  }
   html {
     background: var(--paper);
     scroll-behavior: smooth;
@@ -56,7 +61,7 @@
 
   .top-bar {
     position: fixed;
-    z-index: 80;
+    z-index: 200;
     top: 0;
     left: 0;
     right: 0;
@@ -89,9 +94,24 @@
     text-transform: none;
   }
   .back {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 76px;
+    min-height: 44px;
     font-family: var(--hand-font);
     font-style: italic;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     transition: transform 0.22s, background 0.22s;
+  }
+  .back::before {
+    content: "";
+    position: absolute;
+    inset: -18px -24px;
+    border-radius: 999px;
   }
   .back:hover { transform: translateX(-3px); background: rgba(255,255,255,0.86); }
   .proj-id {
@@ -557,7 +577,7 @@
   }
   .app-logo.zotero {
     background: #c43a35;
-    font-family: Georgia, serif;
+    font-family: var(--ui-font);
   }
   .app-logo.obsidian {
     background: linear-gradient(145deg, #8b5cf6, #3b2f8f);
@@ -1052,7 +1072,7 @@
   </symbol>
 </svg>
 <nav class="top-bar">
-  <a class="back" href="../?room=2" aria-label="Back to portfolio">Back</a>
+  <a class="back" id="back-link" href="../?room=2" aria-label="Back to portfolio">Back</a>
   <div class="proj-id">Agent System</div>
   <div class="top-links" aria-label="Page sections">
     <a href="#rationale">Why</a>
@@ -1325,11 +1345,16 @@
 <script>
   const inIframe = window.top !== window.self;
   if (inIframe) document.body.classList.add('in-iframe');
-  document.querySelector('.back')?.addEventListener('click', (event) => {
-    if (!inIframe) return;
+  document.getElementById('back-link')?.addEventListener('click', (event) => {
+    const href = event.currentTarget.href;
     event.preventDefault();
-    window.parent.postMessage({ type: 'close-route' }, '*');
-  });
+    event.stopPropagation();
+    if (inIframe) {
+      window.parent.postMessage({ type: 'close-route' }, '*');
+    } else {
+      window.location.assign(href);
+    }
+  }, { capture: true });
   window.addEventListener('load', () => {
     try { window.parent.postMessage({ type: 'route-ready', path: 'AgentSystem/' }, '*'); } catch (e) {}
   });
