@@ -509,8 +509,8 @@
     .card:nth-child(4) { left: 54% !important; top: 45% !important; }
     .card:nth-child(5) { left: 12% !important; top: 63% !important; }
     .card:nth-child(6) { left: 54% !important; top: 63% !important; }
-    .card:nth-child(7) { left: 12% !important; top: 81% !important; }
-    .card:nth-child(8) { left: 54% !important; top: 81% !important; }
+    .card:nth-child(7) { left: 12% !important; top: 78% !important; }
+    .card:nth-child(8) { left: 54% !important; top: 78% !important; }
     #bgm-player {
       bottom: 6px;
       left: 6px;
@@ -553,11 +553,11 @@
   <div id="r2-cards"></div>
 
   <div id="bgm-player" role="button" tabindex="0" aria-label="Toggle background music">
-    <video class="bgm-droplet-source" muted loop playsinline autoplay preload="auto" disablepictureinpicture>
+    <video class="bgm-droplet-source" muted loop playsinline autoplay preload="metadata" disablepictureinpicture>
       <source src="assets/video/water_drop.mp4" type="video/mp4">
     </video>
     <canvas class="bgm-droplet" width="160" height="160" aria-hidden="true"></canvas>
-    <audio id="bgm-audio" loop preload="auto" src="assets/audio/bgm.mp3"></audio>
+    <audio id="bgm-audio" loop preload="none" src="assets/audio/bgm.mp3"></audio>
   </div>
 
   <!-- Route shell — holds the case-study iframe; sits above stage but below BGM player -->
@@ -576,6 +576,48 @@
     </div>
   </div>
 </div>
+
+<script>
+// Project bubbles are built outside the 3D module so they appear even if
+// remote Three.js assets are still loading.
+const PROJECTS = [
+  { ttl: 'MetacogReef',  tag: 'Service · 2024',    x: '8%',  y: '20%', tint: 'reef',  route: 'MetacogReef/' },
+  { ttl: 'DiscussAgain', tag: 'UIST · 2026',       x: '63%', y: '14%', tint: 'amber', route: 'DiscussAgain/' },
+  { ttl: 'PointFit',     tag: 'Health · 2024',     x: '12%', y: '58%', tint: 'mint',  route: 'PointFit/' },
+  { ttl: 'AI Speaking Lab', tag: 'AI Edu · 2026',   x: '34%', y: '37%', tint: 'voice', route: 'AISpeakingLab/' },
+  { ttl: 'SupplyNet',    tag: 'Research · 2026',   x: '54%', y: '55%', tint: 'rust',  route: 'SupplyNet/' },
+  { ttl: 'Swarm',        tag: 'Art Demo · 2025',   x: '78%', y: '35%', tint: 'swarm', route: 'Swarm/' },
+  { ttl: 'Puri!',        tag: 'Service · 2024',    x: '77%', y: '61%', tint: 'puri',  route: 'Puri/' },
+  { ttl: 'Agent System', tag: 'AI Ops · Live Demo', x: '34%', y: '73%', tint: 'agent', route: 'AgentSystem/' },
+];
+const cards = document.getElementById('r2-cards');
+for (const p of PROJECTS) {
+  const c = document.createElement('div');
+  c.className = 'card has-route tint-' + (p.tint || 'reef');
+  c.setAttribute('role', 'button');
+  c.setAttribute('tabindex', '0');
+  c.setAttribute('aria-label', 'Open ' + p.ttl + ' project');
+  c.dataset.route = p.route;
+  c.style.left = p.x; c.style.top = p.y;
+  c.innerHTML = '<p class="ttl">' + p.ttl + '</p><p class="tag">' + p.tag + '</p>'
+    + '<span class="card-arrow" aria-hidden="true"></span>';
+  let lastCardActivation = 0;
+  const activate = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const now = performance.now();
+    if (now - lastCardActivation < 320) return;
+    lastCardActivation = now;
+    if (typeof window.openRoute === 'function') window.openRoute(c.dataset.route);
+  };
+  c.addEventListener('click', activate);
+  c.addEventListener('pointerup', activate);
+  c.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') activate(e);
+  });
+  cards.appendChild(c);
+}
+</script>
 
 <script type="module">
 import * as THREE from 'three';
@@ -650,16 +692,36 @@ function easeTrapezoidal(t) {
 // ============================================================
 // Per-scene cache-bust version — bump when frames change to force browser reload
 const ASSET_VERSIONS = { scene1: '1', scene2: 'v11', scene3: '1', scene4: '1' };
+const preloadStarted = new Set();
+function frameSrc(name, idx) {
+  const cfg = SCENES[name];
+  const ver = ASSET_VERSIONS[name] || '1';
+  return cfg.dir + 'frame_' + String(idx + 1).padStart(3, '0') + '.' + cfg.ext + '?v=' + ver;
+}
+function preloadFrame(name, idx) {
+  if (frames[name][idx]) return frames[name][idx];
+  const img = new Image();
+  img.decoding = 'async';
+  img.src = frameSrc(name, idx);
+  frames[name][idx] = img;
+  return img;
+}
 function preloadScene(name) {
+  if (preloadStarted.has(name)) return;
+  preloadStarted.add(name);
   const cfg = SCENES[name];
   for (let i = 0; i < cfg.count; i++) {
-    const img = new Image();
-    const ver = ASSET_VERSIONS[name] || '1';
-    img.src = cfg.dir + 'frame_' + String(i + 1).padStart(3, '0') + '.' + cfg.ext + '?v=' + ver;
-    frames[name][i] = img;
+    preloadFrame(name, i);
     // No promise tracking — drawFrame checks img.complete per-frame.
     // This means navigation works mid-preload: any frame that's loaded draws,
     // unloaded frames fall back to the prior frame (so canvas never resets to stub).
+  }
+}
+
+function preloadTransitionEndpoints() {
+  for (const name of ['scene2', 'scene3', 'scene4']) {
+    preloadFrame(name, 0);
+    preloadFrame(name, SCENES[name].count - 1);
   }
 }
 
@@ -1071,10 +1133,14 @@ function spawnFish(pos, opts = {}) {
   return f;
 }
 
-// Load GLB once; compute alignment quat + centering offset, then spawn fleet.
+// Load GLB only when the gallery is reached; the hero should not wait on a 3D model.
 // We do NOT mutate the geometry — morph-target animation needs original vertex data.
 const gltfLoader = new GLTFLoader();
-gltfLoader.loadAsync('assets/fish/koi.glb').then(gltf => {
+let fishAssetsRequested = false;
+function ensureFishAssetsLoaded() {
+  if (fishAssetsRequested) return;
+  fishAssetsRequested = true;
+  gltfLoader.loadAsync('assets/fish/koi.glb').then(gltf => {
   template = gltf.scene;
   swimClip = gltf.animations[0];
   if (!swimClip) console.warn('[koi GLB] no animation clip — fish will be static');
@@ -1153,9 +1219,10 @@ gltfLoader.loadAsync('assets/fish/koi.glb').then(gltf => {
       }, idx * 160);
     }
   }
-}).catch(err => {
-  console.error('[koi GLB] load failed:', err);
-});
+  }).catch(err => {
+    console.error('[koi GLB] load failed:', err);
+  });
+}
 
 // Click → spawn cluster of small fish at click position, STAGGERED over ~2s with fade-in
 window.addEventListener('click', e => {
@@ -1404,7 +1471,9 @@ function resolveTarget(fromRoom, direction) {
 function startTransition(target) {
   if (state.transitionTo !== null) return false;
   if (state.room === target)        return false;
-  if (!TRANSITIONS[state.room]?.[target]) return false;
+  const tx = TRANSITIONS[state.room]?.[target];
+  if (!tx) return false;
+  preloadScene(tx.scene);
   state.transitionTo = target;
   state.progress = 0;
   state.transitionStartMs = performance.now();
@@ -1432,7 +1501,10 @@ function advanceTransition(now) {
     state.transitionTo = null;
     state.progress = 0;
     lastTransitionEndMs = now;
-    if (state.room === 2) r2IdleStartMs = now;   // begin 3D koi fade-in
+    if (state.room === 2) {
+      r2IdleStartMs = now;   // begin 3D koi fade-in
+      ensureFishAssetsLoaded();
+    }
     else r2IdleStartMs = -Infinity;
   }
 }
@@ -1510,47 +1582,6 @@ window.goRoom = function(roomNum) {
 };
 
 // ============================================================
-// PROJECT CARDS
-// ============================================================
-const PROJECTS = [
-  { ttl: 'MetacogReef',  tag: 'Service · 2024',    x: '8%',  y: '20%', tint: 'reef',  route: 'MetacogReef/' },
-  { ttl: 'DiscussAgain', tag: 'UIST · 2026',       x: '63%', y: '14%', tint: 'amber', route: 'DiscussAgain/' },
-  { ttl: 'PointFit',     tag: 'Health · 2024',     x: '12%', y: '58%', tint: 'mint',  route: 'PointFit/' },
-  { ttl: 'AI Speaking Lab', tag: 'AI Edu · 2026',   x: '34%', y: '37%', tint: 'voice', route: 'AISpeakingLab/' },
-  { ttl: 'SupplyNet',    tag: 'Research · 2026',   x: '54%', y: '55%', tint: 'rust',  route: 'SupplyNet/' },
-  { ttl: 'Swarm',        tag: 'Art Demo · 2025',   x: '78%', y: '35%', tint: 'swarm', route: 'Swarm/' },
-  { ttl: 'Puri!',        tag: 'Service · 2024',    x: '77%', y: '61%', tint: 'puri',  route: 'Puri/' },
-  { ttl: 'Agent System', tag: 'AI Ops · Live Demo', x: '34%', y: '73%', tint: 'agent', route: 'AgentSystem/' },
-];
-const cards = document.getElementById('r2-cards');
-for (const p of PROJECTS) {
-  const c = document.createElement('div');
-  c.className = 'card has-route tint-' + (p.tint || 'reef');
-  c.setAttribute('role', 'button');
-  c.setAttribute('tabindex', '0');
-  c.setAttribute('aria-label', 'Open ' + p.ttl + ' project');
-  c.dataset.route = p.route;
-  c.style.left = p.x; c.style.top = p.y;
-  c.innerHTML = '<p class="ttl">' + p.ttl + '</p><p class="tag">' + p.tag + '</p>'
-    + '<span class="card-arrow" aria-hidden="true"></span>';
-  let lastCardActivation = 0;
-  const activate = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const now = performance.now();
-    if (now - lastCardActivation < 320) return;
-    lastCardActivation = now;
-    openRoute(c.dataset.route);
-  };
-  c.addEventListener('click', activate);
-  c.addEventListener('pointerup', activate);
-  c.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') activate(e);
-  });
-  cards.appendChild(c);
-}
-
-// ============================================================
 // SPA ROUTE SHELL — iframe covers stage while case study is open.
 // BGM <audio> never reloads → music truly continuous.
 // ============================================================
@@ -1583,11 +1614,14 @@ function setRoomInstant(roomNum) {
     state.lastTransitionScene = 'scene2';
     state.lastTransitionFrame = SCENES.scene2.count - 1;
     r2IdleStartMs = performance.now();
+    preloadScene('scene2');
+    ensureFishAssetsLoaded();
   } else if (roomNum === 3) {
     state.previousRoom = 1;
     state.lastTransitionScene = 'scene3';
     state.lastTransitionFrame = SCENES.scene3.count - 1;
     r2IdleStartMs = -Infinity;
+    preloadScene('scene3');
   } else {
     state.previousRoom = null;
     state.lastTransitionScene = null;
@@ -1903,10 +1937,14 @@ function tick(now) {
 // ============================================================
 // BOOT
 // ============================================================
-preloadScene('scene1');
-preloadScene('scene2');
-preloadScene('scene3');
-preloadScene('scene4');
+preloadFrame('scene1', 0);
+preloadTransitionEndpoints();
+const warmScene1 = () => preloadScene('scene1');
+if ('requestIdleCallback' in window) {
+  window.requestIdleCallback(warmScene1, { timeout: 1200 });
+} else {
+  window.setTimeout(warmScene1, 600);
+}
 resizeFish();
 requestAnimationFrame(tick);
 </script>
