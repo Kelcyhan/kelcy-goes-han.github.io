@@ -31,6 +31,12 @@
       var(--bg);
     color: var(--ink);
     font-family: var(--body);
+    transition: opacity .22s ease, transform .22s ease;
+  }
+
+  body.is-returning {
+    opacity: 0;
+    transform: translateY(8px) scale(.992);
   }
 
   body::before {
@@ -965,6 +971,7 @@
   <a id="back-link" href="../index.html?room=2">Back</a>
   <span>AI Speaking Lab</span>
 </nav>
+<script src="../assets/project-back.js"></script>
 <nav class="rail" aria-label="Case sections">
   <a href="#intro" class="active" aria-label="Intro"></a>
   <a href="#demo" aria-label="Demo"></a>
@@ -1321,18 +1328,19 @@
     const now = performance.now();
     if (now - lastBackActivation < 320) return;
     lastBackActivation = now;
-    const galleryUrl = new URL("../index.html?room=2", window.location.href).href;
+    document.body.classList.add("is-returning");
+    const galleryUrl = new URL("../?room=2", window.location.href).href;
     if (window.top !== window.self) {
       try {
         if (typeof window.parent.closeRoute === "function") {
-          window.parent.closeRoute({ replace: true });
+          window.setTimeout(() => window.parent.closeRoute({ replace: true }), 40);
           return;
         }
       } catch (error) {}
-      window.parent.postMessage({ type: "close-route" }, "*");
+      window.setTimeout(() => window.parent.postMessage({ type: "close-route" }, "*"), 40);
       return;
     }
-    window.location.assign(galleryUrl);
+    window.setTimeout(() => window.location.assign(galleryUrl), 180);
   }
   backLink?.addEventListener("click", goBack);
   document.querySelector(".top-bar")?.addEventListener("click", (event) => {

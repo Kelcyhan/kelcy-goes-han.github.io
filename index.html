@@ -658,6 +658,11 @@ const SCENES = {
 };
 
 const frames = { scene1: [], scene2: [], scene3: [], scene4: [] };
+const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches || false;
+let pageVisible = document.visibilityState !== 'hidden';
+document.addEventListener('visibilitychange', () => {
+  pageVisible = document.visibilityState !== 'hidden';
+});
 // Idle backgrounds reuse the same preloaded WebP frames — drawRoomIdle just keeps
 // showing the last frame of whichever transition brought us here, so the commit
 // has zero visual change (no separate idle image files, no crossfade artifact).
@@ -733,14 +738,18 @@ function preloadScene(name) {
   const cfg = SCENES[name];
   let i = 0;
   const loadBatch = () => {
-    const end = Math.min(cfg.count, i + 8);
+    const end = Math.min(cfg.count, i + 4);
     for (; i < end; i++) {
       preloadFrame(name, i);
       // No promise tracking — drawFrame checks img.complete per-frame.
       // This means navigation works mid-preload: any frame that's loaded draws,
       // unloaded frames fall back to the prior frame (so canvas never resets to stub).
     }
-    if (i < cfg.count) window.setTimeout(loadBatch, 60);
+    if (i < cfg.count) {
+      const schedule = () => window.setTimeout(loadBatch, name === 'scene1' ? 140 : 90);
+      if ('requestIdleCallback' in window) window.requestIdleCallback(schedule, { timeout: 900 });
+      else schedule();
+    }
   }
   loadBatch();
 }
@@ -766,15 +775,27 @@ function transitionFramesReady(sceneName) {
 // FRAME CANVAS (2D background)
 // ============================================================
 const stageCanvas = document.getElementById('frame-canvas');
-const stageCtx = stageCanvas.getContext('2d');
+const stageCtx = stageCanvas.getContext('2d', { alpha: false });
+const MAX_STAGE_DPR = window.innerWidth < 760 ? 1 : 1.25;
+let stageW = 0;
+let stageH = 0;
+let lastStagePaintKey = '';
 
 function resizeStage() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  stageCanvas.width = window.innerWidth * dpr;
-  stageCanvas.height = window.innerHeight * dpr;
-  stageCanvas.style.width = window.innerWidth + 'px';
-  stageCanvas.style.height = window.innerHeight + 'px';
+  const dpr = Math.min(window.devicePixelRatio || 1, MAX_STAGE_DPR);
+  const cssW = window.innerWidth;
+  const cssH = window.innerHeight;
+  const nextW = Math.round(cssW * dpr);
+  const nextH = Math.round(cssH * dpr);
+  if (stageCanvas.width === nextW && stageCanvas.height === nextH) return;
+  stageW = cssW;
+  stageH = cssH;
+  stageCanvas.width = nextW;
+  stageCanvas.height = nextH;
+  stageCanvas.style.width = cssW + 'px';
+  stageCanvas.style.height = cssH + 'px';
   stageCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  lastStagePaintKey = '';
 }
 window.addEventListener('resize', resizeStage);
 resizeStage();
@@ -785,7 +806,9 @@ resizeStage();
 const lastDrawnFrame = { scene1: null, scene2: null, scene3: null, scene4: null };
 
 function drawFrame(sceneName, idx) {
-  const w = window.innerWidth, h = window.innerHeight;
+  const paintKey = sceneName + ':' + idx + ':' + stageCanvas.width + 'x' + stageCanvas.height;
+  if (paintKey === lastStagePaintKey && state.transitionTo === null) return;
+  const w = stageW || window.innerWidth, h = stageH || window.innerHeight;
   let img = frames[sceneName][idx];
   if (!img || !img.complete || img.naturalWidth === 0) {
     // Use most recently shown frame from this scene if available
@@ -804,10 +827,15 @@ function drawFrame(sceneName, idx) {
   if (ir > sr) { dh = h; dw = h * ir; dx = (w - dw) / 2; dy = 0; }
   else         { dw = w; dh = w / ir; dx = 0; dy = (h - dh) / 2; }
   stageCtx.drawImage(img, dx, dy, dw, dh);
+  lastStagePaintKey = paintKey;
 }
 
 function drawRoomIdle(roomNum) {
   if (roomNum === 1) {
+    if (prefersReducedMotion) {
+      drawFrame('scene1', 0);
+      return;
+    }
     // R1 idle — Scene 1 ambient loop, time-driven for true 24fps regardless of paint rate
     const t = performance.now() / 1000;
     state.ambientFrame = Math.floor(t * SCENES.scene1.fps) % SCENES.scene1.count;
@@ -850,9 +878,9 @@ function renderStage() {
 // ============================================================
 const fishCanvas = document.getElementById('fish-canvas');
 const fishRenderer = new THREE.WebGLRenderer({
-  canvas: fishCanvas, alpha: true, antialias: true,
+  canvas: fishCanvas, alpha: true, antialias: false, powerPreference: 'low-power',
 });
-fishRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+fishRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
 fishRenderer.setSize(window.innerWidth, window.innerHeight, false);
 fishRenderer.setClearColor(0x000000, 0);
 fishRenderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1850,6 +1878,11 @@ window.addEventListener('message', (e) => {
 let lastT = performance.now();
 let routeWasOpen = false;
 function tick(now) {
+  if (!pageVisible) {
+    lastT = now;
+    requestAnimationFrame(tick);
+    return;
+  }
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
   const routeOpen = document.body.classList.contains('route-open');
@@ -1897,7 +1930,7 @@ function tick(now) {
   const renderDropletFrame = () => {
     if (!ctx || !video.videoWidth || !video.videoHeight) return;
 
-    const target = Math.min(192, Math.max(128, Math.ceil(player.clientWidth * 1.5)));
+    const target = Math.min(128, Math.max(96, Math.ceil(player.clientWidth)));
     if (canvas.width !== target || canvas.height !== target) {
       canvas.width = target;
       canvas.height = target;
@@ -1945,9 +1978,10 @@ function tick(now) {
   };
 
   const renderLoop = () => {
+    if (document.hidden || !playing) return;
     renderDropletFrame();
     if (!video.paused && !video.ended) {
-      renderTimer = window.setTimeout(renderLoop, 1000 / 15);
+      renderTimer = window.setTimeout(renderLoop, 1000 / 8);
     }
   };
 
@@ -2027,6 +2061,14 @@ function tick(now) {
       sessionStorage.setItem('bgm_playing', playing ? '1' : '0');
     } catch (e) {}
   });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      video.pause();
+      window.clearTimeout(renderTimer);
+    } else if (playing) {
+      startVideo();
+    }
+  });
 })();
 
 // ============================================================
@@ -2036,13 +2078,23 @@ preloadFrame('scene1', 0);
 preloadTransitionEndpoints();
 const warmScene1 = () => preloadScene('scene1');
 const warmGalleryTransition = () => preloadScene('scene2');
-if ('requestIdleCallback' in window) {
-  window.requestIdleCallback(warmScene1, { timeout: 1200 });
-  window.requestIdleCallback(warmGalleryTransition, { timeout: 1800 });
-} else {
-  window.setTimeout(warmScene1, 600);
-  window.setTimeout(warmGalleryTransition, 900);
-}
+const warmAfterFirstIntent = () => {
+  warmGalleryTransition();
+  window.removeEventListener('wheel', warmAfterFirstIntent);
+  window.removeEventListener('touchstart', warmAfterFirstIntent);
+  window.removeEventListener('keydown', warmAfterFirstIntent);
+};
+window.addEventListener('wheel', warmAfterFirstIntent, { passive: true, once: true });
+window.addEventListener('touchstart', warmAfterFirstIntent, { passive: true, once: true });
+window.addEventListener('keydown', warmAfterFirstIntent, { once: true });
+const delayedIdle = (fn, delay, timeout = 1200) => {
+  window.setTimeout(() => {
+    if ('requestIdleCallback' in window) window.requestIdleCallback(fn, { timeout });
+    else fn();
+  }, delay);
+};
+delayedIdle(warmScene1, 2600);
+delayedIdle(warmGalleryTransition, 4200);
 resizeFish();
 requestAnimationFrame(tick);
 </script>

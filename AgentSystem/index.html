@@ -40,7 +40,7 @@
   }
   html {
     background: var(--paper);
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
   }
   body {
     min-height: 100%;
@@ -56,6 +56,11 @@
       radial-gradient(circle at 88% 12%, rgba(217,154,43,0.18), transparent 28rem),
       var(--paper);
     background-size: 42px 42px, 42px 42px, auto, auto, auto;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+  body.is-returning {
+    opacity: 0;
+    transform: translateY(8px) scale(0.992);
   }
   a { color: inherit; }
 
@@ -82,8 +87,6 @@
     border: 1px solid rgba(24, 31, 46, 0.13);
     border-radius: 999px;
     box-shadow: 0 16px 48px rgba(40, 33, 22, 0.12);
-    backdrop-filter: blur(16px) saturate(140%);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
   }
   .back,
   .proj-id {
@@ -138,6 +141,11 @@
   .top-links a:hover { background: rgba(16,20,31,0.08); color: var(--ink); }
 
   main { position: relative; z-index: 1; }
+  .section,
+  .demo-section {
+    content-visibility: auto;
+    contain-intrinsic-size: 900px;
+  }
   .hero {
     min-height: 100vh;
     padding: 132px clamp(18px, 5vw, 88px) 72px;
@@ -860,6 +868,9 @@
     background: #0d1117;
     box-shadow: 0 40px 140px rgba(0,0,0,0.55);
   }
+  .demo-shell:not(.demo-loaded) iframe {
+    visibility: hidden;
+  }
   .demo-top {
     min-height: 50px;
     display: flex;
@@ -904,9 +915,31 @@
     letter-spacing: 0.02em;
     text-decoration: none;
     text-transform: none;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
   }
+  .demo-start {
+    position: absolute;
+    inset: 50px 0 0;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background:
+      radial-gradient(ellipse 55% 42% at 50% 42%, rgba(128,184,255,0.18), transparent 62%),
+      rgba(9, 15, 28, 0.92);
+  }
+  .demo-shell.demo-loaded .demo-start { display: none; }
+  .demo-start button {
+    min-height: 48px;
+    border: 1px solid rgba(242,234,220,0.22);
+    border-radius: 999px;
+    padding: 0 20px;
+    color: rgba(242,234,220,0.94);
+    background: rgba(242,234,220,0.11);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .demo-start button:hover { background: rgba(242,234,220,0.17); }
   .demo-fallback {
     display: none;
     position: absolute;
@@ -1080,6 +1113,8 @@
     <a href="#live-demo">Demo</a>
   </div>
 </nav>
+
+<script src="../assets/project-back.js"></script>
 
 <main>
   <section class="hero">
@@ -1329,7 +1364,10 @@
         <span>Live demo</span>
         <span>Mock vault · offline safe</span>
       </div>
-      <iframe title="Agent System live demo" src="demo/" loading="lazy" allow="clipboard-read; clipboard-write"></iframe>
+      <iframe id="agent-demo-frame" title="Agent System live demo" data-src="demo/" src="about:blank" loading="lazy" allow="clipboard-read; clipboard-write"></iframe>
+      <div class="demo-start">
+        <button id="demo-start" type="button">Start interactive demo</button>
+      </div>
       <a class="demo-launch" href="demo/">Open full demo</a>
       <div class="demo-fallback" id="demo-fallback" aria-live="polite">
         <div class="demo-fallback-card">
@@ -1345,16 +1383,18 @@
 <script>
   const inIframe = window.top !== window.self;
   if (inIframe) document.body.classList.add('in-iframe');
-  document.getElementById('back-link')?.addEventListener('click', (event) => {
-    const href = event.currentTarget.href;
-    event.preventDefault();
-    event.stopPropagation();
-    if (inIframe) {
-      window.parent.postMessage({ type: 'close-route' }, '*');
-    } else {
-      window.location.assign(href);
-    }
-  }, { capture: true });
+  const demoShell = document.querySelector('.demo-shell');
+  const demoFrame = document.getElementById('agent-demo-frame');
+  const demoStart = document.getElementById('demo-start');
+  function loadDemo() {
+    if (!demoFrame || demoShell?.classList.contains('demo-loaded')) return;
+    demoFrame.src = demoFrame.dataset.src || 'demo/';
+    demoShell?.classList.add('demo-loaded');
+  }
+  demoStart?.addEventListener('click', loadDemo);
+  document.querySelectorAll('a[href="#live-demo"]').forEach((link) => {
+    link.addEventListener('click', () => window.setTimeout(loadDemo, 260));
+  });
   window.addEventListener('load', () => {
     try { window.parent.postMessage({ type: 'route-ready', path: 'AgentSystem/' }, '*'); } catch (e) {}
   });
