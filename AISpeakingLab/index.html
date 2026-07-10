@@ -939,7 +939,7 @@
   }
 
   @media (max-width: 640px) {
-    .top-bar { inset: 14px; }
+    .top-bar { inset: 14px 14px auto; }
     .top-bar span { display: none; }
     .hero,
     .section,
@@ -1318,41 +1318,6 @@
         tab.setAttribute("aria-pressed", String(active));
       });
     });
-  });
-
-  const backLink = document.getElementById("back-link");
-  let lastBackActivation = 0;
-  function goBack(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    const now = performance.now();
-    if (now - lastBackActivation < 320) return;
-    lastBackActivation = now;
-    document.body.classList.add("is-returning");
-    const galleryUrl = new URL("../?room=2", window.location.href).href;
-    if (window.top !== window.self) {
-      try {
-        if (typeof window.parent.closeRoute === "function") {
-          window.setTimeout(() => window.parent.closeRoute({ replace: true }), 40);
-          return;
-        }
-      } catch (error) {}
-      window.setTimeout(() => window.parent.postMessage({ type: "close-route" }, "*"), 40);
-      return;
-    }
-    window.setTimeout(() => window.location.assign(galleryUrl), 180);
-  }
-  backLink?.addEventListener("click", goBack);
-  document.querySelector(".top-bar")?.addEventListener("click", (event) => {
-    if (event.target.closest("#back-link")) return;
-    const rect = backLink?.getBoundingClientRect();
-    if (!rect) return;
-    const withinBackHitArea =
-      event.clientX >= rect.left - 10 &&
-      event.clientX <= rect.right + 10 &&
-      event.clientY >= rect.top - 10 &&
-      event.clientY <= rect.bottom + 10;
-    if (withinBackHitArea) goBack(event);
   });
 
   function update() {

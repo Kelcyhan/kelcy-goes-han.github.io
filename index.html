@@ -427,7 +427,7 @@
   /* ================ ROUTE SHELL (iframe covers stage while case study is open) ================ */
   #route-shell {
     position: fixed; inset: 0;
-    z-index: 500;
+    z-index: 90000;
     background: #16110b;
     opacity: 0;
     pointer-events: none;
@@ -436,6 +436,9 @@
   #route-shell.active {
     opacity: 1;
     pointer-events: auto;
+  }
+  body.route-open #route-shell.active {
+    pointer-events: auto !important;
   }
   #route-iframe {
     width: 100%; height: 100%; border: 0; display: block; background: transparent;
@@ -470,34 +473,51 @@
   #route-shell.iframe-ready .route-loading { opacity: 0; }
   #route-shell .route-back {
     position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 4;
-    width: min(300px, 46vw);
-    height: 108px;
-    border: 0;
-    padding: 0;
-    background: transparent;
-    color: transparent;
+    top: max(14px, env(safe-area-inset-top));
+    left: max(14px, env(safe-area-inset-left));
+    z-index: 90002;
+    min-width: 76px;
+    min-height: 44px;
+    border: 1px solid rgba(244, 232, 208, 0.18);
+    border-radius: 999px;
+    padding: 0 16px;
+    background: rgba(12, 14, 18, 0.62);
+    color: rgba(244, 232, 208, 0.94);
+    font-family: var(--subtitle-font);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     cursor: pointer;
     touch-action: manipulation;
-    opacity: 1;
+    opacity: 0;
     pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
   }
   #route-shell.active .route-back {
-    pointer-events: auto;
+    pointer-events: auto !important;
+    opacity: 1;
   }
+  #route-shell .route-back:hover { background: rgba(20, 24, 30, 0.74); transform: translateX(-2px); }
   /* When a route is open, hide stage interactions so they don't fight scroll */
   body.route-open #stage,
   body.route-open #main-nav,
   body.route-open .overlay { pointer-events: none; }
+  body.route-open #main-nav *,
+  body.route-open .overlay * { pointer-events: none !important; }
   body.route-open #main-nav { opacity: 0; }
 
   @media (max-width: 768px) {
     #main-nav { padding: 1rem 1.2rem; }
-    .nav-rooms { gap: 1.4rem; }
-    .nav-rooms a { font-size: 0.78rem; }
+    .nav-rooms { gap: 0.1rem; padding: 0.28rem; }
+    .nav-rooms a { font-size: 0.72rem; padding: 0.32rem 0.55rem; }
     .nav-rooms .nav-num { display: none; }
+    #route-shell .route-back {
+      top: max(12px, env(safe-area-inset-top));
+      left: max(12px, env(safe-area-inset-left));
+      min-width: 72px;
+      min-height: 42px;
+      padding: 0 14px;
+    }
     #r1-content { left: 5%; bottom: 18%; }
     #r1-content h1 { font-size: 11vw; }
     .card {
@@ -659,6 +679,8 @@ const SCENES = {
 
 const frames = { scene1: [], scene2: [], scene3: [], scene4: [] };
 const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches || false;
+const mobileLike = window.matchMedia?.('(pointer: coarse)')?.matches || window.innerWidth < 760;
+const INITIAL_SITE_ROOT = new URL('.', window.location.href).href;
 let pageVisible = document.visibilityState !== 'hidden';
 document.addEventListener('visibilitychange', () => {
   pageVisible = document.visibilityState !== 'hidden';
@@ -722,7 +744,10 @@ const preloadStarted = new Set();
 function frameSrc(name, idx) {
   const cfg = SCENES[name];
   const ver = ASSET_VERSIONS[name] || '1';
-  return cfg.dir + 'frame_' + String(idx + 1).padStart(3, '0') + '.' + cfg.ext + '?v=' + ver;
+  return new URL(cfg.dir + 'frame_' + String(idx + 1).padStart(3, '0') + '.' + cfg.ext + '?v=' + ver, INITIAL_SITE_ROOT).href;
+}
+function assetSrc(path) {
+  return new URL(path, INITIAL_SITE_ROOT).href;
 }
 function preloadFrame(name, idx) {
   if (frames[name][idx]) return frames[name][idx];
@@ -832,7 +857,7 @@ function drawFrame(sceneName, idx) {
 
 function drawRoomIdle(roomNum) {
   if (roomNum === 1) {
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion || mobileLike) {
       drawFrame('scene1', 0);
       return;
     }
@@ -1205,7 +1230,7 @@ let fishAssetsRequested = false;
 function ensureFishAssetsLoaded() {
   if (fishAssetsRequested) return;
   fishAssetsRequested = true;
-  gltfLoader.loadAsync('assets/fish/koi.glb').then(gltf => {
+  gltfLoader.loadAsync(assetSrc('assets/fish/koi.glb')).then(gltf => {
   template = gltf.scene;
   swimClip = gltf.animations[0];
   if (!swimClip) console.warn('[koi GLB] no animation clip — fish will be static');
@@ -1592,7 +1617,7 @@ function advanceTransition(now) {
     lastTransitionEndMs = now;
     if (state.room === 2) {
       r2IdleStartMs = now;   // begin 3D koi fade-in
-      ensureFishAssetsLoaded();
+      if (!mobileLike) ensureFishAssetsLoaded();
     }
     else r2IdleStartMs = -Infinity;
   }
@@ -1706,7 +1731,7 @@ function setRoomInstant(roomNum) {
     state.lastTransitionFrame = SCENES.scene2.count - 1;
     r2IdleStartMs = performance.now();
     preloadScene('scene2');
-    ensureFishAssetsLoaded();
+    if (!mobileLike) ensureFishAssetsLoaded();
   } else if (roomNum === 3) {
     state.previousRoom = 1;
     state.lastTransitionScene = 'scene3';
@@ -1821,11 +1846,19 @@ function closeRoute({ replace = false } = {}) {
 }
 window.openRoute  = openRoute;
 window.closeRoute = closeRoute;
-routeBackButton?.addEventListener('click', (event) => {
+let lastRouteBackActivation = 0;
+function activateRouteBack(event) {
+  if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
   event.preventDefault();
   event.stopPropagation();
+  const now = performance.now();
+  if (now - lastRouteBackActivation < 320) return;
+  lastRouteBackActivation = now;
   closeRoute({ replace: true });
-});
+}
+routeBackButton?.addEventListener('pointerdown', activateRouteBack);
+routeBackButton?.addEventListener('click', activateRouteBack);
+routeBackButton?.addEventListener('keydown', activateRouteBack);
 
 window.addEventListener('popstate', (e) => {
   if (e.state && e.state.route) openRouteInternal(e.state.route);
@@ -1923,7 +1956,8 @@ function tick(now) {
   // Audio.play() may be blocked by browser → fall back to first-interaction.
   let playing = true;
   let audioStarted = false;
-  let renderTimer = 0;
+  let renderHandle = 0;
+  let renderMode = 'none';
 
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const clamp01 = v => Math.max(0, Math.min(1, v));
@@ -1977,17 +2011,40 @@ function tick(now) {
     ctx.putImageData(frame, 0, 0);
   };
 
-  const renderLoop = () => {
-    if (document.hidden || !playing) return;
-    renderDropletFrame();
-    if (!video.paused && !video.ended) {
-      renderTimer = window.setTimeout(renderLoop, 1000 / 8);
+  const cancelRenderLoop = () => {
+    if (!renderHandle) return;
+    if (renderMode === 'videoFrame' && typeof video.cancelVideoFrameCallback === 'function') {
+      video.cancelVideoFrameCallback(renderHandle);
+    } else if (renderMode === 'raf') {
+      window.cancelAnimationFrame(renderHandle);
+    } else {
+      window.clearTimeout(renderHandle);
+    }
+    renderHandle = 0;
+    renderMode = 'none';
+  };
+
+  const scheduleNextFrame = () => {
+    if (document.hidden || !playing || video.paused || video.ended) return;
+    if (typeof video.requestVideoFrameCallback === 'function') {
+      renderMode = 'videoFrame';
+      renderHandle = video.requestVideoFrameCallback(() => {
+        renderDropletFrame();
+        scheduleNextFrame();
+      });
+    } else {
+      renderMode = 'raf';
+      renderHandle = window.requestAnimationFrame(() => {
+        renderDropletFrame();
+        scheduleNextFrame();
+      });
     }
   };
 
   const startRenderLoop = () => {
-    window.clearTimeout(renderTimer);
-    renderLoop();
+    cancelRenderLoop();
+    renderDropletFrame();
+    scheduleNextFrame();
   };
 
   video.addEventListener('loadeddata', renderDropletFrame);
@@ -2047,7 +2104,7 @@ function tick(now) {
     } else {
       audio.pause();
       video.pause();
-      window.clearTimeout(renderTimer);
+      cancelRenderLoop();
       player.classList.add('paused');
     }
   };
@@ -2064,7 +2121,7 @@ function tick(now) {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       video.pause();
-      window.clearTimeout(renderTimer);
+      cancelRenderLoop();
     } else if (playing) {
       startVideo();
     }
@@ -2081,11 +2138,9 @@ const warmGalleryTransition = () => preloadScene('scene2');
 const warmAfterFirstIntent = () => {
   warmGalleryTransition();
   window.removeEventListener('wheel', warmAfterFirstIntent);
-  window.removeEventListener('touchstart', warmAfterFirstIntent);
   window.removeEventListener('keydown', warmAfterFirstIntent);
 };
 window.addEventListener('wheel', warmAfterFirstIntent, { passive: true, once: true });
-window.addEventListener('touchstart', warmAfterFirstIntent, { passive: true, once: true });
 window.addEventListener('keydown', warmAfterFirstIntent, { once: true });
 const delayedIdle = (fn, delay, timeout = 1200) => {
   window.setTimeout(() => {
@@ -2093,8 +2148,10 @@ const delayedIdle = (fn, delay, timeout = 1200) => {
     else fn();
   }, delay);
 };
-delayedIdle(warmScene1, 2600);
-delayedIdle(warmGalleryTransition, 4200);
+if (!prefersReducedMotion && !mobileLike) {
+  delayedIdle(warmScene1, 2600);
+  delayedIdle(warmGalleryTransition, 4200);
+}
 resizeFish();
 requestAnimationFrame(tick);
 </script>
