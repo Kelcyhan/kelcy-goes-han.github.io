@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AI Speaking Lab - Kelcy Han</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #050604;
@@ -13,8 +16,8 @@
     --green: #d9ff39;
     --aqua: #79dec3;
     --orange: #f57a37;
-    --title: "Averia Libre", "Sansita", "Space Grotesk", system-ui, sans-serif;
-    --body: Inter, "Helvetica Neue", Arial, sans-serif;
+    --title: "Open Sans", Arial, sans-serif;
+    --body: "Open Sans", Arial, sans-serif;
   }
 
   * { box-sizing: border-box; }
@@ -964,14 +967,50 @@
     .device { transform: none; }
   }
 </style>
+<style>
+body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;overflow:hidden;background:linear-gradient(rgba(217,255,57,.055) 1px,transparent 1px) 0 0/52px 52px,linear-gradient(90deg,rgba(217,255,57,.055) 1px,transparent 1px) 0 0/52px 52px,radial-gradient(circle at 50% 44%,rgba(121,222,195,.13),transparent 36%),#050604;transition:opacity .7s ease,visibility .7s ease}#loading-screen.gone{opacity:0;visibility:hidden;pointer-events:none}.aisl-loader{width:min(560px,82vw);text-align:center}.aisl-wave{height:92px;display:flex;align-items:center;justify-content:center;gap:clamp(4px,1vw,9px)}.aisl-wave i{width:clamp(3px,.55vw,6px);height:16px;border-radius:999px;background:var(--green);box-shadow:0 0 16px rgba(217,255,57,.48);animation:aislWave 1.05s ease-in-out infinite;animation-delay:calc(var(--i)*-70ms)}@keyframes aislWave{50%{height:calc(22px + var(--i)*4px);background:var(--aqua)}}.aisl-load-title{margin-top:18px;color:var(--ink);font:italic 900 clamp(42px,8vw,82px)/.86 var(--title);letter-spacing:-.035em;text-transform:uppercase}.aisl-load-title span{color:var(--green)}.aisl-load-meta{margin-top:24px;display:flex;align-items:center;justify-content:center;gap:12px;color:rgba(246,242,232,.62);font:800 10px/1 var(--body);letter-spacing:.2em;text-transform:uppercase}.aisl-load-meta::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);animation:aislBlink 1s ease infinite}@keyframes aislBlink{50%{opacity:.25}}
+</style>
+<style>html.is-loading,body.is-loading{height:100%;overflow:hidden!important;overscroll-behavior:none!important}</style>
 </head>
-<body>
+<body class="is-loading">
+<div id="loading-screen" role="status" aria-label="Loading AI Speaking Lab"><div class="aisl-loader"><div class="aisl-wave" aria-hidden="true"><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:6"></i><i style="--i:5"></i><i style="--i:4"></i><i style="--i:3"></i><i style="--i:2"></i><i style="--i:1"></i></div><div class="aisl-load-title">AI Speaking <span>Lab</span></div><div class="aisl-load-meta">Calibrating the room</div></div></div>
+<script>
+(() => {
+  const screen = document.getElementById("loading-screen");
+  const startedAt = performance.now();
+  let done = false;
+  document.documentElement.classList.add("is-loading");
+
+  function finish() {
+    if (done) return;
+    const wait = 1450 - (performance.now() - startedAt);
+    if (wait > 0) { window.setTimeout(finish, wait); return; }
+    done = true;
+    screen?.classList.add("gone");
+    document.body.classList.remove("is-loading");
+    document.documentElement.classList.remove("is-loading");
+    document.documentElement.style.removeProperty("height");
+    document.body.style.removeProperty("height");
+    document.documentElement.style.setProperty("overflow-y", "auto", "important");
+    document.body.style.setProperty("overflow-y", "auto", "important");
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event("resize"));
+      if (window.top !== window.self) window.parent.postMessage({ type: "route-ready", path: "AISpeakingLab/" }, "*");
+    });
+  }
+
+  window.__finishAISpeakingLoader = finish;
+  if (document.readyState === "complete") finish();
+  else window.addEventListener("load", finish, { once: true });
+  window.setTimeout(finish, 4200);
+})();
+</script>
 <div class="progress" id="progress"></div>
 <nav class="top-bar">
   <a id="back-link" href="../index.html?room=2">Back</a>
-  <span>AI Speaking Lab</span>
+  <span class="proj-id">AI Speaking Lab</span>
 </nav>
-<script src="../assets/project-back.js"></script>
+<script type="module" src="../assets/project-back.js"></script>
 <nav class="rail" aria-label="Case sections">
   <a href="#intro" class="active" aria-label="Intro"></a>
   <a href="#demo" aria-label="Demo"></a>
@@ -1335,9 +1374,6 @@
   window.addEventListener("resize", update);
   update();
 
-  window.addEventListener("load", () => {
-    if (window.top !== window.self) window.parent.postMessage({ type: "route-ready", path: "AISpeakingLab/" }, "*");
-  }, { once: true });
 })();
 </script>
 </body>

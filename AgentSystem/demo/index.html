@@ -9,12 +9,63 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0d1117" />
     <title>Locusly</title>
+    <link rel="preload" as="image" href="../demo-preview.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
+    <script>
+      // The static demo has no live settings service. Normalize that optional
+      // response before the app reads it so a cold first visit cannot crash.
+      (() => {
+        const nativeFetch = window.fetch.bind(window);
+        window.fetch = async (...args) => {
+          const response = await nativeFetch(...args);
+          const requestUrl = String(args[0]?.url || args[0] || '');
+          if (!requestUrl.includes('/api/settings/llm') || !response.ok) return response;
+          try {
+            const data = await response.clone().json();
+            const safe = data && typeof data === 'object' ? data : {};
+            safe.settings = safe.settings && typeof safe.settings === 'object' ? safe.settings : {};
+            safe.settings.providers = safe.settings.providers && typeof safe.settings.providers === 'object' ? safe.settings.providers : {};
+            safe.providers = safe.providers && typeof safe.providers === 'object' ? safe.providers : {};
+            safe.warnings = Array.isArray(safe.warnings) ? safe.warnings : [];
+            return new Response(JSON.stringify(safe), {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers
+            });
+          } catch (error) {
+            return response;
+          }
+        };
+      })();
+    </script>
     <script type="module" crossorigin src="./assets/index-1HQcghmU.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-DPPhqLs7.css">
     <style>
+      html,
+      body,
+      #root {
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+        margin: 0;
+        overflow: hidden;
+        overscroll-behavior: none;
+        background: #181825;
+      }
+      #boot-poster {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        background: #eef4f7 url("../demo-preview.png") center / cover no-repeat;
+        opacity: 1;
+        transition: opacity 160ms ease;
+        pointer-events: none;
+      }
+      #boot-poster.is-ready {
+        opacity: 0;
+      }
       *,
       *::before,
       *::after {
@@ -23,6 +74,28 @@
     </style>
   </head>
   <body>
+    <div id="boot-poster" aria-hidden="true"></div>
     <div id="root"></div>
+    <script>
+      (() => {
+        const poster = document.getElementById('boot-poster');
+        const root = document.getElementById('root');
+        let readySince = 0;
+        function revealApp() {
+          const text = root?.textContent || '';
+          if (!root?.children.length || !text.includes('Today') || !text.includes('Command Bar')) {
+            readySince = 0;
+            return window.setTimeout(revealApp, 50);
+          }
+          if (!readySince) readySince = Date.now();
+          if (Date.now() - readySince < 800) return window.setTimeout(revealApp, 50);
+          window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+            poster?.classList.add('is-ready');
+            window.setTimeout(() => poster?.remove(), 180);
+          }));
+        }
+        revealApp();
+      })();
+    </script>
   </body>
 </html>

@@ -140,6 +140,14 @@
   }
   .top-links a:hover { background: rgba(16,20,31,0.08); color: var(--ink); }
 
+  #back-link,
+  .top-links {
+    display: none !important;
+  }
+  .top-bar {
+    justify-content: flex-end !important;
+  }
+
   main { position: relative; z-index: 1; }
   .section,
   .demo-section {
@@ -836,7 +844,7 @@
   }
 
   .demo-section {
-    padding: clamp(70px, 9vw, 118px) clamp(14px, 3vw, 40px);
+    padding: clamp(70px, 9vw, 118px) clamp(14px, 3vw, 40px) 0;
     background: #090b12;
     color: #eef0f5;
   }
@@ -868,9 +876,6 @@
     background: #0d1117;
     box-shadow: 0 40px 140px rgba(0,0,0,0.55);
   }
-  .demo-shell:not(.demo-loaded) iframe {
-    visibility: hidden;
-  }
   .demo-top {
     min-height: 50px;
     display: flex;
@@ -888,7 +893,8 @@
   }
   .demo-shell iframe {
     width: 100%;
-    height: min(820px, 82vh);
+    height: calc(100vh - 50px);
+    height: calc(100dvh - 50px);
     min-height: 620px;
     border: 0;
     display: block;
@@ -916,35 +922,11 @@
     text-decoration: none;
     text-transform: none;
   }
-  .demo-start {
-    position: absolute;
-    inset: 50px 0 0;
-    z-index: 4;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-    background:
-      radial-gradient(ellipse 55% 42% at 50% 42%, rgba(128,184,255,0.18), transparent 62%),
-      rgba(9, 15, 28, 0.92);
-  }
-  .demo-shell.demo-loaded .demo-start { display: none; }
-  .demo-start button {
-    min-height: 48px;
-    border: 1px solid rgba(242,234,220,0.22);
-    border-radius: 999px;
-    padding: 0 20px;
-    color: rgba(242,234,220,0.94);
-    background: rgba(242,234,220,0.11);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 800;
-  }
-  .demo-start button:hover { background: rgba(242,234,220,0.17); }
   .demo-fallback {
     display: none;
     position: absolute;
     inset: 50px 0 0;
-    z-index: 2;
+    z-index: 5;
     align-items: center;
     justify-content: center;
     padding: 24px;
@@ -1018,8 +1000,6 @@
   }
   @media (max-width: 720px) {
     .top-bar { padding: 12px; }
-    .proj-id,
-    .top-links { display: none; }
     .hero { padding-top: 108px; }
     .hero-grid { grid-template-columns: 1fr; }
     .hero-evidence { min-height: 0; }
@@ -1062,6 +1042,8 @@
       height: 78vh;
     }
   }
+</style><style>
+body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;background:linear-gradient(rgba(110,149,246,.07) 1px,transparent 1px) 0 0/42px 42px,linear-gradient(90deg,rgba(110,149,246,.055) 1px,transparent 1px) 0 0/42px 42px,radial-gradient(circle at 50% 42%,rgba(110,149,246,.18),transparent 34rem),var(--paper);transition:opacity .65s ease,visibility .65s ease}#loading-screen.gone{opacity:0;visibility:hidden;pointer-events:none}.agent-loader{width:min(610px,86vw)}.agent-loader-head{display:flex;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}.agent-loader h1{margin:24px 0 30px;font-size:clamp(42px,8vw,78px);line-height:.95;letter-spacing:-.055em}.agent-nodes{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.agent-nodes::before{content:"";position:absolute;left:10%;right:10%;top:17px;height:1px;background:rgba(110,149,246,.35)}.agent-node{position:relative;z-index:1;padding:10px 8px;border:1px solid var(--line);border-radius:8px;background:rgba(244,239,229,.9);text-align:center;color:var(--muted);font-size:10px;font-weight:700}.agent-node::before{content:"";display:block;width:9px;height:9px;margin:0 auto 9px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 5px rgba(110,149,246,.14);animation:agentPing 1.5s ease-in-out infinite;animation-delay:calc(var(--i)*180ms)}@keyframes agentPing{50%{background:var(--green);box-shadow:0 0 0 8px rgba(47,159,127,.12)}}.agent-status{margin-top:20px;color:var(--blue);font:700 11px/1 var(--ui-font);letter-spacing:.08em;text-transform:uppercase}
 </style>
 </head>
 
@@ -1114,7 +1096,7 @@
   </div>
 </nav>
 
-<script src="../assets/project-back.js"></script>
+<script type="module" src="../assets/project-back.js"></script>
 
 <main>
   <section class="hero">
@@ -1364,10 +1346,7 @@
         <span>Live demo</span>
         <span>Mock vault · offline safe</span>
       </div>
-      <iframe id="agent-demo-frame" title="Agent System live demo" data-src="demo/" src="about:blank" loading="lazy" allow="clipboard-read; clipboard-write"></iframe>
-      <div class="demo-start">
-        <button id="demo-start" type="button">Start interactive demo</button>
-      </div>
+      <iframe id="agent-demo-frame" title="Agent System live demo" src="demo/" loading="eager" allow="clipboard-read; clipboard-write"></iframe>
       <a class="demo-launch" href="demo/">Open full demo</a>
       <div class="demo-fallback" id="demo-fallback" aria-live="polite">
         <div class="demo-fallback-card">
@@ -1381,26 +1360,72 @@
 </main>
 
 <script>
+  const loadingScreen = document.getElementById('loading-screen');
+  let loadingDone = false;
+  function blockLoadingScroll(event) {
+    if (!document.body.classList.contains('is-loading')) return;
+    event.preventDefault();
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('wheel', blockLoadingScroll, { passive: false, capture: true });
+  window.addEventListener('touchmove', blockLoadingScroll, { passive: false, capture: true });
+  window.addEventListener('scroll', () => {
+    if (document.body.classList.contains('is-loading') && window.scrollY !== 0) window.scrollTo(0, 0);
+  }, { passive: true });
+  function finishLoading() { if (loadingDone) return; loadingDone = true; loadingScreen?.classList.add('gone'); document.body.classList.remove('is-loading'); try { window.parent.postMessage({ type: 'route-ready', path: 'AgentSystem/' }, '*'); } catch (e) {} }
   const inIframe = window.top !== window.self;
   if (inIframe) document.body.classList.add('in-iframe');
+  try { localStorage.setItem('onboarding-checklist-dismissed', '1'); } catch (e) {}
   const demoShell = document.querySelector('.demo-shell');
   const demoFrame = document.getElementById('agent-demo-frame');
-  const demoStart = document.getElementById('demo-start');
-  function loadDemo() {
-    if (!demoFrame || demoShell?.classList.contains('demo-loaded')) return;
-    demoFrame.src = demoFrame.dataset.src || 'demo/';
-    demoShell?.classList.add('demo-loaded');
+  const demoLoadingLabel = document.getElementById('demo-start');
+  const demoRenderStartedAt = performance.now();
+  let demoReady = false;
+  let demoReadyTimer = 0;
+  function demoHasRenderedUI() {
+    try {
+      const doc = demoFrame?.contentDocument;
+      const demoRoot = doc?.getElementById('root');
+      const rootRect = demoRoot?.getBoundingClientRect();
+      return doc?.readyState === 'complete'
+        && demoRoot?.children.length > 0
+        && demoRoot.textContent.includes('Today')
+        && demoRoot.textContent.includes('Command Bar')
+        && rootRect?.width > 300
+        && rootRect?.height > 300;
+    } catch (e) {
+      return false;
+    }
   }
-  demoStart?.addEventListener('click', loadDemo);
-  document.querySelectorAll('a[href="#live-demo"]').forEach((link) => {
-    link.addEventListener('click', () => window.setTimeout(loadDemo, 260));
-  });
-  window.addEventListener('load', () => {
-    try { window.parent.postMessage({ type: 'route-ready', path: 'AgentSystem/' }, '*'); } catch (e) {}
-  });
-  if (location.protocol === 'file:') {
-    document.getElementById('demo-fallback')?.classList.add('active');
+  function markDemoReady() {
+    if (demoReady) return;
+    if (!demoHasRenderedUI()) {
+      demoReadyTimer = 0;
+      return waitForDemoRender();
+    }
+    demoReady = true;
+    demoShell?.classList.add('demo-ready');
+    demoShell?.classList.add('demo-active');
   }
+  function waitForDemoRender() {
+    if (demoReady) return;
+    if (demoHasRenderedUI()) {
+      // The opaque loading layer already hides intermediate frames. Keep the
+      // iframe rendering behind it, then reveal immediately after two paints.
+      if (!demoReadyTimer) {
+        demoReadyTimer = 1;
+        window.requestAnimationFrame(() => window.requestAnimationFrame(markDemoReady));
+      }
+      return;
+    }
+    if (performance.now() - demoRenderStartedAt > 10000 && demoLoadingLabel) {
+      demoLoadingLabel.textContent = 'Still loading interactive demo…';
+    }
+    window.setTimeout(waitForDemoRender, 80);
+  }
+  demoFrame?.addEventListener('load', waitForDemoRender);
+  waitForDemoRender();
+  finishLoading();
 </script>
 </body>
 </html>
