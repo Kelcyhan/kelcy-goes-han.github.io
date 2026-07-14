@@ -30,6 +30,17 @@ function copyRuntimeAssets() {
         resolve(outputAssets, dir),
         { recursive: true },
       )));
+      // The Agent System prototype is already a self-contained production
+      // bundle. Its nested assets are runtime-relative and must stay together.
+      await cp(
+        resolve(__dirname, 'AgentSystem/demo'),
+        resolve(__dirname, 'dist/AgentSystem/demo'),
+        { recursive: true },
+      );
+      await cp(
+        resolve(__dirname, 'AgentSystem/demo-preview.png'),
+        resolve(__dirname, 'dist/AgentSystem/demo-preview.png'),
+      );
     },
   };
 }

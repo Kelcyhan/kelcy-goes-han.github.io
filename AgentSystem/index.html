@@ -901,6 +901,26 @@
     background: #0d1117;
     opacity: 1;
   }
+  .demo-start {
+    position: absolute;
+    inset: 50px 0 0;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(circle at 50% 42%, rgba(110,149,246,.2), transparent 34rem),
+      #0d1117;
+    color: rgba(242,234,220,.82);
+    font: 700 12px/1.4 var(--ui-font);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    transition: opacity .28s ease, visibility .28s ease;
+  }
+  .demo-shell.demo-ready .demo-start {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
   .demo-launch {
     position: absolute;
     right: 14px;
@@ -1047,7 +1067,20 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
 </style>
 </head>
 
-<body>
+<body class="is-loading">
+<div id="loading-screen" role="status" aria-label="Loading Agent System">
+  <div class="agent-loader">
+    <div class="agent-loader-head"><span>Agent System</span><span>Initialising workspace</span></div>
+    <h1>One place for<br>agent work.</h1>
+    <div class="agent-nodes" aria-hidden="true">
+      <div class="agent-node" style="--i:0">Projects</div>
+      <div class="agent-node" style="--i:1">Sessions</div>
+      <div class="agent-node" style="--i:2">Artifacts</div>
+      <div class="agent-node" style="--i:3">Approvals</div>
+    </div>
+    <div class="agent-status">Connecting the workspace…</div>
+  </div>
+</div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="icon-paper" viewBox="0 0 24 24">
     <path d="M7 3h7l4 4v14H7z"></path><path d="M14 3v5h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16h5"></path>
@@ -1347,6 +1380,7 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
         <span>Mock vault · offline safe</span>
       </div>
       <iframe id="agent-demo-frame" title="Agent System live demo" src="demo/" loading="eager" allow="clipboard-read; clipboard-write"></iframe>
+      <div class="demo-start" id="demo-start" role="status">Starting interactive demo…</div>
       <a class="demo-launch" href="demo/">Open full demo</a>
       <div class="demo-fallback" id="demo-fallback" aria-live="polite">
         <div class="demo-fallback-card">
@@ -1372,7 +1406,16 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
   window.addEventListener('scroll', () => {
     if (document.body.classList.contains('is-loading') && window.scrollY !== 0) window.scrollTo(0, 0);
   }, { passive: true });
-  function finishLoading() { if (loadingDone) return; loadingDone = true; loadingScreen?.classList.add('gone'); document.body.classList.remove('is-loading'); try { window.parent.postMessage({ type: 'route-ready', path: 'AgentSystem/' }, '*'); } catch (e) {} }
+  const loadingStartedAt = performance.now();
+  function finishLoading() {
+    if (loadingDone) return;
+    const remaining = 900 - (performance.now() - loadingStartedAt);
+    if (remaining > 0) return window.setTimeout(finishLoading, remaining);
+    loadingDone = true;
+    loadingScreen?.classList.add('gone');
+    document.body.classList.remove('is-loading');
+    try { window.parent.postMessage({ type: 'route-ready', path: 'AgentSystem/' }, '*'); } catch (e) {}
+  }
   const inIframe = window.top !== window.self;
   if (inIframe) document.body.classList.add('in-iframe');
   try { localStorage.setItem('onboarding-checklist-dismissed', '1'); } catch (e) {}
@@ -1424,8 +1467,16 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
     window.setTimeout(waitForDemoRender, 80);
   }
   demoFrame?.addEventListener('load', waitForDemoRender);
+  window.addEventListener('message', (event) => {
+    if (event.source === demoFrame?.contentWindow && event.data?.type === 'agent-demo-ready') {
+      demoReady = true;
+      demoShell?.classList.add('demo-ready', 'demo-active');
+    }
+  });
   waitForDemoRender();
-  finishLoading();
+  if (document.readyState === 'complete') finishLoading();
+  else window.addEventListener('load', finishLoading, { once: true });
+  window.setTimeout(finishLoading, 3500);
 </script>
 </body>
 </html>

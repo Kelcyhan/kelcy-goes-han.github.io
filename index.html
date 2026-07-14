@@ -1712,6 +1712,9 @@ function pushInput(direction) {
   if (target) startTransition(target);
 }
 
+let routedWheelX = 0;
+let routedWheelY = 0;
+let routedWheelFrame = 0;
 window.addEventListener('wheel', e => {
   if (document.body.classList.contains('route-open')) {
     if (e.target?.closest?.('#route-back, #bgm-player')) return;
@@ -1721,11 +1724,16 @@ window.addEventListener('wheel', e => {
       try {
         if (frameWindow.document.body.classList.contains('is-loading')) return;
       } catch (error) {}
-      frameWindow.scrollBy({
-        left: e.deltaX,
-        top: e.deltaY,
-        behavior: 'auto',
-      });
+      routedWheelX += e.deltaX;
+      routedWheelY += e.deltaY;
+      if (!routedWheelFrame) {
+        routedWheelFrame = window.requestAnimationFrame(() => {
+          frameWindow.scrollBy({ left: routedWheelX, top: routedWheelY, behavior: 'auto' });
+          routedWheelX = 0;
+          routedWheelY = 0;
+          routedWheelFrame = 0;
+        });
+      }
     }
     return;
   }

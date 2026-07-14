@@ -91,6 +91,7 @@
           if (Date.now() - readySince < 800) return window.setTimeout(revealApp, 50);
           window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
             poster?.classList.add('is-ready');
+            try { window.parent.postMessage({ type: 'agent-demo-ready' }, '*'); } catch (error) {}
             window.setTimeout(() => poster?.remove(), 180);
           }));
         }
