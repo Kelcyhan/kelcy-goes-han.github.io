@@ -1,62 +1,41 @@
 import { cp, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-const projectPages = [
-  'AISpeakingLab',
-  'AgentSystem',
-  'DiscussAgain',
-  'MetacogReef',
-  'PointFit',
-  'Puri',
-  'SupplyNet',
-  'Swarm',
+const runtimeCopies = [
+  ['assets/frames', 'assets/frames'],
+  ['AgentSystem/demo', 'demos/agent-system'],
+  ['SupplyNet/sandbox', 'demos/supply-net'],
+  ['Swarm/sandbox', 'demos/swarm'],
 ];
 
-// Frame sequences and the GLB are addressed dynamically at runtime, so Vite
-// cannot discover them from static imports. Copy them with their original URL
-// structure after every build instead of relying on the dev server's fallback.
 function copyRuntimeAssets() {
-  const runtimeAssetDirs = ['frames', 'fish'];
-
   return {
     name: 'copy-runtime-assets',
     apply: 'build',
     async closeBundle() {
-      const outputAssets = resolve(__dirname, 'dist/assets');
-      await mkdir(outputAssets, { recursive: true });
-      await Promise.all(runtimeAssetDirs.map((dir) => cp(
-        resolve(__dirname, 'assets', dir),
-        resolve(outputAssets, dir),
-        { recursive: true },
-      )));
-      // The Agent System prototype is already a self-contained production
-      // bundle. Its nested assets are runtime-relative and must stay together.
-      await cp(
-        resolve(__dirname, 'AgentSystem/demo'),
-        resolve(__dirname, 'dist/AgentSystem/demo'),
-        { recursive: true },
-      );
-      await cp(
-        resolve(__dirname, 'AgentSystem/demo-preview.png'),
-        resolve(__dirname, 'dist/AgentSystem/demo-preview.png'),
-      );
+      const outDir = resolve(__dirname, 'dist');
+      await Promise.all(runtimeCopies.map(async ([source, destination]) => {
+        const target = resolve(outDir, destination);
+        await mkdir(target, { recursive: true });
+        await cp(resolve(__dirname, source), target, { recursive: true });
+      }));
+
+      // The Agent System static build still asks for these two support files at
+      // the domain root. Keep the published demo self-contained without
+      // modifying its generated bundle.
+      await cp(resolve(__dirname, 'AgentSystem/demo/noise.png'), resolve(outDir, 'noise.png'));
+      await cp(resolve(__dirname, 'AgentSystem/demo/audio-processor.js'), resolve(outDir, 'audio-processor.js'));
     },
   };
 }
 
 export default defineConfig({
-  appType: 'mpa',
-  plugins: [copyRuntimeAssets()],
+  plugins: [react(), copyRuntimeAssets()],
   build: {
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        ...Object.fromEntries(
-          projectPages.map((name) => [name, resolve(__dirname, name, 'index.html')]),
-        ),
-      },
-    },
+    assetsInlineLimit: 0,
+    chunkSizeWarningLimit: 900,
   },
   server: {
     host: '0.0.0.0',

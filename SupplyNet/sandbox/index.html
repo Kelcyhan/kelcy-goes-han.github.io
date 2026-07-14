@@ -15,6 +15,26 @@
 
 <body>
   <div id="app"></div>
+  <script>
+    (() => {
+      const root = document.getElementById('app');
+      let stableSince = 0;
+      function reportReady() {
+        if (!root?.children.length) {
+          stableSince = 0;
+          return window.setTimeout(reportReady, 60);
+        }
+        if (!stableSince) stableSince = Date.now();
+        if (Date.now() - stableSince < 900) return window.setTimeout(reportReady, 60);
+        if (window.parent !== window) {
+          window.parent.postMessage({
+            source: 'kelcy-demo', version: 1, demo: 'supply-net', type: 'ready'
+          }, window.location.origin);
+        }
+      }
+      reportReady();
+    })();
+  </script>
 </body>
 
 </html>
