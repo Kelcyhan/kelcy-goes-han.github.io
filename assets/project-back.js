@@ -72,8 +72,7 @@
         right: max(14px, env(safe-area-inset-right)) !important;
       }
       #loading-screen {
-        pointer-events: auto !important;
-        touch-action: none !important;
+        pointer-events: none !important;
       }
       #loading-screen.gone {
         pointer-events: none !important;

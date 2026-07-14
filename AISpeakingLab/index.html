@@ -61,6 +61,7 @@
     z-index: 100;
     width: 100%;
     height: 3px;
+    pointer-events: none;
     transform: scaleX(0);
     transform-origin: left center;
     will-change: transform;
@@ -971,18 +972,16 @@
   }
 </style>
 <style>
-body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;overflow:hidden;background:linear-gradient(rgba(217,255,57,.055) 1px,transparent 1px) 0 0/52px 52px,linear-gradient(90deg,rgba(217,255,57,.055) 1px,transparent 1px) 0 0/52px 52px,radial-gradient(circle at 50% 44%,rgba(121,222,195,.13),transparent 36%),#050604;transition:opacity .7s ease,visibility .7s ease}#loading-screen.gone{opacity:0;visibility:hidden;pointer-events:none}.aisl-loader{width:min(560px,82vw);text-align:center}.aisl-wave{height:92px;display:flex;align-items:center;justify-content:center;gap:clamp(4px,1vw,9px)}.aisl-wave i{width:clamp(3px,.55vw,6px);height:16px;border-radius:999px;background:var(--green);box-shadow:0 0 16px rgba(217,255,57,.48);animation:aislWave 1.05s ease-in-out infinite;animation-delay:calc(var(--i)*-70ms)}@keyframes aislWave{50%{height:calc(22px + var(--i)*4px);background:var(--aqua)}}.aisl-load-title{margin-top:18px;color:var(--ink);font:italic 900 clamp(42px,8vw,82px)/.86 var(--title);letter-spacing:-.035em;text-transform:uppercase}.aisl-load-title span{color:var(--green)}.aisl-load-meta{margin-top:24px;display:flex;align-items:center;justify-content:center;gap:12px;color:rgba(246,242,232,.62);font:800 10px/1 var(--body);letter-spacing:.2em;text-transform:uppercase}.aisl-load-meta::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);animation:aislBlink 1s ease infinite}@keyframes aislBlink{50%{opacity:.25}}
+body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;overflow:hidden;pointer-events:none!important;background:linear-gradient(rgba(217,255,57,.055) 1px,transparent 1px) 0 0/52px 52px,linear-gradient(90deg,rgba(217,255,57,.055) 1px,transparent 1px) 0 0/52px 52px,radial-gradient(circle at 50% 44%,rgba(121,222,195,.13),transparent 36%),#050604;transition:opacity .7s ease,visibility .7s ease}#loading-screen.gone{opacity:0;visibility:hidden;pointer-events:none}.aisl-loader{width:min(560px,82vw);text-align:center}.aisl-wave{height:92px;display:flex;align-items:center;justify-content:center;gap:clamp(4px,1vw,9px)}.aisl-wave i{width:clamp(3px,.55vw,6px);height:16px;border-radius:999px;background:var(--green);box-shadow:0 0 16px rgba(217,255,57,.48);animation:aislWave 1.05s ease-in-out infinite;animation-delay:calc(var(--i)*-70ms)}@keyframes aislWave{50%{height:calc(22px + var(--i)*4px);background:var(--aqua)}}.aisl-load-title{margin-top:18px;color:var(--ink);font:italic 900 clamp(42px,8vw,82px)/.86 var(--title);letter-spacing:-.035em;text-transform:uppercase}.aisl-load-title span{color:var(--green)}.aisl-load-meta{margin-top:24px;display:flex;align-items:center;justify-content:center;gap:12px;color:rgba(246,242,232,.62);font:800 10px/1 var(--body);letter-spacing:.2em;text-transform:uppercase}.aisl-load-meta::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);animation:aislBlink 1s ease infinite}@keyframes aislBlink{50%{opacity:.25}}
 </style>
-<style>html.is-loading,body.is-loading{height:100%;overflow:hidden!important;overscroll-behavior:none!important}</style>
 </head>
-<body class="is-loading">
+<body>
 <div id="loading-screen" role="status" aria-label="Loading AI Speaking Lab"><div class="aisl-loader"><div class="aisl-wave" aria-hidden="true"><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:6"></i><i style="--i:5"></i><i style="--i:4"></i><i style="--i:3"></i><i style="--i:2"></i><i style="--i:1"></i></div><div class="aisl-load-title">AI Speaking <span>Lab</span></div><div class="aisl-load-meta">Calibrating the room</div></div></div>
 <script>
 (() => {
   const screen = document.getElementById("loading-screen");
   const startedAt = performance.now();
   let done = false;
-  document.documentElement.classList.add("is-loading");
 
   function finish() {
     if (done) return;
@@ -990,10 +989,8 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
     if (wait > 0) { window.setTimeout(finish, wait); return; }
     done = true;
     screen?.classList.add("gone");
-    document.body.classList.remove("is-loading");
-    document.documentElement.classList.remove("is-loading");
-    document.documentElement.style.removeProperty("height");
-    document.body.style.removeProperty("height");
+    screen?.addEventListener("transitionend", () => screen.remove(), { once: true });
+    window.setTimeout(() => screen?.remove(), 850);
     document.documentElement.style.setProperty("overflow-y", "auto", "important");
     document.body.style.setProperty("overflow-y", "auto", "important");
     requestAnimationFrame(() => {
@@ -1003,9 +1000,12 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
   }
 
   window.__finishAISpeakingLoader = finish;
-  if (document.readyState === "complete") finish();
-  else window.addEventListener("load", finish, { once: true });
-  window.setTimeout(finish, 4200);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", finish, { once: true });
+  } else {
+    finish();
+  }
+  window.setTimeout(finish, 2200);
 })();
 </script>
 <div class="progress" id="progress"></div>
