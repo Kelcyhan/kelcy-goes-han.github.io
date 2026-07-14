@@ -4,6 +4,7 @@ import homeIdle from '../../assets/frames/scene_1/frame_001.webp';
 import reefIdle from '../../assets/a1_idle.webp';
 import loungeIdle from '../../assets/a2_idle.webp';
 import { projects } from '../data/projects.js';
+import KoiPond from './KoiPond.jsx';
 import TransitionLink from './TransitionLink.jsx';
 
 const ROOM_LABELS = { 1: 'Index', 2: 'Gallery', 3: 'Contact' };
@@ -15,6 +16,7 @@ const TRANSITIONS = {
 };
 const FRAME_COUNT = 121;
 const FRAME_STEP = 2;
+const AMBIENT_FPS = 12;
 const TRANSITION_MS = 2520;
 const BASE_URL = import.meta.env.BASE_URL || '/';
 
@@ -72,12 +74,24 @@ function drawCover(canvas, image) {
   context.drawImage(image, x, y, drawWidth, drawHeight);
 }
 
+function clearCanvas(canvas) {
+  if (!canvas) return;
+  const context = canvas.getContext('2d');
+  if (!context) return;
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.clearRect(0, 0, canvas.width, canvas.height);
+}
+
 function ProjectCard({ project, index }) {
   return (
     <TransitionLink
       className="project-card"
       to={`/projects/${project.slug}`}
-      style={{ '--card-accent': project.accent, '--delay': `${index * 45}ms` }}
+      style={{
+        '--card-accent': project.cardAccent || project.accent,
+        '--card-ink': project.ink,
+        '--delay': `${index * 45}ms`,
+      }}
       aria-label={`Open ${project.title} project`}
     >
       <span className={`project-card-media ${project.graphic ? `is-${project.graphic}` : ''}`}>
@@ -105,15 +119,20 @@ export default function ScenicHome() {
   const initialRoom = Math.min(3, Math.max(1, Number(searchParams.get('room')) || 1));
   const [room, setRoom] = useState(initialRoom);
   const [busy, setBusy] = useState(false);
-  const [transitionLabel, setTransitionLabel] = useState('');
   const canvasRef = useRef(null);
+  const ambientCanvasRef = useRef(null);
   const cacheRef = useRef(new Map());
   const animationRef = useRef(0);
+  const ambientAnimationRef = useRef(0);
   const mountedRef = useRef(true);
   const goRoomRef = useRef(null);
   const reduceMotion = useMemo(
     () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false,
     [],
+  );
+  const ambientMotionEnabled = useMemo(
+    () => !reduceMotion && !(window.matchMedia?.('(pointer: coarse)').matches || window.innerWidth < 760),
+    [reduceMotion],
   );
 
   const loadFrame = useCallback((scene, index) => {
@@ -147,6 +166,7 @@ export default function ScenicHome() {
   const goRoom = useCallback(async (target) => {
     if (busy || target === room || !TRANSITIONS[room]?.[target]) return;
     if (reduceMotion) {
+      if (target !== 1) clearCanvas(ambientCanvasRef.current);
       commitRoom(target);
       return;
     }
@@ -158,7 +178,6 @@ export default function ScenicHome() {
     );
     const sequence = transition.reversed ? forward.reverse() : forward;
     setBusy(true);
-    setTransitionLabel(`Entering ${ROOM_LABELS[target]}`);
 
     const opening = sequence.slice(0, 12);
     await Promise.all(opening.map((index) => loadFrame(transition.scene, index)));
@@ -189,13 +208,11 @@ export default function ScenicHome() {
       if (raw < 1) {
         animationRef.current = window.requestAnimationFrame(tick);
       } else {
+        if (target !== 1) clearCanvas(ambientCanvasRef.current);
         commitRoom(target);
-        setTransitionLabel('');
         setBusy(false);
         window.requestAnimationFrame(() => {
-          const canvas = canvasRef.current;
-          const context = canvas?.getContext('2d');
-          context?.clearRect(0, 0, canvas.width, canvas.height);
+          clearCanvas(canvasRef.current);
         });
       }
     };
@@ -221,6 +238,68 @@ export default function ScenicHome() {
   }, [loadFrame]);
 
   useEffect(() => {
+    if (!ambientMotionEnabled) return undefined;
+
+    let cancelled = false;
+    let nextFrame = 0;
+    let batchTimer = 0;
+    const loadBatch = () => {
+      if (cancelled) return;
+      const end = Math.min(FRAME_COUNT, nextFrame + 8);
+      for (; nextFrame < end; nextFrame += 1) void loadFrame(1, nextFrame);
+      if (nextFrame < FRAME_COUNT) batchTimer = window.setTimeout(loadBatch, 45);
+    };
+
+    batchTimer = window.setTimeout(loadBatch, 60);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(batchTimer);
+    };
+  }, [ambientMotionEnabled, loadFrame]);
+
+  useEffect(() => {
+    const canvas = ambientCanvasRef.current;
+    if (!canvas) return undefined;
+
+    // Keep the latest ambient frame frozen underneath the outgoing transition.
+    if (busy) return undefined;
+    if (room !== 1 || !ambientMotionEnabled) {
+      clearCanvas(canvas);
+      return undefined;
+    }
+
+    let cancelled = false;
+    let startedAt = 0;
+    let lastFrame = -1;
+    const tick = (now) => {
+      if (cancelled) return;
+      const frameIndex = Math.floor(((now - startedAt) / 1000) * AMBIENT_FPS) % FRAME_COUNT;
+      if (frameIndex !== lastFrame) {
+        const entry = cacheRef.current.get(`1:${frameIndex}`);
+        if (entry?.ready) {
+          drawCover(canvas, entry.image);
+          lastFrame = frameIndex;
+        } else {
+          void loadFrame(1, frameIndex);
+        }
+      }
+      ambientAnimationRef.current = window.requestAnimationFrame(tick);
+    };
+
+    const prime = Array.from({ length: 16 }, (_, index) => loadFrame(1, index));
+    void Promise.all(prime).then(() => {
+      if (cancelled) return;
+      startedAt = performance.now();
+      ambientAnimationRef.current = window.requestAnimationFrame(tick);
+    });
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(ambientAnimationRef.current);
+    };
+  }, [ambientMotionEnabled, busy, loadFrame, room]);
+
+  useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === 'ArrowDown') goRoomRef.current?.(2);
       else if (event.key === 'ArrowRight') goRoomRef.current?.(3);
@@ -236,10 +315,12 @@ export default function ScenicHome() {
   }, []);
 
   return (
-    <main className={`scenic-home room-${room} ${busy ? 'is-transitioning' : ''}`}>
+    <main className={`scenic-home room-${room} ${busy ? 'is-transitioning' : ''}`} aria-busy={busy}>
       <div className="scenic-stage" aria-hidden="true">
         <img className="scenic-idle" src={IDLE_IMAGES[room]} alt="" />
+        <canvas ref={ambientCanvasRef} className="ambient-canvas" />
         <canvas ref={canvasRef} className="transition-canvas" />
+        <KoiPond active={room === 2 && !busy} />
         <span className="scenic-wash" />
       </div>
 
@@ -296,10 +377,9 @@ export default function ScenicHome() {
         </div>
       </section>
 
-      <div className={`transition-status ${transitionLabel ? 'is-visible' : ''}`} role="status" aria-live="polite">
-        <span /> {transitionLabel}
-      </div>
-      <p className="home-hint">Use the room menu or arrow keys</p>
+      <p className="home-hint">
+        {room === 2 ? 'Move to scatter · Click to summon more' : 'Use the room menu or arrow keys'}
+      </p>
     </main>
   );
 }

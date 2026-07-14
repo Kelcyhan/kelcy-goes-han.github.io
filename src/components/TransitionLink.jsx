@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function shouldHandle(event) {
@@ -12,14 +13,14 @@ function shouldHandle(event) {
 export function useTransitionNavigate() {
   const navigate = useNavigate();
 
-  return (to, options) => {
+  return useCallback((to, options) => {
     const commit = () => navigate(to, options);
     if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       document.startViewTransition(commit);
     } else {
       commit();
     }
-  };
+  }, [navigate]);
 }
 
 export default function TransitionLink({ to, onClick, children, ...props }) {

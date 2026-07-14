@@ -3,23 +3,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/projects/:path*", "destination": "/index.html" },
-    { "source": "/AISpeakingLab", "destination": "/index.html" },
-    { "source": "/AISpeakingLab/", "destination": "/index.html" },
-    { "source": "/AgentSystem", "destination": "/index.html" },
-    { "source": "/AgentSystem/", "destination": "/index.html" },
-    { "source": "/DiscussAgain", "destination": "/index.html" },
-    { "source": "/DiscussAgain/", "destination": "/index.html" },
-    { "source": "/MetacogReef", "destination": "/index.html" },
-    { "source": "/MetacogReef/", "destination": "/index.html" },
-    { "source": "/PointFit", "destination": "/index.html" },
-    { "source": "/PointFit/", "destination": "/index.html" },
-    { "source": "/Puri", "destination": "/index.html" },
-    { "source": "/Puri/", "destination": "/index.html" },
-    { "source": "/SupplyNet", "destination": "/index.html" },
-    { "source": "/SupplyNet/", "destination": "/index.html" },
-    { "source": "/Swarm", "destination": "/index.html" },
-    { "source": "/Swarm/", "destination": "/index.html" }
+    { "source": "/projects/:path*", "destination": "/index.html" }
   ],
   "headers": [
     {

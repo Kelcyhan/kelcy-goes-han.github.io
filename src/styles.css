@@ -127,7 +127,9 @@ iframe {
 
 .scenic-stage,
 .scenic-idle,
+.ambient-canvas,
 .transition-canvas,
+.koi-canvas,
 .scenic-wash {
   position: absolute;
   inset: 0;
@@ -142,17 +144,33 @@ iframe {
 }
 
 .scenic-idle {
+  z-index: 1;
   object-fit: cover;
   transform: scale(1.015);
   animation: scenicBreath 15s ease-in-out infinite alternate;
+}
+
+.room-1 .scenic-idle {
+  transform: none;
+  animation: none;
+}
+
+.ambient-canvas {
+  z-index: 1;
+  pointer-events: none;
 }
 
 .transition-canvas {
   z-index: 2;
 }
 
-.scenic-wash {
+.koi-canvas {
   z-index: 3;
+  pointer-events: none;
+}
+
+.scenic-wash {
+  z-index: 4;
   pointer-events: none;
   background:
     linear-gradient(180deg, rgba(16, 25, 22, 0.24), transparent 28%, transparent 65%, rgba(12, 19, 17, 0.32)),
@@ -385,12 +403,14 @@ iframe {
   transform: translateY(14px);
   opacity: 0;
   animation: cardEnter 520ms var(--delay) ease forwards;
-  transition: transform 250ms ease, background 250ms ease, box-shadow 250ms ease;
+  transition: color 250ms ease, border-color 250ms ease, transform 250ms ease, background 250ms ease, box-shadow 250ms ease;
 }
 
-.project-card:hover {
+.project-card:is(:hover, :focus-visible) {
   z-index: 2;
-  background: color-mix(in srgb, var(--card-accent) 42%, rgba(13, 42, 43, 0.75));
+  color: var(--card-ink);
+  border-color: color-mix(in srgb, var(--card-ink) 24%, transparent);
+  background: var(--card-accent);
   box-shadow: 0 24px 60px rgba(2, 29, 30, 0.35);
   transform: translateY(-5px) !important;
 }
@@ -413,6 +433,7 @@ iframe {
   content: "";
   background: linear-gradient(180deg, transparent 58%, rgba(5, 25, 25, 0.35));
   pointer-events: none;
+  transition: background 250ms ease;
 }
 
 .project-card-media img {
@@ -422,8 +443,12 @@ iframe {
   transition: transform 500ms ease;
 }
 
-.project-card:hover .project-card-media img {
+.project-card:is(:hover, :focus-visible) .project-card-media img {
   transform: scale(1.045);
+}
+
+.project-card:is(:hover, :focus-visible) .project-card-media::after {
+  background: linear-gradient(180deg, transparent 58%, color-mix(in srgb, var(--card-accent) 56%, transparent));
 }
 
 .project-card-copy {
@@ -453,6 +478,12 @@ iframe {
   font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  transition: color 250ms ease, opacity 250ms ease;
+}
+
+.project-card:is(:hover, :focus-visible) .project-card-copy small {
+  color: var(--card-ink);
+  opacity: 0.68;
 }
 
 .project-arrow {
@@ -466,9 +497,10 @@ iframe {
   transition: color 200ms ease, background 200ms ease, transform 200ms ease;
 }
 
-.project-card:hover .project-arrow {
-  color: #15312d;
-  background: #fff;
+.project-card:is(:hover, :focus-visible) .project-arrow {
+  color: var(--card-accent);
+  border-color: var(--card-ink);
+  background: var(--card-ink);
   transform: rotate(8deg);
 }
 
@@ -562,144 +594,167 @@ iframe {
   text-transform: uppercase;
 }
 
-.transition-status {
-  position: fixed;
-  z-index: 30;
-  top: 50%;
-  left: 50%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  color: #fff;
-  background: rgba(19, 30, 27, 0.5);
-  backdrop-filter: blur(18px);
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -42%);
-  transition: opacity 220ms ease, transform 220ms ease;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.transition-status.is-visible {
-  opacity: 1;
-  transform: translate(-50%, -50%);
-}
-
-.transition-status span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #cdeadd;
-  animation: statusPulse 900ms ease-in-out infinite alternate;
-}
-
-@keyframes statusPulse {
-  to { opacity: 0.32; transform: scale(0.72); }
-}
-
 /* ============================== MUSIC ============================== */
 
 .music-player {
   position: fixed;
   z-index: 120;
-  left: clamp(20px, 4vw, 58px);
-  bottom: 20px;
+  bottom: 10px;
+  left: 10px;
+  width: 140px;
+  height: 140px;
+  isolation: isolate;
+  transform: scale(1);
+  transform-origin: bottom left;
+  transition: transform 550ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.app-home > .music-player {
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 80px;
+  transform-origin: bottom left;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .music-player:hover {
+    transform: scale(1.18);
+  }
+
+  .app-home > .music-player:hover {
+    transform: scale(1);
+  }
 }
 
 .music-toggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 50px;
-  padding: 5px 13px 5px 5px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  color: #fff;
-  background: rgba(27, 34, 31, 0.52);
-  box-shadow: 0 12px 30px rgba(15, 22, 18, 0.18);
-  backdrop-filter: blur(18px) saturate(0.85);
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: transparent;
+  background: transparent;
   cursor: pointer;
-  transition: background 180ms ease, transform 180ms ease;
 }
 
-.music-toggle:hover {
-  background: rgba(27, 34, 31, 0.74);
-  transform: translateY(-2px);
+.music-toggle:focus-visible {
+  outline-color: rgba(244, 232, 208, 0.9);
+  outline-offset: -12px;
 }
 
 .music-orb {
-  position: relative;
-  flex: 0 0 40px;
-  width: 40px;
-  height: 40px;
-  overflow: hidden;
-  border-radius: 50%;
-  background: #b7d7ce;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: transparent;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1), opacity 700ms ease;
 }
 
 .music-orb video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  display: none;
 }
 
-.music-wave {
+.music-orb canvas {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.music-toggle[aria-pressed="false"] .music-orb {
+  opacity: 0.68;
+  transform: scale(0.74);
+}
+
+/* ======================== ORIGINAL PROJECT ROUTE ======================== */
+
+body.route-open {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.original-project-shell {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 50%, rgba(244, 167, 66, 0.05), transparent 60%),
+    linear-gradient(180deg, #16110b 0%, #1f1813 60%, #14110e 100%);
+}
+
+.original-project-frame {
   position: absolute;
-  inset: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.82);
-  border-radius: 50%;
+  z-index: 1;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  border: 0;
+  background: #181825;
+  opacity: 0;
+  touch-action: pan-x pan-y pinch-zoom;
+  transition: opacity 500ms ease;
+}
+
+.original-project-shell.is-ready .original-project-frame {
+  opacity: 1;
+}
+
+.original-project-loading {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #f1ece3;
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  font-style: italic;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  pointer-events: none;
+  transition: opacity 400ms ease;
+}
+
+.original-project-shell.is-ready .original-project-loading {
   opacity: 0;
 }
 
-.music-wave.is-playing {
-  animation: musicRipple 1.6s ease-out infinite;
+.original-project-back {
+  position: absolute;
+  z-index: 2;
+  top: max(14px, env(safe-area-inset-top));
+  left: max(14px, env(safe-area-inset-left));
+  min-width: 76px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(244, 232, 208, 0.18);
+  border-radius: 999px;
+  color: rgba(244, 232, 208, 0.94);
+  background: rgba(12, 14, 18, 0.62);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 180ms ease, transform 180ms ease;
 }
 
-@keyframes musicRipple {
-  0% { opacity: 0.75; transform: scale(0.55); }
-  100% { opacity: 0; transform: scale(1.15); }
-}
-
-.music-copy b,
-.music-copy small {
-  display: block;
-  white-space: nowrap;
-}
-
-.music-copy b {
-  font-size: 0.7rem;
-  letter-spacing: 0.04em;
-}
-
-.music-copy small {
-  margin-top: 2px;
-  color: rgba(255, 255, 255, 0.6);
-  font-family: var(--serif);
-  font-size: 0.65rem;
-  font-style: italic;
-}
-
-.music-player.is-compact {
-  right: 20px;
-  bottom: 18px;
-  left: auto;
-}
-
-.music-player.is-compact .music-toggle {
-  color: var(--ink);
-  border-color: rgba(32, 34, 31, 0.15);
-  background: rgba(247, 243, 236, 0.84);
-  box-shadow: 0 12px 34px rgba(35, 31, 25, 0.12);
-}
-
-.music-player.is-compact .music-copy small {
-  color: var(--muted);
+.original-project-back:hover {
+  background: rgba(20, 24, 30, 0.74);
+  transform: translateX(-2px);
 }
 
 /* ============================== PROJECTS ============================== */
@@ -1862,26 +1917,34 @@ body.lightbox-open {
     padding: 100px 22px 100px;
   }
 
-  .home-hint,
-  .music-copy {
+  .home-hint {
     display: none;
   }
 
   .music-player,
   .music-player.is-compact {
     right: auto;
-    bottom: 14px;
-    left: 14px;
+    bottom: 6px;
+    left: 6px;
+    width: 96px;
+    height: 96px;
+  }
+
+  .app-home > .music-player {
+    bottom: 0;
+    left: 0;
+    width: 80px;
+    height: 80px;
   }
 
   .music-toggle {
-    min-height: 46px;
-    padding: 3px;
+    min-height: 0;
+    padding: 0;
   }
 
   .music-orb {
-    width: 40px;
-    height: 40px;
+    width: 100%;
+    height: 100%;
   }
 
   .project-header {
