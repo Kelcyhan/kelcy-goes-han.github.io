@@ -1,3 +1,4 @@
+import { cp, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 
@@ -12,8 +13,30 @@ const projectPages = [
   'Swarm',
 ];
 
+// Frame sequences and the GLB are addressed dynamically at runtime, so Vite
+// cannot discover them from static imports. Copy them with their original URL
+// structure after every build instead of relying on the dev server's fallback.
+function copyRuntimeAssets() {
+  const runtimeAssetDirs = ['frames', 'fish'];
+
+  return {
+    name: 'copy-runtime-assets',
+    apply: 'build',
+    async closeBundle() {
+      const outputAssets = resolve(__dirname, 'dist/assets');
+      await mkdir(outputAssets, { recursive: true });
+      await Promise.all(runtimeAssetDirs.map((dir) => cp(
+        resolve(__dirname, 'assets', dir),
+        resolve(outputAssets, dir),
+        { recursive: true },
+      )));
+    },
+  };
+}
+
 export default defineConfig({
   appType: 'mpa',
+  plugins: [copyRuntimeAssets()],
   build: {
     rollupOptions: {
       input: {

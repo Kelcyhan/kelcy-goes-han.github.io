@@ -807,6 +807,7 @@ function easeTrapezoidal(t) {
 // Per-scene cache-bust version — bump when frames change to force browser reload
 const ASSET_VERSIONS = { scene1: '1', scene2: 'v11', scene3: '1', scene4: '1' };
 const preloadStarted = new Set();
+const preloadComplete = new Set();
 function frameSrc(name, idx) {
   const cfg = SCENES[name];
   const ver = ASSET_VERSIONS[name] || '1';
@@ -829,7 +830,10 @@ function preloadScene(name) {
   const cfg = SCENES[name];
   let i = 0;
   const loadBatch = () => {
-    const end = Math.min(cfg.count, i + 4);
+    // Start requests quickly enough that a transition is ready on first use,
+    // while keeping each batch bounded to avoid a single main-thread burst.
+    const batchSize = name === 'scene1' ? 8 : 12;
+    const end = Math.min(cfg.count, i + batchSize);
     for (; i < end; i++) {
       preloadFrame(name, i);
       // No promise tracking — drawFrame checks img.complete per-frame.
@@ -837,9 +841,9 @@ function preloadScene(name) {
       // unloaded frames fall back to the prior frame (so canvas never resets to stub).
     }
     if (i < cfg.count) {
-      const schedule = () => window.setTimeout(loadBatch, name === 'scene1' ? 140 : 90);
-      if ('requestIdleCallback' in window) window.requestIdleCallback(schedule, { timeout: 900 });
-      else schedule();
+      window.setTimeout(loadBatch, name === 'scene1' ? 45 : 30);
+    } else {
+      preloadComplete.add(name);
     }
   }
   loadBatch();
@@ -858,8 +862,14 @@ function imageReady(img) {
 
 function transitionFramesReady(sceneName) {
   const cfg = SCENES[sceneName];
-  const checkpoints = [0, 8, 18, 32, Math.floor(cfg.count * 0.5), cfg.count - 1];
-  return checkpoints.every(idx => imageReady(frames[sceneName][idx]));
+  if (preloadComplete.has(sceneName)) return true;
+  // Require the opening run of frames so an animation can begin smoothly.
+  // Later frames continue downloading while these first frames play.
+  const openingFrameCount = Math.min(24, cfg.count);
+  for (let idx = 0; idx < openingFrameCount; idx++) {
+    if (!imageReady(frames[sceneName][idx])) return false;
+  }
+  return true;
 }
 
 // ============================================================
@@ -1638,7 +1648,7 @@ function startTransition(target, opts = {}) {
     pendingTransition = {
       target,
       requestedAt: performance.now(),
-      forceAfterMs: 1100,
+      forceAfterMs: 1800,
     };
     return false;
   }
@@ -2068,7 +2078,7 @@ if (!prefersReducedMotion && !mobileLike) {
   // Start the visible room shortly after first paint so it actually animates,
   // while still allowing the poster and controls to become interactive first.
   delayedIdle(warmScene1, 450);
-  delayedIdle(warmGalleryTransition, 4200);
+  delayedIdle(warmGalleryTransition, 1600);
 }
 resizeFish();
 requestAnimationFrame(tick);
