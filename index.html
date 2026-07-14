@@ -512,6 +512,7 @@
     inset: 0;
     z-index: 1;
     width: 100vw; height: 100vh; height: 100dvh; border: 0; display: block; background: #181825;
+    touch-action: pan-x pan-y pinch-zoom;
     opacity: 0; transition: opacity 0.5s ease;
   }
   #route-shell.iframe-ready #route-iframe { opacity: 1; }
@@ -1712,29 +1713,11 @@ function pushInput(direction) {
   if (target) startTransition(target);
 }
 
-let routedWheelX = 0;
-let routedWheelY = 0;
-let routedWheelFrame = 0;
 window.addEventListener('wheel', e => {
   if (document.body.classList.contains('route-open')) {
-    if (e.target?.closest?.('#route-back, #bgm-player')) return;
-    const frameWindow = document.getElementById('route-iframe')?.contentWindow;
-    if (frameWindow) {
-      e.preventDefault();
-      try {
-        if (frameWindow.document.body.classList.contains('is-loading')) return;
-      } catch (error) {}
-      routedWheelX += e.deltaX;
-      routedWheelY += e.deltaY;
-      if (!routedWheelFrame) {
-        routedWheelFrame = window.requestAnimationFrame(() => {
-          frameWindow.scrollBy({ left: routedWheelX, top: routedWheelY, behavior: 'auto' });
-          routedWheelX = 0;
-          routedWheelY = 0;
-          routedWheelFrame = 0;
-        });
-      }
-    }
+    // The case study iframe owns its own native scrolling. Do not cancel or
+    // synthesize wheel input here: doing both makes trackpads feel erratic and
+    // can prevent mouse wheels from scrolling at all in some browsers.
     return;
   }
   e.preventDefault();

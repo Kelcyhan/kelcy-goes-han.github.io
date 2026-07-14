@@ -901,26 +901,6 @@
     background: #0d1117;
     opacity: 1;
   }
-  .demo-start {
-    position: absolute;
-    inset: 50px 0 0;
-    z-index: 4;
-    display: grid;
-    place-items: center;
-    background:
-      radial-gradient(circle at 50% 42%, rgba(110,149,246,.2), transparent 34rem),
-      #0d1117;
-    color: rgba(242,234,220,.82);
-    font: 700 12px/1.4 var(--ui-font);
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    transition: opacity .28s ease, visibility .28s ease;
-  }
-  .demo-shell.demo-ready .demo-start {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
   .demo-launch {
     position: absolute;
     right: 14px;
@@ -1380,7 +1360,6 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
         <span>Mock vault · offline safe</span>
       </div>
       <iframe id="agent-demo-frame" title="Agent System live demo" src="demo/" loading="eager" allow="clipboard-read; clipboard-write"></iframe>
-      <div class="demo-start" id="demo-start" role="status">Starting interactive demo…</div>
       <a class="demo-launch" href="demo/">Open full demo</a>
       <div class="demo-fallback" id="demo-fallback" aria-live="polite">
         <div class="demo-fallback-card">
@@ -1396,6 +1375,7 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
 <script>
   const loadingScreen = document.getElementById('loading-screen');
   let loadingDone = false;
+  let pageLoaded = document.readyState === 'complete';
   function blockLoadingScroll(event) {
     if (!document.body.classList.contains('is-loading')) return;
     event.preventDefault();
@@ -1409,6 +1389,7 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
   const loadingStartedAt = performance.now();
   function finishLoading() {
     if (loadingDone) return;
+    if (!pageLoaded || !demoReady) return;
     const remaining = 900 - (performance.now() - loadingStartedAt);
     if (remaining > 0) return window.setTimeout(finishLoading, remaining);
     loadingDone = true;
@@ -1421,8 +1402,6 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
   try { localStorage.setItem('onboarding-checklist-dismissed', '1'); } catch (e) {}
   const demoShell = document.querySelector('.demo-shell');
   const demoFrame = document.getElementById('agent-demo-frame');
-  const demoLoadingLabel = document.getElementById('demo-start');
-  const demoRenderStartedAt = performance.now();
   let demoReady = false;
   let demoReadyTimer = 0;
   function demoHasRenderedUI() {
@@ -1449,6 +1428,7 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
     demoReady = true;
     demoShell?.classList.add('demo-ready');
     demoShell?.classList.add('demo-active');
+    finishLoading();
   }
   function waitForDemoRender() {
     if (demoReady) return;
@@ -1461,9 +1441,6 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
       }
       return;
     }
-    if (performance.now() - demoRenderStartedAt > 10000 && demoLoadingLabel) {
-      demoLoadingLabel.textContent = 'Still loading interactive demo…';
-    }
     window.setTimeout(waitForDemoRender, 80);
   }
   demoFrame?.addEventListener('load', waitForDemoRender);
@@ -1471,12 +1448,15 @@ body.is-loading{overflow:hidden}#loading-screen{position:fixed;inset:0;z-index:9
     if (event.source === demoFrame?.contentWindow && event.data?.type === 'agent-demo-ready') {
       demoReady = true;
       demoShell?.classList.add('demo-ready', 'demo-active');
+      finishLoading();
     }
   });
   waitForDemoRender();
-  if (document.readyState === 'complete') finishLoading();
-  else window.addEventListener('load', finishLoading, { once: true });
-  window.setTimeout(finishLoading, 3500);
+  if (pageLoaded) finishLoading();
+  else window.addEventListener('load', () => {
+    pageLoaded = true;
+    finishLoading();
+  }, { once: true });
 </script>
 </body>
 </html>

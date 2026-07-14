@@ -9,7 +9,6 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0d1117" />
     <title>Locusly</title>
-    <link rel="preload" as="image" href="../demo-preview.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet" />
@@ -54,18 +53,6 @@
         overscroll-behavior: none;
         background: #181825;
       }
-      #boot-poster {
-        position: fixed;
-        inset: 0;
-        z-index: 2147483647;
-        background: #eef4f7 url("../demo-preview.png") center / cover no-repeat;
-        opacity: 1;
-        transition: opacity 160ms ease;
-        pointer-events: none;
-      }
-      #boot-poster.is-ready {
-        opacity: 0;
-      }
       *,
       *::before,
       *::after {
@@ -74,28 +61,24 @@
     </style>
   </head>
   <body>
-    <div id="boot-poster" aria-hidden="true"></div>
     <div id="root"></div>
     <script>
       (() => {
-        const poster = document.getElementById('boot-poster');
         const root = document.getElementById('root');
         let readySince = 0;
-        function revealApp() {
+        function notifyReady() {
           const text = root?.textContent || '';
           if (!root?.children.length || !text.includes('Today') || !text.includes('Command Bar')) {
             readySince = 0;
-            return window.setTimeout(revealApp, 50);
+            return window.setTimeout(notifyReady, 50);
           }
           if (!readySince) readySince = Date.now();
-          if (Date.now() - readySince < 800) return window.setTimeout(revealApp, 50);
+          if (Date.now() - readySince < 800) return window.setTimeout(notifyReady, 50);
           window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-            poster?.classList.add('is-ready');
             try { window.parent.postMessage({ type: 'agent-demo-ready' }, '*'); } catch (error) {}
-            window.setTimeout(() => poster?.remove(), 180);
           }));
         }
-        revealApp();
+        notifyReady();
       })();
     </script>
   </body>
