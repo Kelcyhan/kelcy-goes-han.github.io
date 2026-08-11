@@ -62,6 +62,15 @@ for (const [directory, marker] of originalProjects) {
     await verifyHtmlReferences(path);
     const html = await readFile(resolve(dist, path), 'utf8');
     if (!html.includes(marker)) failures.push(`${path} is not the original ${marker} page`);
+    if (!/id=["']loading-screen["']/.test(html)) {
+      failures.push(`${path} is missing its custom loading screen`);
+    }
+    if (!html.includes('route-ready')) {
+      failures.push(`${path} is missing its custom-loader handoff`);
+    }
+    if (!html.includes('../assets/project-back.js')) {
+      failures.push(`${path} is missing the shared project-route bridge`);
+    }
   }
 }
 
@@ -109,6 +118,12 @@ for (let scene = 1; scene <= 4; scene += 1) {
 }
 
 const builtAssets = await readdir(resolve(dist, 'assets'));
+for (const asset of builtAssets.filter((name) => ['.css', '.js'].includes(extname(name)))) {
+  const source = await readFile(resolve(dist, 'assets', asset), 'utf8');
+  if (source.includes('original-project-loading')) {
+    failures.push(`Built shell asset ${asset} restores the generic project Loading overlay`);
+  }
+}
 const requiredAssetGroups = [
   ['background music', (name) => extname(name) === '.mp3'],
   ['water droplet video', (name) => name.startsWith('water_drop-') && extname(name) === '.mp4'],
@@ -133,5 +148,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log('Site verification passed: routes, demos, frame sequences, koi, audio, and videos are present.');
+  console.log('Site verification passed: routes, custom loaders, demos, frame sequences, koi, audio, and videos are present.');
 }

@@ -320,6 +320,7 @@
   const shell = document.getElementById('sandbox-frame');
   const iframe = shell.querySelector('iframe');
   const infoCard = document.getElementById('info-card');
+  const inIframe = window.top !== window.self;
 
   let loadingDone = false;
   function finishLoading() {
