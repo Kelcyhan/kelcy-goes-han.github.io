@@ -43,6 +43,10 @@ await requireFile('audio-processor.js');
 await requireFile('assets/project-back.js');
 await requireFile('assets/fish/koi.glb');
 await verifyHtmlReferences('index.html');
+await requireFile('Doliu/index.html');
+await requireFile('BetweenBayShop/index.html');
+if (await exists(resolve(dist, 'Doliu/index.html'))) await verifyHtmlReferences('Doliu/index.html');
+if (await exists(resolve(dist, 'BetweenBayShop/index.html'))) await verifyHtmlReferences('BetweenBayShop/index.html');
 
 const originalProjects = [
   ['AISpeakingLab', 'AI Speaking Lab'],

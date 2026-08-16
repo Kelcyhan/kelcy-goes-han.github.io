@@ -8,6 +8,11 @@ import KoiPond from './KoiPond.jsx';
 import TransitionLink from './TransitionLink.jsx';
 
 const ROOM_LABELS = { 1: 'Index', 2: 'Gallery', 3: 'Contact' };
+const PROJECT_GROUPS = [
+  ['commerce', 'Commerce & Brand'],
+  ['product', 'Product & UX'],
+  ['creative', 'Creative Tech'],
+];
 const IDLE_IMAGES = { 1: homeIdle, 2: reefIdle, 3: loungeIdle };
 const TRANSITIONS = {
   1: { 2: { scene: 2, reversed: false }, 3: { scene: 3, reversed: false } },
@@ -83,17 +88,8 @@ function clearCanvas(canvas) {
 }
 
 function ProjectCard({ project, index }) {
-  return (
-    <TransitionLink
-      className="project-card"
-      to={`/projects/${project.slug}`}
-      style={{
-        '--card-accent': project.cardAccent || project.accent,
-        '--card-ink': project.ink,
-        '--delay': `${index * 45}ms`,
-      }}
-      aria-label={`Open ${project.title} project`}
-    >
+  const cardContent = (
+    <>
       <span className={`project-card-media ${project.graphic ? `is-${project.graphic}` : ''}`}>
         {project.preview ? (
           <img src={project.preview} alt="" loading="lazy" decoding="async" />
@@ -110,6 +106,37 @@ function ProjectCard({ project, index }) {
         </span>
         <span className="project-arrow" aria-hidden="true">↗</span>
       </span>
+    </>
+  );
+  const sharedProps = {
+    className: 'project-card',
+    style: {
+      '--card-accent': project.cardAccent || project.accent,
+      '--card-ink': project.ink,
+      '--delay': `${index * 45}ms`,
+    },
+    'aria-label': `Open ${project.title} project`,
+  };
+
+  if (project.externalUrl) {
+    return (
+      <a
+        {...sharedProps}
+        href={project.externalUrl}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {cardContent}
+      </a>
+    );
+  }
+
+  return (
+    <TransitionLink
+      {...sharedProps}
+      to={`/projects/${project.slug}`}
+    >
+      {cardContent}
     </TransitionLink>
   );
 }
@@ -118,6 +145,7 @@ export default function ScenicHome() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialRoom = Math.min(3, Math.max(1, Number(searchParams.get('room')) || 1));
   const [room, setRoom] = useState(initialRoom);
+  const [activeProjectGroup, setActiveProjectGroup] = useState('commerce');
   const [busy, setBusy] = useState(false);
   const canvasRef = useRef(null);
   const ambientCanvasRef = useRef(null);
@@ -311,7 +339,7 @@ export default function ScenicHome() {
   }, [room]);
 
   useEffect(() => {
-    document.title = 'Kelcy Han — Creative Technologist';
+    document.title = 'Kelcy Han — AI-native Brand & Visual Designer';
   }, []);
 
   return (
@@ -326,7 +354,7 @@ export default function ScenicHome() {
 
       <header className="home-header">
         <button className="home-logo" type="button" onClick={() => goRoom(1)} disabled={busy}>
-          KELCY HAN
+          Kelcy Han
         </button>
         <nav className="room-nav" aria-label="Portfolio rooms">
           {[1, 2, 3].map((roomNumber) => (
@@ -345,9 +373,9 @@ export default function ScenicHome() {
       </header>
 
       <section className={`home-room home-intro ${room === 1 ? 'is-active' : ''}`} aria-hidden={room !== 1}>
-        <p className="eyebrow">Creative technologist · Hong Kong</p>
-        <h1>Hello,<br />I’m Kelcy Han.</h1>
-        <p className="home-lede">I build thoughtful systems where design, technology, and real-world behaviour meet.</p>
+        <p className="eyebrow">AI-native Brand & Visual Designer · Hong Kong</p>
+        <h1>I turn brand ideas<br />into visuals that sell.</h1>
+        <p className="home-lede">I combine AI-native workflows with brand thinking to create identities, IP, campaign visuals and e-commerce experiences — from concept to launch.</p>
         <button className="room-cta" type="button" onClick={() => goRoom(2)} disabled={busy}>
           Enter selected work <span aria-hidden="true">↓</span>
         </button>
@@ -356,24 +384,41 @@ export default function ScenicHome() {
       <section className={`home-room home-gallery ${room === 2 ? 'is-active' : ''}`} aria-hidden={room !== 2}>
         <div className="gallery-heading">
           <div>
-            <p className="eyebrow">Selected work · 2024–2026</p>
-            <h2>Eight systems,<br />one curious practice.</h2>
+            <p className="eyebrow">AI-native brand & visual design · 2024–2026</p>
+            <h2>Selected projects,<br />one visual practice.</h2>
           </div>
-          <p>Research prototypes, services, learning environments, and interactive experiments.</p>
+          <p>Brand identity, IP design, Shopify commerce, campaign visuals and creative technology.</p>
+        </div>
+        <div className="project-tabs" role="tablist" aria-label="Project categories">
+          {PROJECT_GROUPS.map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={activeProjectGroup === value}
+              className={activeProjectGroup === value ? 'is-active' : ''}
+              onClick={() => setActiveProjectGroup(value)}
+            >
+              {label}
+              <span>{String(projects.filter((project) => project.group === value).length).padStart(2, '0')}</span>
+            </button>
+          ))}
         </div>
         <div className="project-grid">
-          {projects.map((project, index) => <ProjectCard key={project.slug} project={project} index={index} />)}
+          {projects
+            .filter((project) => project.group === activeProjectGroup)
+            .map((project, index) => <ProjectCard key={project.slug} project={project} index={index} />)}
         </div>
       </section>
 
       <section className={`home-room home-contact ${room === 3 ? 'is-active' : ''}`} aria-hidden={room !== 3}>
-        <p className="eyebrow">Contact · collaborations welcome</p>
-        <h2>Let’s make the<br />complicated feel clear.</h2>
-        <p>Open to research collaborations, creative technology, product work, and conversations about the spaces between disciplines.</p>
+        <p className="eyebrow">Available in Hong Kong</p>
+        <h2>Let’s build visuals<br />people remember.</h2>
+        <p>Open to AI-native brand, visual and e-commerce design opportunities, with hands-on experience across identity, IP, campaigns and Shopify.</p>
         <div className="contact-links">
           <a href="mailto:kelcyhan@gmail.com">Email <span aria-hidden="true">↗</span></a>
           <a href="https://www.linkedin.com/in/kelcy-goes-han" target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>
-          <a href="https://github.com/Kelcyhan" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+          <a href="https://www.instagram.com/kelcyart/" target="_blank" rel="noreferrer">Instagram <span aria-hidden="true">↗</span></a>
         </div>
       </section>
 

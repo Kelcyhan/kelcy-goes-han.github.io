@@ -1,0 +1,19 @@
+const products = [
+  {id:1,name:'Doliu Hush Doll',price:220,category:'living',tag:'New',image:'./assets/merch-03.png',position:'20% 50%'},
+  {id:2,name:'Foldbloom Tote Bag',price:120,category:'accessories',tag:'Bestseller',image:'./assets/merch-01.png',position:'30% 46%'},
+  {id:3,name:'Petal Day Umbrella',price:168,category:'accessories',tag:'New',image:'./assets/merch-03.png',position:'84% 52%'},
+  {id:4,name:'Take-a-Pause Tumbler',price:98,category:'living',tag:'',image:'./assets/merch-02.png',position:'88% 58%'},
+  {id:5,name:'Little Moments Notebook',price:78,category:'stationery',tag:'',image:'./assets/merch-02.png',position:'22% 68%'},
+  {id:6,name:'Doliu Enamel Pin Set',price:88,category:'accessories',tag:'Gift pick',image:'./assets/merch-04.png',position:'82% 56%'},
+  {id:7,name:'In-between Sticker Sheet',price:32,category:'stationery',tag:'',image:'./assets/merch-01.png',position:'36% 67%'},
+  {id:8,name:'Foldbloom Sleep Mask',price:72,category:'living',tag:'',image:'./assets/merch-03.png',position:'40% 60%'}
+];
+const cart=[];
+const grid=document.querySelector('#product-grid');
+grid.innerHTML=products.map(p=>`<article class="product-card" data-category="${p.category}"><div class="product-media"><img src="${p.image}" alt="${p.name}" style="object-position:${p.position}">${p.tag?`<span class="product-tag">${p.tag}</span>`:''}<button class="add-button" data-add="${p.id}" aria-label="Add ${p.name} to bag">+</button></div><div class="product-meta"><span>${p.name}</span><span>HK$${p.price}</span></div></article>`).join('');
+function renderCart(){const count=document.querySelector('[data-cart-count]'),items=document.querySelector('.cart-items'),empty=document.querySelector('.cart-empty'),footer=document.querySelector('.cart-footer');count.textContent=cart.length;items.innerHTML=cart.map((p,i)=>`<div class="cart-item"><img src="${p.image}" alt=""><div><p>${p.name}</p><span>HK$${p.price}</span></div><button data-remove="${i}" aria-label="Remove ${p.name}">×</button></div>`).join('');empty.hidden=cart.length>0;footer.hidden=cart.length===0;document.querySelector('[data-cart-total]').textContent=`HK$${cart.reduce((sum,p)=>sum+p.price,0)}`}
+function openCart(){document.querySelector('.cart').classList.add('is-open');document.querySelector('.scrim').classList.add('is-open');document.querySelector('.cart').setAttribute('aria-hidden','false')}
+function closeCart(){document.querySelector('.cart').classList.remove('is-open');document.querySelector('.scrim').classList.remove('is-open');document.querySelector('.cart').setAttribute('aria-hidden','true')}
+document.addEventListener('click',e=>{const add=e.target.closest('[data-add]');if(add){cart.push(products.find(p=>p.id===Number(add.dataset.add)));renderCart();openCart()}const remove=e.target.closest('[data-remove]');if(remove){cart.splice(Number(remove.dataset.remove),1);renderCart()}if(e.target.closest('.cart-trigger'))openCart();if(e.target.closest('[data-close-cart]'))closeCart();const filter=e.target.closest('[data-filter]');if(filter){document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('is-active',b===filter));document.querySelectorAll('.product-card').forEach(card=>card.hidden=filter.dataset.filter!=='all'&&card.dataset.category!==filter.dataset.filter)}if(e.target.closest('[data-open-promo]')){document.querySelector('.promo').hidden=false;document.querySelector('.scrim').classList.add('is-open')}if(e.target.closest('[data-close-promo]')){document.querySelector('.promo').hidden=true;document.querySelector('.scrim').classList.remove('is-open')}if(e.target.closest('[data-promo-add]')){cart.push({name:'Foldbloom Gift Set',price:298,image:'./assets/merch-01.png'});renderCart();document.querySelector('.promo').hidden=true;openCart()}});
+document.querySelector('#newsletter').addEventListener('submit',e=>{e.preventDefault();e.currentTarget.hidden=true;document.querySelector('.form-success').hidden=false});
+renderCart();

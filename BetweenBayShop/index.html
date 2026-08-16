@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Between Bay — a Shopify-ready lifestyle storefront designed around the Doliu character system.">
+  <title>Between Bay — E-commerce by Kelcy Han</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="announcement">Free Hong Kong delivery over HK$400 · New Foldbloom collection</div>
+  <header class="site-header">
+    <a href="#top" class="brand" aria-label="Between Bay home"><img src="./assets/brand-logo.png" alt="Between Bay"></a>
+    <nav aria-label="Store navigation">
+      <a href="#new">New arrivals</a><a href="#collections">Collections</a><a href="#story">Our story</a>
+    </nav>
+    <button class="cart-trigger" type="button" aria-label="Open shopping bag">Bag <span data-cart-count>0</span></button>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>Take your time.<br><span>Little by little,</span><br>you’ll get there.</h1>
+        <p>Soft companions and useful little things for every in-between moment.</p>
+        <a class="button" href="#new">Shop the collection</a>
+      </div>
+      <div class="hero-media"><img src="./assets/merch-03.png" alt="Between Bay lifestyle collection"></div>
+    </section>
+
+    <section class="value-strip" aria-label="Store benefits">
+      <div><b>Gentle discovery</b><span>Collections that unfold like a story</span></div>
+      <div><b>Thoughtful details</b><span>Designed around craft and character</span></div>
+      <div><b>Easy & intuitive</b><span>A calm journey from browse to bag</span></div>
+    </section>
+
+    <section class="shop-section" id="new">
+      <div class="section-heading"><div><p>New arrivals</p><h2>Goods that go with you.</h2></div><button class="text-button" data-filter="all">View all</button></div>
+      <div class="filters" aria-label="Filter products">
+        <button class="is-active" data-filter="all">All</button><button data-filter="living">Living</button><button data-filter="stationery">Stationery</button><button data-filter="accessories">Accessories</button>
+      </div>
+      <div class="product-grid" id="product-grid"></div>
+    </section>
+
+    <section class="campaign" id="collections">
+      <div class="campaign-media"><img src="./assets/merch-04.png" alt="Between Bay pop-up gift box"></div>
+      <div class="campaign-copy"><p>Seasonal campaign</p><h2>Your own little<br>pause, packed.</h2><p>Build a Foldbloom gift set with a tote, notebook and pin. A campaign-ready bundle for gifting season.</p><button class="button button-light" data-open-promo>Build a gift set</button></div>
+    </section>
+
+    <section class="story" id="story">
+      <div class="story-copy"><p>Meet Doliu</p><h2>A soft guide for<br>the in-between.</h2><p>Doliu’s five petals fold into a curled form whenever life feels overwhelming. The character turns Between Bay’s promise into an emotional product language that scales from content to commerce.</p><a class="text-link" href="../Doliu/index.html">Explore the complete brand case study →</a></div>
+      <img src="./assets/character-master.png" alt="Doliu 2D and 3D character system">
+    </section>
+
+    <section class="edm-section">
+      <div class="edm-preview"><span>Between Bay Notes · 01</span><h2>Rainy days<br>are part of the way.</h2><p>A launch story made for inbox, Instagram and storefront campaign placement.</p><a href="#new">Meet the rainy-day edit →</a></div>
+      <div class="edm-copy"><p>Campaign system</p><h2>One launch,<br>multiple touchpoints.</h2><ul><li>Homepage and collection banners</li><li>Product-category imagery</li><li>Instagram launch assets</li><li>EDM art direction and copy hierarchy</li></ul></div>
+    </section>
+
+    <section class="newsletter"><img src="./assets/brand-logo.png" alt="Between Bay"><h2>Notes from the bay.</h2><p>New drops, small joys, no clutter.</p><form id="newsletter"><input type="email" required placeholder="Email address" aria-label="Email address"><button type="submit">Join</button></form><div class="form-success" hidden>You’re on the list — thank you.</div></section>
+  </main>
+
+  <footer><span>Between Bay © 2026</span><span>E-commerce design · Hong Kong</span></footer>
+
+  <aside class="cart" aria-hidden="true"><div class="cart-head"><h2>Your bag</h2><button class="icon-button" data-close-cart aria-label="Close shopping bag">×</button></div><div class="cart-items"></div><div class="cart-empty">Your bag is taking a little pause.</div><div class="cart-footer" hidden><div><span>Subtotal</span><b data-cart-total>HK$0</b></div><button class="button">Checkout</button><small>Demo interaction — no payment will be taken.</small></div></aside>
+  <div class="scrim" data-close-cart></div>
+  <div class="promo" role="dialog" aria-modal="true" aria-labelledby="promo-title" hidden><button class="icon-button" data-close-promo aria-label="Close promotion">×</button><img src="./assets/merch-01.png" alt="Foldbloom collection"><div><p>Gift set builder</p><h2 id="promo-title">Pick three little comforts.</h2><p>Choose any tote, notebook and pin set for HK$298.</p><button class="button" data-promo-add>Add set to bag</button></div></div>
+  <script src="./script.js"></script>
+</body>
+</html>
