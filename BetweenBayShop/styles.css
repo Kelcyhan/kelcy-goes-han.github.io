@@ -5,3 +5,52 @@
 
 /* Use one natural-title-case typography system throughout the storefront. */
 body *{text-transform:none!important}
+
+/* Employer-facing case study: strategy and adaptation behind the storefront. */
+.case-study{background:#fff;color:var(--ink);border-top:1px solid var(--line)}
+.case-study p,.case-study h2,.case-study h3,.case-study figure{margin-top:0}
+.case-intro{display:grid;grid-template-columns:.78fr 1.22fr;min-height:700px;border-bottom:1px solid #b7cff7}
+.case-copy{display:flex;flex-direction:column;justify-content:center;padding:clamp(54px,6vw,96px) clamp(26px,5vw,74px)}
+.case-logo{width:230px;margin-bottom:clamp(50px,7vw,90px)}
+.case-copy>h2{max-width:680px;margin-bottom:clamp(50px,7vw,90px);color:var(--blue);font-size:clamp(4rem,6.4vw,7.2rem);font-weight:800;letter-spacing:-.075em;line-height:.85}
+.case-copy>h2 span{color:var(--pink)}
+.case-brief{max-width:620px}.case-brief>p,.system-title>p,.touchpoints-heading>p:first-child{margin-bottom:12px;color:var(--blue);font-size:12px;font-weight:800;letter-spacing:.08em}
+.case-brief h3{margin-bottom:0;font-size:clamp(1rem,1.35vw,1.25rem);font-weight:550;line-height:1.55}
+.case-hero{position:relative;overflow:hidden;margin:0;min-height:620px}.case-hero>img{width:100%;height:100%;object-fit:cover}
+.case-hero figcaption{position:absolute;right:20px;bottom:20px;max-width:300px;padding:12px 15px;background:rgba(255,255,255,.91);font-size:11px;line-height:1.4}
+.system-band{display:grid;grid-template-columns:.7fr 1.05fr .8fr 1.45fr;gap:36px;align-items:center;padding:56px clamp(26px,4vw,64px);border-bottom:1px solid #b7cff7}
+.system-title h2{margin:0;color:var(--blue);font-size:clamp(2.4rem,3.5vw,4.6rem);letter-spacing:-.055em;line-height:.9}
+.palette{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.palette div{display:flex;min-width:0;flex-direction:column;align-items:center;text-align:center}
+.palette i{display:block;width:clamp(40px,4vw,66px);aspect-ratio:1;margin-bottom:12px;border-radius:50%;background:var(--swatch)}
+.palette b{font-size:11px}.palette span{margin-top:3px;color:#60708d;font-size:9px}
+.type-specimen{padding-left:34px;border-left:1px solid #b7cff7}.type-specimen>span{display:block;color:#34435e;font-size:9px;font-weight:800;letter-spacing:.08em}
+.type-specimen strong{display:block;margin:6px 0 12px;color:#1c2f5b;font-size:clamp(1.5rem,2vw,2.4rem);letter-spacing:-.04em}
+.type-specimen p{margin-bottom:10px;color:#27375a;font-size:13px;line-height:1.55}.type-specimen small{display:block;max-width:270px;color:#61708b;line-height:1.45}
+.image-language{display:grid;grid-template-columns:.85fr 1.15fr;gap:14px}.image-language img{width:100%;height:190px;border-radius:8px;object-fit:cover}
+.image-language img:first-child{object-position:30% 58%}.image-language img:last-child{object-position:70% 55%}
+.touchpoints{padding:clamp(70px,9vw,130px) clamp(20px,4vw,64px)}
+.touchpoints-heading{display:grid;grid-template-columns:1fr .7fr;align-items:end;margin-bottom:54px}.touchpoints-heading>p:first-child{grid-column:1/-1}
+.touchpoints-heading h2{margin:0;color:var(--blue);font-size:clamp(3rem,5vw,6.3rem);letter-spacing:-.065em;line-height:.9}
+.touchpoints-heading>p:last-child{max-width:460px;margin:0 0 8px auto;color:#66728a;line-height:1.6}
+.touchpoint-rail{display:grid;grid-template-columns:repeat(4,minmax(260px,1fr));gap:18px;overflow-x:auto;padding-bottom:16px}
+.touchpoint h3{display:flex;justify-content:space-between;margin-bottom:12px;color:var(--blue);font-size:13px}.touchpoint h3 span{color:#9aa4b8;font-weight:500}
+.touchpoint-frame{height:310px;overflow:hidden;border:1px solid #b7cff7;border-radius:7px;background:#fff}
+.mini-nav{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 12px;font-size:8px}.mini-nav img{width:86px}.homepage-frame>img{width:100%;height:262px;object-fit:cover}
+.product-detail-frame{display:grid;grid-template-columns:1.08fr .92fr;gap:14px;padding:16px;background:#f7f4f0}.product-detail-frame>img{width:100%;height:276px;object-fit:cover;object-position:48% 42%;background:#dce7fa}
+.product-detail-frame>div{display:flex;flex-direction:column;justify-content:center}.product-detail-frame small{font-size:11px}.product-detail-frame b{margin:8px 0 14px;color:var(--blue);font-size:18px}.product-detail-frame p{color:#697386;font-size:10px;line-height:1.45}
+.product-detail-frame button{min-height:34px;border:0;background:var(--blue);color:#fff;font-size:10px;font-weight:800;cursor:pointer}
+.social-head,.social-foot{display:flex;align-items:center;justify-content:space-between;height:42px;padding:0 12px;font-size:10px}.social-grid{display:grid;grid-template-columns:1.25fr .75fr;height:226px}
+.social-grid img{width:100%;height:100%;object-fit:cover}.social-grid blockquote{display:flex;align-items:center;margin:0;padding:18px;background:var(--lavender);color:#fff;font-size:22px;font-weight:800;letter-spacing:-.04em;line-height:.92}.social-foot{justify-content:flex-start;font-size:16px}
+.edm-frame{position:relative;padding:26px 22px;background:#dfeaff}.edm-frame>img:first-child{width:112px}.edm-frame h4{position:relative;z-index:1;margin:50px 0 20px;color:var(--blue);font-size:30px;line-height:.9;letter-spacing:-.055em}
+.edm-frame>a{position:relative;z-index:1;display:inline-flex;padding:9px 12px;background:var(--blue);color:#fff;font-size:8px}.edm-product{position:absolute;right:-22px;bottom:-56px;width:66%;height:250px;object-fit:cover;object-position:50% 36%;mix-blend-mode:multiply}
+.case-note{border-top:1px solid #b7cff7;background:#fff;color:#60708d}
+
+@media(max-width:900px){
+  .case-intro{grid-template-columns:1fr}.case-copy{padding:70px 24px}.case-logo{margin-bottom:52px}.case-copy>h2{font-size:clamp(4rem,14vw,6.5rem)}.case-hero{min-height:54vw}
+  .system-band{grid-template-columns:1fr 1.1fr;gap:42px}.type-specimen{padding-left:0;border-left:0}
+  .touchpoints-heading{grid-template-columns:1fr}.touchpoints-heading>p:last-child{margin:24px 0 0}.touchpoint-rail{grid-template-columns:repeat(4,300px)}
+}
+@media(max-width:520px){
+  .case-hero{min-height:430px}.case-hero figcaption{right:12px;bottom:12px;left:12px}.system-band{grid-template-columns:1fr;padding:48px 20px}.palette{gap:8px}.image-language img{height:150px}
+  .touchpoints{padding-inline:16px}.touchpoints-heading h2{font-size:3.5rem}.touchpoint-rail{margin-right:-16px}.case-note{gap:8px}
+}
