@@ -44,6 +44,9 @@ body *{text-transform:none!important}
 .edm-frame{position:relative;padding:26px 22px;background:#dfeaff}.edm-frame>img:first-child{width:112px}.edm-frame h4{position:relative;z-index:1;margin:50px 0 20px;color:var(--blue);font-size:30px;line-height:.9;letter-spacing:-.055em}
 .edm-frame>a{position:relative;z-index:1;display:inline-flex;padding:9px 12px;background:var(--blue);color:#fff;font-size:8px}.edm-product{position:absolute;right:-22px;bottom:-56px;width:66%;height:250px;object-fit:cover;object-position:50% 36%;mix-blend-mode:multiply}
 .case-note{border-top:1px solid #b7cff7;background:#fff;color:#60708d}
+.case-overview{margin:0;padding:clamp(70px,9vw,130px) clamp(20px,4vw,64px)}
+.case-overview img{display:block;width:100%;height:auto;border:1px solid #b7cff7;border-radius:10px;box-shadow:0 24px 60px rgba(10,96,214,.1)}
+.case-overview figcaption{display:flex;justify-content:space-between;gap:20px;padding-top:14px;color:#60708d;font-size:11px;letter-spacing:.03em}
 
 @media(max-width:900px){
   .case-intro{grid-template-columns:1fr}.case-copy{padding:70px 24px}.case-logo{margin-bottom:52px}.case-copy>h2{font-size:clamp(4rem,14vw,6.5rem)}.case-hero{min-height:54vw}
@@ -53,4 +56,5 @@ body *{text-transform:none!important}
 @media(max-width:520px){
   .case-hero{min-height:430px}.case-hero figcaption{right:12px;bottom:12px;left:12px}.system-band{grid-template-columns:1fr;padding:48px 20px}.palette{gap:8px}.image-language img{height:150px}
   .touchpoints{padding-inline:16px}.touchpoints-heading h2{font-size:3.5rem}.touchpoint-rail{margin-right:-16px}.case-note{gap:8px}
+  .case-overview{padding-inline:16px}.case-overview figcaption{flex-direction:column;gap:4px}
 }

@@ -479,6 +479,18 @@ iframe {
   transition: transform 500ms ease;
 }
 
+.project-card-media.is-contain {
+  background: #ffffff;
+}
+
+.project-card-media.is-contain::after {
+  display: none;
+}
+
+.project-card-media.is-contain img {
+  object-fit: contain;
+}
+
 .project-card:is(:hover, :focus-visible) .project-card-media img {
   transform: scale(1.045);
 }

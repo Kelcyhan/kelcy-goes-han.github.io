@@ -90,7 +90,7 @@ function clearCanvas(canvas) {
 function ProjectCard({ project, index }) {
   const cardContent = (
     <>
-      <span className={`project-card-media ${project.graphic ? `is-${project.graphic}` : ''}`}>
+      <span className={`project-card-media ${project.graphic ? `is-${project.graphic}` : ''} ${project.previewFit ? `is-${project.previewFit}` : ''}`}>
         {project.preview ? (
           <img src={project.preview} alt="" loading="lazy" decoding="async" />
         ) : (

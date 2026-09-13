@@ -7,7 +7,7 @@ import puriPreview from '../../Puri/assets/puri-final-product.png';
 import supplyNetPreview from '../../SupplyNet/assets/overview.webp';
 import swarmFlightPreview from '../../assets/swarm-flight-preview.png';
 import betweenBayPreview from '../../Doliu/assets/merch-03.png';
-import betweenBayShopPreview from '../../BetweenBayShop/assets/merch-04.png';
+import betweenBayShopPreview from '../../BetweenBayShop/assets/case-study-overview.png';
 
 // Project case studies keep their original, independently designed pages.
 // This list contains only the metadata needed by the React gallery and route shell.
@@ -23,6 +23,7 @@ export const projects = [
     loaderBackground: '#f7f4f0',
     ink: '#111a2a',
     preview: betweenBayShopPreview,
+    previewFit: 'contain',
     group: 'commerce',
   },
   {
