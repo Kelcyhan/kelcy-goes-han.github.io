@@ -102,7 +102,7 @@ export const projects = [
     loaderBackground: '#0a1815',
     ink: '#55220e',
     preview: supplyNetPreview,
-    group: 'creative',
+    group: 'product',
   },
   {
     slug: 'swarm',
@@ -142,7 +142,7 @@ export const projects = [
     loaderBackground: '#f4efe5',
     ink: '#172a5b',
     preview: agentPreview,
-    group: 'creative',
+    group: 'product',
   },
 ];
 
