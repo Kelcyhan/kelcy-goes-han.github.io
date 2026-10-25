@@ -384,6 +384,7 @@ iframe {
 
 .project-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   max-width: 1500px;
   margin: 0 auto 18px;
@@ -2224,4 +2225,12 @@ body.lightbox-open {
 
 .scenic-home .home-hint {
   font-size: 0.72rem;
+}
+
+/* Keep the project return control clear of the Graphic Works page content. */
+.project-graphic-works { background: #f7f4eb; }
+.project-graphic-works .original-project-frame {
+  height: calc(100% - 72px);
+  margin-top: 72px;
+  border-top: 1px solid #d8d0c2;
 }

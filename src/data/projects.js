@@ -8,12 +8,14 @@ import supplyNetPreview from '../../SupplyNet/assets/overview.webp';
 import swarmFlightPreview from '../../assets/swarm-flight-preview.png';
 import betweenBayPreview from '../../Doliu/assets/merch-03.png';
 import betweenBayShopPreview from '../../BetweenBayShop/assets/case-study-overview.png';
+import visualStudiesPreview from '../../VisualStudies/assets/colour-yellow.png';
 
 // Project case studies keep their original, independently designed pages.
 // This list contains only the metadata needed by the React gallery and route shell.
 export const projects = [
   {
     slug: 'between-bay-shop',
+    caseStudyUrl: '/BetweenBayShop/case-study.html',
     legacyPath: 'BetweenBayShop',
     title: 'Between Bay',
     category: 'E-commerce',
@@ -143,6 +145,17 @@ export const projects = [
     ink: '#172a5b',
     preview: agentPreview,
     group: 'creative',
+  },
+  {
+    slug: 'graphic-works',
+    legacyPath: 'VisualStudies',
+    title: 'Graphic Works',
+    category: 'Composition & image treatment',
+    accent: '#edaf38',
+    loaderBackground: '#f7f4eb',
+    ink: '#493321',
+    preview: visualStudiesPreview,
+    group: 'graphic',
   },
 ];
 

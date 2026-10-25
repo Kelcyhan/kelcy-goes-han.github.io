@@ -12,6 +12,7 @@ const PROJECT_GROUPS = [
   ['commerce', 'Commerce & Brand'],
   ['product', 'Product & UX'],
   ['creative', 'Creative Tech'],
+  ['graphic', 'Graphic Design'],
 ];
 const IDLE_IMAGES = { 1: homeIdle, 2: reefIdle, 3: loungeIdle };
 const TRANSITIONS = {
@@ -102,7 +103,7 @@ function ProjectCard({ project, index }) {
       <span className="project-card-copy">
         <span>
           <b>{project.title}</b>
-          <small>{project.category} · {project.year}</small>
+          <small>{project.category}{project.year ? ` · ${project.year}` : ''}</small>
         </span>
         <span className="project-arrow" aria-hidden="true">↗</span>
       </span>
@@ -145,7 +146,11 @@ export default function ScenicHome() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialRoom = Math.min(3, Math.max(1, Number(searchParams.get('room')) || 1));
   const [room, setRoom] = useState(initialRoom);
-  const [activeProjectGroup, setActiveProjectGroup] = useState('commerce');
+  const [activeProjectGroup, setActiveProjectGroup] = useState(() => (
+    PROJECT_GROUPS.some(([value]) => value === searchParams.get('category'))
+      ? searchParams.get('category')
+      : 'commerce'
+  ));
   const [busy, setBusy] = useState(false);
   const canvasRef = useRef(null);
   const ambientCanvasRef = useRef(null);
@@ -374,8 +379,8 @@ export default function ScenicHome() {
 
       <section className={`home-room home-intro ${room === 1 ? 'is-active' : ''}`} aria-hidden={room !== 1}>
         <p className="eyebrow">AI-native Brand & Visual Designer · Hong Kong</p>
-        <h1>I turn brand ideas<br />into visuals that sell.</h1>
-        <p className="home-lede">I combine AI-native workflows with brand thinking to create identities, IP, campaign visuals and e-commerce experiences — from concept to launch.</p>
+        <h1>Brand ideas,<br />made visual.</h1>
+        <p className="home-lede">I design brand identities, character worlds, campaign visuals and e-commerce experiences, combining hands-on design with AI-assisted exploration.</p>
         <button className="room-cta" type="button" onClick={() => goRoom(2)} disabled={busy}>
           Enter selected work <span aria-hidden="true">↓</span>
         </button>
@@ -387,7 +392,7 @@ export default function ScenicHome() {
             <p className="eyebrow">AI-native brand & visual design · 2024–2026</p>
             <h2>Selected projects,<br />one visual practice.</h2>
           </div>
-          <p>Brand identity, IP design, Shopify commerce, campaign visuals and creative technology.</p>
+          <p>Brand identity, IP design, storefront prototypes, campaign visuals and creative technology.</p>
         </div>
         <div className="project-tabs" role="tablist" aria-label="Project categories">
           {PROJECT_GROUPS.map(([value, label]) => (
@@ -397,7 +402,10 @@ export default function ScenicHome() {
               role="tab"
               aria-selected={activeProjectGroup === value}
               className={activeProjectGroup === value ? 'is-active' : ''}
-              onClick={() => setActiveProjectGroup(value)}
+              onClick={() => {
+                setActiveProjectGroup(value);
+                setSearchParams({ room: '2', category: value }, { replace: true });
+              }}
             >
               {label}
               <span>{String(projects.filter((project) => project.group === value).length).padStart(2, '0')}</span>
@@ -414,7 +422,7 @@ export default function ScenicHome() {
       <section className={`home-room home-contact ${room === 3 ? 'is-active' : ''}`} aria-hidden={room !== 3}>
         <p className="eyebrow">Available in Hong Kong</p>
         <h2>Let’s build visuals<br />people remember.</h2>
-        <p>Open to AI-native brand, visual and e-commerce design opportunities, with hands-on experience across identity, IP, campaigns and Shopify.</p>
+        <p>Open to junior brand, visual and e-commerce design opportunities. My work spans character identities, campaign concepts, web interfaces and storefront explorations.</p>
         <div className="contact-links">
           <a href="mailto:kelcyhan@gmail.com">Email <span aria-hidden="true">↗</span></a>
           <a href="https://www.linkedin.com/in/kelcy-goes-han" target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>

@@ -45,6 +45,12 @@ await requireFile('assets/fish/koi.glb');
 await verifyHtmlReferences('index.html');
 await requireFile('Doliu/index.html');
 await requireFile('BetweenBayShop/index.html');
+await requireFile('VisualStudies/index.html');
+if (await exists(resolve(dist, 'VisualStudies/index.html'))) await verifyHtmlReferences('VisualStudies/index.html');
+for (const name of ['social', 'banner']) {
+  await requireFile(`VisualStudies/assets/off-hours-${name}.png`);
+  await requireFile(`VisualStudies/assets/off-hours-${name}.svg`);
+}
 if (await exists(resolve(dist, 'Doliu/index.html'))) await verifyHtmlReferences('Doliu/index.html');
 if (await exists(resolve(dist, 'BetweenBayShop/index.html'))) await verifyHtmlReferences('BetweenBayShop/index.html');
 

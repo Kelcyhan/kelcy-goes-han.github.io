@@ -36,6 +36,7 @@ function App() {
     <div className={isProject ? 'app app-project' : 'app app-home'}>
       <Routes>
         <Route path="/" element={<ScenicHome />} />
+        <Route path="/projects/visual-studies" element={<Navigate replace to="/projects/graphic-works" />} />
         <Route path="/projects/:slug" element={<ProjectRoute />} />
         <Route path="/:legacy" element={<LegacyRoute />} />
         <Route path="*" element={<NotFound />} />

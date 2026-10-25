@@ -1,0 +1,48 @@
+{
+  "name": "OFF HOURS",
+  "type": "Fictional coffee and leisure concept",
+  "version": "2026-09-26",
+  "palette": {
+    "paper": "#F8EED2",
+    "ink": "#493321",
+    "yellow": "#EDAF38",
+    "line": "#B9A779"
+  },
+  "fonts": {
+    "display": "Georgia (system serif)",
+    "body": "Arial (system sans-serif)"
+  },
+  "typography": {
+    "social": {
+      "headline": 124,
+      "body": 23
+    },
+    "banner": {
+      "headline": 103,
+      "body": 23
+    }
+  },
+  "sizes": {
+    "social": [
+      1080,
+      1350
+    ],
+    "banner": [
+      1600,
+      600
+    ]
+  },
+  "margins": {
+    "social": 72,
+    "banner": 72
+  },
+  "original": {
+    "file": "assets/colour-yellow.png",
+    "size": [
+      627,
+      627
+    ],
+    "pixelEdits": false
+  },
+  "sourceNote": "Original date, software, references and contribution unconfirmed. Layout, copy and code prepared with Codex; concept pending owner review."
+}

@@ -4,14 +4,15 @@ import { useTransitionNavigate } from './TransitionLink.jsx';
 export default function ProjectPage({ project }) {
   const iframeRef = useRef(null);
   const transitionNavigate = useTransitionNavigate();
-  const projectUrl = `/${project.legacyPath}/index.html`;
+  const projectUrl = project.caseStudyUrl || `/${project.legacyPath}/index.html`;
+  const galleryUrl = `/?room=2&category=${encodeURIComponent(project.group)}`;
 
   useEffect(() => {
     document.title = `${project.title} — Kelcy Han`;
     document.body.classList.add('on-project-page', 'route-open');
     window.scrollTo(0, 0);
 
-    const closeProject = () => transitionNavigate('/?room=2', { replace: true });
+    const closeProject = () => transitionNavigate(galleryUrl, { replace: true });
     const onKeyDown = (event) => {
       if (event.key === 'Escape') closeProject();
     };
@@ -27,7 +28,7 @@ export default function ProjectPage({ project }) {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('message', onMessage);
     };
-  }, [project, transitionNavigate]);
+  }, [project, galleryUrl, transitionNavigate]);
 
   return (
     <main
@@ -37,7 +38,7 @@ export default function ProjectPage({ project }) {
       <button
         className="original-project-back"
         type="button"
-        onClick={() => transitionNavigate('/?room=2', { replace: true })}
+        onClick={() => transitionNavigate(galleryUrl, { replace: true })}
       >
         Back
       </button>

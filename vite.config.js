@@ -19,6 +19,7 @@ const runtimeDirectories = [
   ['assets/fish', 'assets/fish'],
   ['Doliu', 'Doliu'],
   ['BetweenBayShop', 'BetweenBayShop'],
+  ['VisualStudies', 'VisualStudies'],
   ...originalProjectDirectories.map((name) => [name, name]),
 ];
 
